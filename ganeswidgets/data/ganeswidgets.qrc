@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/mark.svg</file>
+        <file>hgwidget.css</file>
+        <file>hgwidget.widgetml</file>
+        <file>hgindexfeedback.css</file>
+    </qresource>
+</RCC>

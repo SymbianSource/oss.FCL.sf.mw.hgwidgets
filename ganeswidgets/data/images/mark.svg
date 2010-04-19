@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generator: Mobile Designer 3.0 2.0 -->
+<svg width="40" height="40" viewBox="-20 -20 40 40"
+	stroke-miterlimit="2" enable-background="new" zoomAndPan="disable"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xmlns:ev="http://www.w3.org/2001/xml-events"
+	xml:space="preserve" version="1.1" baseProfile="Normal">
+
+<!-- Definitions -->
+<defs>
+<style type="text/css"><![CDATA[
+	.st0 { fill:none; stroke:#fff; stroke-width:3; stroke-miterlimit:4;}
+]]>
+</style>
+</defs>
+
+<!-- Movie Background -->
+<rect fill="none" x="-20" y="-20" width="40" height="40"/>
+
+<!-- Scene 1 -->
+<g id="Scene_1">
+	<rect x="-19.5" y="-19.5" width="38.75" height="38.75" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="bevel" stroke-miterlimit="4"/>
+	<polyline class="st0"
+		 points="-14.5,4.75 -0.75,16.5"/>
+	<polyline class="st0"
+		 points="-0.75,16.5 8.25,-16.25"/>
+</g>
+
+</svg>

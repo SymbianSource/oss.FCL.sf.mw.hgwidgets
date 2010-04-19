@@ -1,0 +1,83 @@
+EXPORTS
+	?setScrollBar@HgWidget@@QAEXPAVHbScrollBar@@@Z @ 1 NONAME ; void HgWidget::setScrollBar(class HbScrollBar *)
+	?setCurrentIndex@HgWidget@@QAEXABVQModelIndex@@V?$QFlags@W4SelectionFlag@QItemSelectionModel@@@@@Z @ 2 NONAME ; void HgWidget::setCurrentIndex(class QModelIndex const &, class QFlags<enum QItemSelectionModel::SelectionFlag>)
+	?currentIndex@HgWidget@@QBE?AVQModelIndex@@XZ @ 3 NONAME ; class QModelIndex HgWidget::currentIndex(void) const
+	?trUtf8@HgWidget@@SA?AVQString@@PBD0@Z @ 4 NONAME ; class QString HgWidget::trUtf8(char const *, char const *)
+	?scrollTo@HgWidget@@QAEXABVQModelIndex@@@Z @ 5 NONAME ; void HgWidget::scrollTo(class QModelIndex const &)
+	??1HgWidget@@UAE@XZ @ 6 NONAME ; HgWidget::~HgWidget(void)
+	?selectionModel@HgWidget@@QBEPAVQItemSelectionModel@@XZ @ 7 NONAME ; class QItemSelectionModel * HgWidget::selectionModel(void) const
+	?activated@HgWidget@@IAEXABVQModelIndex@@@Z @ 8 NONAME ; void HgWidget::activated(class QModelIndex const &)
+	?eventFilter@HgWidget@@MAE_NPAVQObject@@PAVQEvent@@@Z @ 9 NONAME ; bool HgWidget::eventFilter(class QObject *, class QEvent *)
+	?scrollBarPolicy@HgWidget@@QBE?AW4ScrollBarPolicy@1@XZ @ 10 NONAME ; enum HgWidget::ScrollBarPolicy HgWidget::scrollBarPolicy(void) const
+	?selectAll@HgWidget@@QAEXXZ @ 11 NONAME ; void HgWidget::selectAll(void)
+	?trUtf8@HgWidget@@SA?AVQString@@PBD0H@Z @ 12 NONAME ; class QString HgWidget::trUtf8(char const *, char const *, int)
+	?tr@HgWidget@@SA?AVQString@@PBD0@Z @ 13 NONAME ; class QString HgWidget::tr(char const *, char const *)
+	?getStaticMetaObject@HgWidget@@SAABUQMetaObject@@XZ @ 14 NONAME ; struct QMetaObject const & HgWidget::getStaticMetaObject(void)
+	?qt_metacast@HgWidget@@UAEPAXPBD@Z @ 15 NONAME ; void * HgWidget::qt_metacast(char const *)
+	?setSelectionModel@HgWidget@@QAEXPAVQItemSelectionModel@@@Z @ 16 NONAME ; void HgWidget::setSelectionModel(class QItemSelectionModel *)
+	?d_func@HgWidget@@ABEPBVHgWidgetPrivate@@XZ @ 17 NONAME ; class HgWidgetPrivate const * HgWidget::d_func(void) const
+	?setScrollBarPolicy@HgWidget@@QAEXW4ScrollBarPolicy@1@@Z @ 18 NONAME ; void HgWidget::setScrollBarPolicy(enum HgWidget::ScrollBarPolicy)
+	?longPressEnabled@HgWidget@@QBE_NXZ @ 19 NONAME ; bool HgWidget::longPressEnabled(void) const
+	?tr@HgWidget@@SA?AVQString@@PBD0H@Z @ 20 NONAME ; class QString HgWidget::tr(char const *, char const *, int)
+	?setModel@HgWidget@@UAEXPAVQAbstractItemModel@@@Z @ 21 NONAME ; void HgWidget::setModel(class QAbstractItemModel *)
+	?longPressed@HgWidget@@IAEXABVQModelIndex@@ABVQPointF@@@Z @ 22 NONAME ; void HgWidget::longPressed(class QModelIndex const &, class QPointF const &)
+	?staticMetaObject@HgWidget@@2UQMetaObject@@B @ 23 NONAME ; struct QMetaObject const HgWidget::staticMetaObject
+	?selectionMode@HgWidget@@QBE?AW4SelectionMode@1@XZ @ 24 NONAME ; enum HgWidget::SelectionMode HgWidget::selectionMode(void) const
+	??_EHgWidget@@UAE@I@Z @ 25 NONAME ; HgWidget::~HgWidget(unsigned int)
+	?qt_metacall@HgWidget@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 26 NONAME ; int HgWidget::qt_metacall(enum QMetaObject::Call, int, void * *)
+	?d_func@HgWidget@@AAEPAVHgWidgetPrivate@@XZ @ 27 NONAME ; class HgWidgetPrivate * HgWidget::d_func(void)
+	?metaObject@HgWidget@@UBEPBUQMetaObject@@XZ @ 28 NONAME ; struct QMetaObject const * HgWidget::metaObject(void) const
+	?scrollBar@HgWidget@@QBEPAVHbScrollBar@@XZ @ 29 NONAME ; class HbScrollBar * HgWidget::scrollBar(void) const
+	?model@HgWidget@@QBEPAVQAbstractItemModel@@XZ @ 30 NONAME ; class QAbstractItemModel * HgWidget::model(void) const
+	?clearSelection@HgWidget@@QAEXXZ @ 31 NONAME ; void HgWidget::clearSelection(void)
+	?setLongPressEnabled@HgWidget@@QAEX_N@Z @ 32 NONAME ; void HgWidget::setLongPressEnabled(bool)
+	?dataChanged@HgWidget@@IAEXABVQModelIndex@@0@Z @ 33 NONAME ; void HgWidget::dataChanged(class QModelIndex const &, class QModelIndex const &)
+	?setSelectionMode@HgWidget@@QAEXW4SelectionMode@1@_N@Z @ 34 NONAME ; void HgWidget::setSelectionMode(enum HgWidget::SelectionMode, bool)
+	?event@HgWidget@@MAE_NPAVQEvent@@@Z @ 35 NONAME ; bool HgWidget::event(class QEvent *)
+	?orientationChanged@HgWidget@@QAEXW4Orientation@Qt@@@Z @ 36 NONAME ; void HgWidget::orientationChanged(enum Qt::Orientation)
+	?aboutToChangeOrientation@HgWidget@@QAEXXZ @ 37 NONAME ; void HgWidget::aboutToChangeOrientation(void)
+	?getItemOutline@HgWidget@@QAE_NABVQModelIndex@@AAVQPolygonF@@@Z @ 38 NONAME ; bool HgWidget::getItemOutline(class QModelIndex const &, class QPolygonF &)
+	?getVisibleItemIndices@HgWidget@@QBE?AV?$QList@VQModelIndex@@@@XZ @ 39 NONAME ; class QList<class QModelIndex> HgWidget::getVisibleItemIndices(void) const
+	?scrollingEnded@HgWidget@@IAEXXZ @ 40 NONAME ; void HgWidget::scrollingEnded(void)
+	?scrollingStarted@HgWidget@@IAEXXZ @ 41 NONAME ; void HgWidget::scrollingStarted(void)
+	?scrollDirection@HgWidget@@QBE?AW4Orientation@Qt@@XZ @ 42 NONAME ; enum Qt::Orientation HgWidget::scrollDirection(void) const
+	?tr@HgMediawall@@SA?AVQString@@PBD0@Z @ 43 NONAME ; class QString HgMediawall::tr(char const *, char const *)
+	?qt_metacall@HgMediawall@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 44 NONAME ; int HgMediawall::qt_metacall(enum QMetaObject::Call, int, void * *)
+	?d_func@HgMediawall@@ABEPBVHgMediawallPrivate@@XZ @ 45 NONAME ; class HgMediawallPrivate const * HgMediawall::d_func(void) const
+	?tr@HgGrid@@SA?AVQString@@PBD0H@Z @ 46 NONAME ; class QString HgGrid::tr(char const *, char const *, int)
+	?metaObject@HgMediawall@@UBEPBUQMetaObject@@XZ @ 47 NONAME ; struct QMetaObject const * HgMediawall::metaObject(void) const
+	?d_func@HgGrid@@ABEPBVHgGridPrivate@@XZ @ 48 NONAME ; class HgGridPrivate const * HgGrid::d_func(void) const
+	?tr@HgMediawall@@SA?AVQString@@PBD0H@Z @ 49 NONAME ; class QString HgMediawall::tr(char const *, char const *, int)
+	?staticMetaObject@HgMediawall@@2UQMetaObject@@B @ 50 NONAME ; struct QMetaObject const HgMediawall::staticMetaObject
+	??_EHgGrid@@UAE@I@Z @ 51 NONAME ; HgGrid::~HgGrid(unsigned int)
+	?trUtf8@HgMediawall@@SA?AVQString@@PBD0@Z @ 52 NONAME ; class QString HgMediawall::trUtf8(char const *, char const *)
+	?getStaticMetaObject@HgMediawall@@SAABUQMetaObject@@XZ @ 53 NONAME ; struct QMetaObject const & HgMediawall::getStaticMetaObject(void)
+	?getStaticMetaObject@HgGrid@@SAABUQMetaObject@@XZ @ 54 NONAME ; struct QMetaObject const & HgGrid::getStaticMetaObject(void)
+	?d_func@HgGrid@@AAEPAVHgGridPrivate@@XZ @ 55 NONAME ; class HgGridPrivate * HgGrid::d_func(void)
+	?qt_metacall@HgGrid@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 56 NONAME ; int HgGrid::qt_metacall(enum QMetaObject::Call, int, void * *)
+	??0HgGrid@@QAE@W4Orientation@Qt@@PAVQGraphicsItem@@@Z @ 57 NONAME ; HgGrid::HgGrid(enum Qt::Orientation, class QGraphicsItem *)
+	??0HgMediawall@@QAE@PAVQGraphicsItem@@@Z @ 58 NONAME ; HgMediawall::HgMediawall(class QGraphicsItem *)
+	?qt_metacast@HgGrid@@UAEPAXPBD@Z @ 59 NONAME ; void * HgGrid::qt_metacast(char const *)
+	?trUtf8@HgGrid@@SA?AVQString@@PBD0H@Z @ 60 NONAME ; class QString HgGrid::trUtf8(char const *, char const *, int)
+	??0HgWidget@@IAE@PAVHbWidgetPrivate@@PAVQGraphicsItem@@@Z @ 61 NONAME ; HgWidget::HgWidget(class HbWidgetPrivate *, class QGraphicsItem *)
+	?trUtf8@HgMediawall@@SA?AVQString@@PBD0H@Z @ 62 NONAME ; class QString HgMediawall::trUtf8(char const *, char const *, int)
+	?trUtf8@HgGrid@@SA?AVQString@@PBD0@Z @ 63 NONAME ; class QString HgGrid::trUtf8(char const *, char const *)
+	?tr@HgGrid@@SA?AVQString@@PBD0@Z @ 64 NONAME ; class QString HgGrid::tr(char const *, char const *)
+	??1HgGrid@@UAE@XZ @ 65 NONAME ; HgGrid::~HgGrid(void)
+	?qt_metacast@HgMediawall@@UAEPAXPBD@Z @ 66 NONAME ; void * HgMediawall::qt_metacast(char const *)
+	?staticMetaObject@HgGrid@@2UQMetaObject@@B @ 67 NONAME ; struct QMetaObject const HgGrid::staticMetaObject
+	??1HgMediawall@@UAE@XZ @ 68 NONAME ; HgMediawall::~HgMediawall(void)
+	?metaObject@HgGrid@@UBEPBUQMetaObject@@XZ @ 69 NONAME ; struct QMetaObject const * HgGrid::metaObject(void) const
+	??_EHgMediawall@@UAE@I@Z @ 70 NONAME ; HgMediawall::~HgMediawall(unsigned int)
+	?d_func@HgMediawall@@AAEPAVHgMediawallPrivate@@XZ @ 71 NONAME ; class HgMediawallPrivate * HgMediawall::d_func(void)
+	?descriptionPosition@HgMediawall@@QBE?AW4LabelPosition@1@XZ @ 72 NONAME ; enum HgMediawall::LabelPosition HgMediawall::descriptionPosition(void) const
+	?setDescriptionFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 73 NONAME ; void HgMediawall::setDescriptionFontSpec(class HbFontSpec const &)
+	?titleFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 74 NONAME ; class HbFontSpec HgMediawall::titleFontSpec(void) const
+	?setDescriptionPosition@HgMediawall@@QAEXW4LabelPosition@1@@Z @ 75 NONAME ; void HgMediawall::setDescriptionPosition(enum HgMediawall::LabelPosition)
+	?titlePosition@HgMediawall@@QBE?AW4LabelPosition@1@XZ @ 76 NONAME ; enum HgMediawall::LabelPosition HgMediawall::titlePosition(void) const
+	?setTitleFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 77 NONAME ; void HgMediawall::setTitleFontSpec(class HbFontSpec const &)
+	?setTitlePosition@HgMediawall@@QAEXW4LabelPosition@1@@Z @ 78 NONAME ; void HgMediawall::setTitlePosition(enum HgMediawall::LabelPosition)
+	?descriptionFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 79 NONAME ; class HbFontSpec HgMediawall::descriptionFontSpec(void) const
+	?setIndexFeedbackPolicy@HgWidget@@QAEXW4IndexFeedbackPolicy@1@@Z @ 80 NONAME ; void HgWidget::setIndexFeedbackPolicy(enum HgWidget::IndexFeedbackPolicy)
+	?indexFeedbackPolicy@HgWidget@@QBE?AW4IndexFeedbackPolicy@1@XZ @ 81 NONAME ; enum HgWidget::IndexFeedbackPolicy HgWidget::indexFeedbackPolicy(void) const
+

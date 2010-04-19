@@ -1,0 +1,40 @@
+HgWidget
+{
+	layout:default_layout;
+}
+
+HgWidget::scrollbar-vertical
+{
+	left:0un;
+	right:0un;
+	top:-0.8un;
+	bottom:expr(var(hb-param-widget-scroll-bar-interactive-width)+0.8un);
+}
+
+HgWidget::scrollbar-horizontal
+{
+	left:0un;
+	right:var(hb-param-widget-scroll-bar-interactive-width);
+	top:0un;
+	bottom:0un;
+}
+
+HgWidget::continuation-indicator-bottom
+{
+	fixed-height:2.0un;
+}
+
+HgWidget::continuation-indicator-top
+{
+	fixed-height:2.0un;
+}
+
+HgWidget::continuation-indicator-left
+{
+	fixed-width:2.0un;
+}
+
+HgWidget::continuation-indicator-right
+{
+	fixed-width:2.0un;
+}

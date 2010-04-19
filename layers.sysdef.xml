@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE SystemDefinition SYSTEM "sysdef_1_5_1.dtd" [<!ENTITY layer_real_source_path "sf/mw/hgwidgets" >]>
+
+<SystemDefinition name="hgwidgets" schema="1.5.1">
+  <systemModel>
+
+    <layer name="app_layer">
+      <module name="hgwidgets">
+        <unit unitID="imm.hgwidgets" name="hgwidgets" bldFile="&layer_real_source_path;" proFile="hgwidgets.pro" qmakeArgs="" mrp=""/>
+      </module>
+    </layer>
+
+    <layer name="api_test_layer">
+      <module name="hgwidgets_api_tests">
+      </module>
+    </layer>
+
+    <layer name="unit_test_layer">
+      <module name="hgwidgets_unit_tests">
+      </module>
+    </layer>
+
+  </systemModel>
+</SystemDefinition>

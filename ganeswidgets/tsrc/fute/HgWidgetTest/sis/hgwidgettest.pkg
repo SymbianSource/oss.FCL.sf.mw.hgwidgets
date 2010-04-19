@@ -1,0 +1,39 @@
+; Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
+; All rights reserved.
+; This component and the accompanying materials are made available
+; under the terms of "Eclipse Public License v1.0"
+; which accompanies this distribution, and is available
+; at the URL "http://www.eclipse.org/legal/epl-v10.html".
+; Initial Contributors:
+; Nokia Corporation - initial contribution.
+; Contributors:
+; Description: pkg file for ganeswidgets and test application
+
+; Language
+&EN
+
+; SIS header: name, uid, version
+#{"hgwidgettest"},(0xE321b788),1,0,0
+
+; Localised Vendor name
+%{"Vendor"}
+
+; Unique Vendor name
+:"Vendor"
+
+; Manual PKG pre-rules from PRO files
+; Default HW/platform dependencies
+[0x101F7961],0,0,0,{"S60ProductID"}
+[0x102032BE],0,0,0,{"S60ProductID"}
+[0x102752AE],0,0,0,{"S60ProductID"}
+[0x1028315F],0,0,0,{"S60ProductID"}
+ 
+; Default dependency to Qt libraries
+(0x2001E61C), 4, 5, 2, {"Qt"}
+
+; Executable and default resource files
+"/epoc32/release/$(PLATFORM)/$(TARGET)/hgwidgettest.exe"    - "!:\sys\bin\hgwidgettest.exe"
+"/epoc32/data/z/resource/apps/hgwidgettest.rsc"    - "!:\resource\apps\hgwidgettest.rsc"
+"/epoc32/data/z/private/10003a3f/import/apps/hgwidgettest_reg.rsc"    - "!:\private\10003a3f\import\apps\hgwidgettest_reg.rsc"
+
+; Manual PKG post-rules from PRO files
