@@ -19,9 +19,10 @@
 #include "hgcoverflowcontainer.h"
 #include "trace.h"
 
-HgMediawallPrivate::HgMediawallPrivate()
+HgMediawallPrivate::HgMediawallPrivate() : HgWidgetPrivate()
 {
     FUNC_LOG;
+    mStaticScrollDirection = true;
 }
 
 HgMediawallPrivate::~HgMediawallPrivate()
@@ -29,14 +30,14 @@ HgMediawallPrivate::~HgMediawallPrivate()
     FUNC_LOG;
 }
 
-void HgMediawallPrivate::init()
+void HgMediawallPrivate::init(Qt::Orientation orientation)
 {
     FUNC_LOG;
 
     Q_Q(HgMediawall);
     HgCoverflowContainer* container = new HgCoverflowContainer(q);
     // Mediawall supports only horizontal scrolling.
-    container->init(Qt::Horizontal);
+    container->init(orientation);
     HgWidgetPrivate::init(container);
 }
 

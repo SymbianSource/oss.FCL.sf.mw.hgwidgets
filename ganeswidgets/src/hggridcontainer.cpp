@@ -41,7 +41,10 @@ static const qreal KSpringVelocityToCameraYAngleFactor(2);
 
 HgGridContainer::HgGridContainer(QGraphicsItem *parent) : HgContainer(parent)
 {
-    
+
+    mUserItemSize = QSize(120,120);
+    mUserItemSpacing = QSize(1,1);
+
 }
 
 HgGridContainer::~HgGridContainer()
@@ -56,15 +59,15 @@ void HgGridContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     updateSelectedItem();
 }
 
-HgMediaWallRenderer* HgGridContainer::createRenderer()
+HgMediaWallRenderer* HgGridContainer::createRenderer(Qt::Orientation scrollDirection)
 {
 
-    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this);
+    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, false);
     renderer->enableCoverflowMode(false);
-    renderer->setImageSize(QSizeF(105, 80));
+    renderer->setImageSize(mUserItemSize);
     renderer->setRowCount(3, renderer->getImageSize(), false);    
     renderer->enableReflections(false);
-    renderer->setSpacing(QSizeF(1,1));
+    renderer->setSpacing(mUserItemSpacing);
     renderer->setFrontCoverElevationFactor(0.5);    
 
     return renderer;
@@ -101,4 +104,19 @@ void HgGridContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitI
     
     selectItem();
     emit longPressed(hitItem->modelIndex(), pos);    
+}
+
+void HgGridContainer::onScrollPositionChanged(qreal pos)
+{
+    HgContainer::onScrollPositionChanged(pos);
+
+    if (pos < 0) return;    
+    const int index = ((int)pos)*rowCount();
+    if (index > itemCount()) return;
+    
+    HgWidgetItem* item = itemByIndex(index);
+    if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
+        qDebug() << "CURRENT CHANGE" << QString::number(item->modelIndex().row());
+        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+    }    
 }

@@ -16,9 +16,11 @@
 */
 #include "hgwidgetitem.h"
 #include "hgquadrenderer.h"
+#include "trace.h"
 #include <hgwidgets/hgwidgets.h>
 #include <QStringList>
 #include <HbIcon>
+#include "hgvgimage.h"
 
 HgWidgetItem::HgWidgetItem(HgQuadRenderer* renderer):
 mTitle(""),
@@ -48,13 +50,15 @@ HgWidgetItem::~HgWidgetItem()
     delete mHgImage;
 }
 
-void HgWidgetItem::setImage( QImage image )
+void HgWidgetItem::setImage(const QImage &image)
 {
     if (!mHgImage)
     {
         mHgImage = mRenderer->createNativeImage();
     }
+    
     mHgImage->setImage(image);
+
     if (!mVisibility)
         mHgImage->setAlpha(0);
     
@@ -120,8 +124,11 @@ bool HgWidgetItem::updateItemData()
                     if (size.width() != 0 && size.height() != 0 ){
                         QPixmap pixmap = qicon.pixmap(size);
                         if (!pixmap.isNull()){
-                            setImage(pixmap.toImage());
-                            mValidData = true;        
+                            QImage tempImage = pixmap.toImage();
+                            if (!tempImage.isNull()) {
+                                setImage(tempImage);
+                                mValidData = true;        
+                            }
                         }
                     break;
                     }
@@ -133,15 +140,25 @@ bool HgWidgetItem::updateItemData()
             // QIcon too.
             QIcon tempIcon = image.value<QIcon>();
             QList<QSize> sizes = tempIcon.availableSizes();
-            QSize size;
-            foreach(size, sizes){
-                if (size.width() != 0 && size.height() != 0 ){
-                    QPixmap pixmap = tempIcon.pixmap(size);
-                    if (!pixmap.isNull()){
-                        setImage(pixmap.toImage());
-                        mValidData = true;        
+            if (sizes.count() == 0 && !(tempIcon.isNull())) {
+                QPixmap pixmap = tempIcon.pixmap(tempIcon.actualSize(QSize(250, 250)));
+                if (!pixmap.isNull()){
+                    INFO("Valid image found for" << mModelIndex);
+                    setImage(pixmap.toImage());
+                    mValidData = true;
+                }
+            }
+            else {
+                QSize size;
+                foreach(size, sizes){
+                    if (size.width() != 0 && size.height() != 0 ){
+                        QPixmap pixmap = tempIcon.pixmap(size);
+                        if (!pixmap.isNull()){
+                            setImage(pixmap.toImage());
+                            mValidData = true;
+                        }
+                    break;
                     }
-                break;
                 }
             }
         }
@@ -165,6 +182,9 @@ void HgWidgetItem::releaseItemData()
     mValidData = false;
     if (mHgImage)
         mHgImage->releaseImage();
+
+    delete mHgImage;
+    mHgImage = 0;
 }
 
 bool HgWidgetItem::validData() const

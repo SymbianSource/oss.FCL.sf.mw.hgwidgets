@@ -20,7 +20,7 @@
 
 static const int BUFFERSIZE(120);
 
-HgGridPrivate::HgGridPrivate() 
+HgGridPrivate::HgGridPrivate() : HgWidgetPrivate()
 {
 
 }

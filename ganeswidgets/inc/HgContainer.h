@@ -79,6 +79,20 @@ public:
 
     void init(Qt::Orientation scrollDirection);
 
+    void setDefaultImage(QImage defaultImage);
+    
+    void setItemSizePolicy(HgWidget::ItemSizePolicy policy);
+    HgWidget::ItemSizePolicy itemSizePolicy() const;
+
+    void setItemSize(const QSizeF& size);
+    QSizeF itemSize() const;
+    
+    void setItemSpacing(const QSizeF& size);
+    QSizeF itemSpacing() const;
+    
+    Qt::Orientation scrollDirection() const;
+    qreal scrollPosition() const;
+    
 signals:
 
     // emit this signal when scrolling. for example scrollbar can be connected to this signal.
@@ -95,7 +109,6 @@ private slots:
     void redraw();
     void updateLongPressVisualizer();
     void updateByCurrentIndex(const QModelIndex &current);
-    void onScrollingEnded();
 
 protected: // from HgMediaWallDataProvider
 
@@ -116,13 +129,14 @@ protected: // events
     virtual void gestureEvent(QGestureEvent *event);
 protected:
 
-    virtual HgMediaWallRenderer* createRenderer()=0;
+    virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection)=0;
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
     virtual void handleCurrentChanged(const QModelIndex &current);
+    virtual QRectF drawableRect() const;
 
 protected:
 
@@ -139,15 +153,16 @@ protected:
     void initSpringForScrollBar();
     void initSpringForScrolling();
     void boundSpring();
-    void handlePanning(QPanGesture *gesture);
-    void handleTap(Qt::GestureState state, const QPointF &pos);
-    void handleLongTap(Qt::GestureState state, const QPointF &pos);
-    void handleItemAction(const QPointF &pos, ItemActionType action);
+    bool handlePanning(QPanGesture *gesture);
+    bool handleTap(Qt::GestureState state, const QPointF &pos);
+    bool handleLongTap(Qt::GestureState state, const QPointF &pos);
+    bool handleItemAction(const QPointF &pos, ItemActionType action);
 
     void selectItem();
     void updateSelectedItem();
     void unselectItem();
 
+    bool hasItemAt(const QPointF& pos);
     HgWidgetItem* getItemAt(const QPointF& pos, int& index);
     void startLongPressWatcher(const QPointF& pos);
     void stopLongPressWatcher();
@@ -155,6 +170,10 @@ protected:
 
     QTransform qtToVgTransform() const;
     QPointF mapQtToVg(const QPointF& p) const;
+    
+    virtual void updateItemSizeAndSpacing();
+    virtual QSizeF getAutoItemSize() const;
+    virtual QSizeF getAutoItemSpacing() const;
 
 protected: // data
 
@@ -194,7 +213,12 @@ protected: // data
     QPointF mOffsetAtDragStart;
     QTime mLongTapDuration;
     bool mScrollBarPressed;
-        
+
+    HgWidget::ItemSizePolicy mItemSizePolicy;
+    QSizeF mUserItemSize;
+    QSizeF mUserItemSpacing;
+    
+    Qt::Orientation mOrientation;
 };
 
 #endif

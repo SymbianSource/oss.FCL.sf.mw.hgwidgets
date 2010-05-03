@@ -41,8 +41,8 @@ EXPORTS
 	_ZN8HgWidget8setModelEP18QAbstractItemModel @ 40 NONAME
 	_ZN8HgWidget9activatedERK11QModelIndex @ 41 NONAME
 	_ZN8HgWidget9selectAllEv @ 42 NONAME
-	_ZN8HgWidgetC1EP15HbWidgetPrivateP13QGraphicsItem @ 43 NONAME
-	_ZN8HgWidgetC2EP15HbWidgetPrivateP13QGraphicsItem @ 44 NONAME
+	_ZN8HgWidgetC1ER15HgWidgetPrivateP13QGraphicsItem @ 43 NONAME
+	_ZN8HgWidgetC2ER15HgWidgetPrivateP13QGraphicsItem @ 44 NONAME
 	_ZN8HgWidgetD0Ev @ 45 NONAME
 	_ZN8HgWidgetD1Ev @ 46 NONAME
 	_ZN8HgWidgetD2Ev @ 47 NONAME
@@ -86,4 +86,21 @@ EXPORTS
 	_ZNK11HgMediawall19descriptionPositionEv @ 85 NONAME
 	_ZN8HgWidget22setIndexFeedbackPolicyENS_19IndexFeedbackPolicyE @ 86 NONAME
 	_ZNK8HgWidget19indexFeedbackPolicyEv @ 87 NONAME
+	_ZN8HgWidget15setDefaultImageE6QImage @ 88 NONAME
+	_ZN11HgMediawallC1ER18HgMediawallPrivateP13QGraphicsItem @ 89 NONAME
+	_ZN11HgMediawallC2ER18HgMediawallPrivateP13QGraphicsItem @ 90 NONAME
+	_ZN6HgGridC1EN2Qt11OrientationER13HgGridPrivateP13QGraphicsItem @ 91 NONAME
+	_ZN6HgGridC2EN2Qt11OrientationER13HgGridPrivateP13QGraphicsItem @ 92 NONAME
+	_ZN8HgWidgetC1EP13QGraphicsItem @ 93 NONAME
+	_ZN8HgWidgetC2EP13QGraphicsItem @ 94 NONAME
+	_ZN8HgWidget11setItemSizeERK6QSizeF @ 95 NONAME
+	_ZN8HgWidget14setItemSpacingERK6QSizeF @ 96 NONAME
+	_ZN8HgWidget17setItemSizePolicyENS_14ItemSizePolicyE @ 97 NONAME
+	_ZNK8HgWidget11itemSpacingEv @ 98 NONAME
+	_ZNK8HgWidget14itemSizePolicyEv @ 99 NONAME
+	_ZNK8HgWidget8itemSizeEv @ 100 NONAME
+	_ZN11HgMediawall17enableReflectionsEb @ 101 NONAME
+	_ZN11HgMediawall25setFrontItemPositionDeltaERK7QPointF @ 102 NONAME
+	_ZNK11HgMediawall18reflectionsEnabledEv @ 103 NONAME
+	_ZNK11HgMediawall22frontItemPositionDeltaEv @ 104 NONAME
 

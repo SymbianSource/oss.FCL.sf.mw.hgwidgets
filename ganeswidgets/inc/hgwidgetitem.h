@@ -32,27 +32,27 @@ class HgWidgetItem
 {
 public:
 
-    HgWidgetItem(HgQuadRenderer* renderer);
-    HgWidgetItem( HgQuadRenderer* renderer, QImage image, QString title, QString description );
-    virtual ~HgWidgetItem();  
-    
-    void setImage( QImage image );
-    
-    void setTitle( QString title );
+    HgWidgetItem(HgQuadRenderer *renderer);
+    HgWidgetItem(HgQuadRenderer *renderer, QImage image, QString title, QString description );
+    virtual ~HgWidgetItem();
+
+    void setImage(const QImage &image);
+
+    void setTitle(QString title);
     QString title() const;
-    
+
     const HgImage* image() const;
-        
+
     void setDescription( QString description );
     QString description() const;
-    
+
     void setModelIndex( const QModelIndex& index);
     QModelIndex modelIndex() const;
-    
+
     bool validData() const;
     bool updateItemData();
     void releaseItemData();
-    
+
     bool visibility() const;
     void setVisibility(bool visible);
 
@@ -65,7 +65,7 @@ private:
     HgImage*    mHgImage;
     HgQuadRenderer* mRenderer;
     bool mVisibility;
-    
+
     Q_DISABLE_COPY(HgWidgetItem)
 };
 

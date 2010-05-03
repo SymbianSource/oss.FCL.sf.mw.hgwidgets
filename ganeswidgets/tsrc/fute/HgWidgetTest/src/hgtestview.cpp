@@ -34,12 +34,10 @@ HgTestView::HgTestView(const QString &title1, const QString &title2, const QPixm
         HbMainWindow *primaryWindow = mainWindows[0];
 
         setTitle(primaryWindow->currentView()->title());
-        setItemVisible(Hb::AllItems, true); // ensure that all needed view items stay visible
 
-        // set view as parent because action will be removed on view exit
-        mBackAction = new HbAction(Hb::BackAction, this);
-        primaryWindow->addSoftKeyAction(Hb::SecondarySoftKey, mBackAction);
-        connect(mBackAction, SIGNAL(triggered()), SLOT(closeView()));
+        HbAction *backAction = new HbAction(Hb::BackNaviAction);
+        connect(backAction, SIGNAL(triggered()), SIGNAL(closeRequested()));
+        setNavigationAction(backAction);
 
         QGraphicsLinearLayout *layout = new QGraphicsLinearLayout(Qt::Vertical);
         HANDLE_ERROR_NULL(layout);
@@ -64,21 +62,6 @@ HgTestView::HgTestView(const QString &title1, const QString &title2, const QPixm
             setLayout(layout);
         }
     }
-}
-
-void HgTestView::closeView()
-{
-    FUNC_LOG;
-
-    QList<HbMainWindow *> mainWindows = hbInstance->allMainWindows();
-    if (mainWindows.count() > 0)
-    {
-        HbMainWindow *primaryWindow = mainWindows[0];
-        primaryWindow->removeView(this);
-        primaryWindow->setViewSwitchingEnabled(true);
-        primaryWindow->removeSoftKeyAction(Hb::SecondarySoftKey, mBackAction); // restores original action
-    }
-    delete this; // ownership transferred back from HbMainWindow
 }
 
 void HgTestView::resizeEvent(QGraphicsSceneResizeEvent *event)

@@ -37,7 +37,7 @@ public:
     virtual void resizeEvent(QGraphicsSceneResizeEvent *event);
 
     // from HgContainer
-    virtual HgMediaWallRenderer* createRenderer();
+    virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection);
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
@@ -46,6 +46,11 @@ public:
     virtual void handleCurrentChanged(const QModelIndex & current);
     virtual void itemDataChanged(const int &firstIndex, const int &lastIndex);
     virtual void scrollToPosition(const QPointF& pos, bool animate);
+    virtual QRectF drawableRect() const;
+
+    virtual QSizeF getAutoItemSize() const;
+    virtual QSizeF getAutoItemSpacing() const;
+    virtual void updateItemSizeAndSpacing();
     
     void setTitlePosition(HgMediawall::LabelPosition position);
     HgMediawall::LabelPosition titlePosition() const;
@@ -56,17 +61,33 @@ public:
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
 
+    void setFrontItemPositionDelta(const QPointF& position);
+    QPointF frontItemPositionDelta() const;
+
+    void enableReflections(bool enabled);
+    bool reflectionsEnabled() const;
+        
+private: // From HgContainer
+    void setDefaultImage(QImage defaultImage);
+
 private:
-    void positionLabels();
+
     void updateLabels(int itemIndex);
+
+    void updatePositions();
+    
+    void calculatePositions();    
+    void positionLabels();
 
 private:
     HbLabel *mTitleLabel;
     HbLabel *mDescriptionLabel;
     HgMediawall::LabelPosition mTitlePosition;
     HgMediawall::LabelPosition mDescriptionPosition;
-    int mCenterIconTop;
     int mPrevPos;
+    qreal mAspectRatio;
+    QRectF mDrawableRect;
+    QSizeF mAutoSize;
 };
 
 #endif

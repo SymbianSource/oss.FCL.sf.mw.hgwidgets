@@ -19,6 +19,8 @@
 #define HGQUADRENDERER_H
 
 #include <qlist>
+#include <QImage>
+#include <QVector2D>
 
 class HgQuad;
 class QPointF;
@@ -27,7 +29,6 @@ class QRectF;
 class QMatrix4x4;
 class QPolygonF;
 class HgImage;
-class QImage;
 class HgImageFader;
 /**
  *
@@ -97,12 +98,32 @@ public:
      * 
      */
     virtual QList<HgQuad*> getVisibleQuads(const QRectF& rect) const=0;
+    
+    virtual void setDefaultImage(QImage defaultImage);
+
+    /**
+     * 
+     */
+    virtual void setTranslation(const QVector2D& translate);
+    
+    /**
+     * 
+     */
+    virtual HgQuad* getQuadByUserData(const QVariant& userData) const;
+    
+    /**
+     * 
+     */
+    virtual QImage getDefaultImage() const;
+    
 protected:    
     HgQuadRenderer(int maxQuads);
 
     QList<HgQuad*> mQuads;
     qreal mMirroringPlaneY;
     HgImageFader* mImageFader;
+    QImage mDefaultImage;
+    QVector2D mTranslation;
 };
 
 #endif

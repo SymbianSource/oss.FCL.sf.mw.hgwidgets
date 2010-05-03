@@ -20,8 +20,10 @@
 #include <QModelIndex>
 #include "hbautotest.h"
 #include <hbapplication.h>
+#include <hblabel.h>
 #include <hbmainwindow.h>
 #include <hbscrollbar>
+#include <hbview>
 #include <hgwidgets/hgwidgets.h>
 #include <hgwidgets/hggrid.h>
 #include <hgwidgets/hgmediawall.h>
@@ -39,6 +41,16 @@ static const QPointF grid_portrait_pos6(70, 200);
 static const QPointF grid_portrait_pos7(180, 200);
 static const QPointF grid_portrait_pos8(280, 200);
 
+// These work with 360x640 resolution
+static const QPointF expected_label_pos_above_alone(180, 144);
+static const QPointF expected_label_pos_above_top(180, 132);
+static const QPointF expected_label_pos_above_bottom(180, 163);
+static const QPointF expected_label_pos_below_alone(180, 324);
+static const QPointF expected_label_pos_below_top(180, 312);
+static const QPointF expected_label_pos_below_bottom(180, 342);
+
+static const int default_delay(1500);
+
 class TestGanesWidgets : public QObject
 {
     Q_OBJECT
@@ -55,6 +67,7 @@ private slots:
     void cleanup();
 
 private slots:
+    void test_setModel();
     void test_panGridLandscape();
     void test_panGridPortrait();
     void test_panCoverFlowLandscape();
@@ -75,15 +88,22 @@ private slots:
     void test_addItemsCoverFlow();
     void test_removeItemsCoverFlow();
     void test_moveItemsCoverFlow();
+    void test_labelPositionsCoverFlow();
+    void test_labelFontSpecsCoverFlow();
+    void test_resetModelCoverFlow();
+    void test_resetModelGrid();
 
 private:
 
     void pan( Qt::Orientation, TBool begin );
+    bool checkLabelAt(HbMainWindow *window, const QPointF &pos, const QString &expectedText);
+    HbLabel *findLabelAt(QGraphicsItem *parent, const QPointF &pos);
 
 private:
 
     HbMainWindow* mWindow;
     HgWidget* mWidget;
+    HgMediawall* mMediawall;
 
 };
 
@@ -105,8 +125,8 @@ public:
     void removeItems(int index, int count=1);
     void moveItems(int from, int to, int count=1);
     void changeItem(int index);
-    void reset();
-
+    void reset(int newItemCount=0);
+    
     QImage mImage;
     QStringList mItems;
     bool mValidData;
@@ -129,7 +149,7 @@ TestModel::~TestModel()
 void TestModel::generateItems(int count)
 {
     for (int i=0; i<count; i++) {
-        mItems.append(QString("Item %0").arg(i));
+        mItems.append(QString("Item ").append(i));
     }
 }
 
@@ -143,7 +163,7 @@ void TestModel::insertItems(int index, int count)
     beginInsertRows(QModelIndex(), index, index+count-1); // Inclusive
     int end = index+count;
     for ( ;index<end; index++) {
-        mItems.insert(index, QString("Item %0").arg(mItems.count()));
+        mItems.insert(index, QString("Item ").append(mItems.count()));
     }
     endInsertRows();
 }
@@ -171,13 +191,15 @@ void TestModel::moveItems(int from, int to, int count)
     }
 }
 
-void TestModel::reset()
+void TestModel::reset(int newItemCount)
 {
     beginResetModel();
     mItems.clear();
+    if (newItemCount > 0) {
+        generateItems(newItemCount);
+    }
     endResetModel();
 }
-
 
 void TestModel::changeItem(int index)
 {
@@ -189,6 +211,8 @@ void TestModel::changeItem(int index)
 
 int TestModel::rowCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent);
+
     return mItems.count();
 }
 
@@ -205,14 +229,10 @@ QVariant TestModel::data(const QModelIndex &index, int role) const
         {
         case Qt::DisplayRole:
             {
-            QStringList texts;
-            QString text("Primary %0");
-            text.arg(row);
-            texts << text;
-            text = "Secondary %0";
-            text.arg(row);
-            texts << text;
-            returnValue = texts;
+            QStringList list;
+            list << QString("Primary %1").arg(row);
+            list << QString("Secondary %1").arg(row);
+            returnValue = list;
             break;
             }
         case Qt::DecorationRole:
@@ -282,6 +302,36 @@ void TestGanesWidgets::pan( Qt::Orientation orientation, TBool begin )
     HbAutoTest::mousePress( (HbAutoTestMainWindow*)mWindow, mWidget, start, -1 );
     HbAutoTest::mouseMove( (HbAutoTestMainWindow*)mWindow, mWidget, end, -1 );
     HbAutoTest::mouseRelease( (HbAutoTestMainWindow*)mWindow, mWidget, end, 100 );
+}
+
+void TestGanesWidgets::test_setModel()
+{
+    mWindow = new HbMainWindow;
+    mWidget = new HgGrid(Qt::Horizontal);
+    mWindow->addView(mWidget);
+    QVERIFY(mWidget->model() == 0);
+
+    TestModel model1;
+    model1.generateItems(10);
+    mWidget->setModel(&model1);
+    QVERIFY(&model1 == mWidget->model());
+
+    mWindow->show();
+
+    QTest::qWait(2000);
+
+    TestModel model2;
+    model2.generateItems(20);
+    mWidget->setModel(&model2);
+    QVERIFY(&model2 == mWidget->model());
+
+    QTest::qWait(2000);
+
+    mWidget->setModel(0);
+    QVERIFY(mWidget->model() == 0);
+
+    delete mWindow;
+    mWindow = 0;
 }
 
 void TestGanesWidgets::test_panGridLandscape()
@@ -713,7 +763,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
     qRegisterMetaType<QModelIndex>("QModelIndex");
     QSignalSpy currentItemSpy(mWidget->selectionModel(), SIGNAL(currentChanged(QModelIndex, QModelIndex)));
 
-    QTest::qWait(2000);
+    QTest::qWait(default_delay);
 
     QVERIFY(mWidget->currentIndex() == model.index(0, 0));
 
@@ -725,7 +775,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos1, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(0, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -733,7 +783,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos2, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(1, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -741,7 +791,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos2, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(2, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -749,7 +799,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos2, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(3, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -757,7 +807,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos3, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(2, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -765,7 +815,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos3, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(1, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -773,7 +823,7 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos3, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(0, 0));
     QVERIFY(currentItemSpy.count() == 1);
     QVERIFY(currentItemSpy.at(0).count() > 0);
@@ -781,11 +831,11 @@ void TestGanesWidgets::test_currentItemCoverflow()
 
     currentItemSpy.clear();
     HbAutoTest::mouseClick((HbAutoTestMainWindow*)mWindow, mWidget, pos3, 100);
-    QTest::qWait(1000);
+    QTest::qWait(default_delay);
     QVERIFY(mWidget->currentIndex() == model.index(0, 0));
     QVERIFY(currentItemSpy.count() == 0);
 
-    QTest::qWait(2000);
+    QTest::qWait(default_delay);
 
     delete mWindow;
     mWindow = 0;
@@ -1279,73 +1329,74 @@ void TestGanesWidgets::test_addItemsCoverFlow()
 
     QList<QModelIndex> requestedIndexes;
     TestModel model(&requestedIndexes);
-    model.generateItems(120);
+    model.generateItems(110);
     mWidget->setModel(&model);
     mWindow->addView(mWidget);
     mWindow->show();
 
     QTest::qWait(2000);
 
-    QVERIFY(requestedIndexes.count() == 40); // Scroll buffer size in coverflow mode is assumed to be 40
+    QVERIFY(requestedIndexes.count() == 30); // Scroll buffer size in coverflow mode is assumed to be 30
     QVERIFY(requestedIndexes.front() == model.index(0, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
     requestedIndexes.clear();
 
     // Move buffer to the end of items
-    mWidget->scrollTo(model.index(119, 0));
+    mWidget->setCurrentIndex(model.index(95, 0));
+    mWidget->scrollTo(model.index(95, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Add one item to beginning of buffer
     model.insertItems(80, 1);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 0); // New item falls outside of buffer as buffer is moved up
+    QVERIFY(requestedIndexes.count() == 0); // Buffer is moved up to 81
     requestedIndexes.clear();
-    // Last item is now 120
+    // Last item is now 110
 
     // Add many items to beginning of buffer
     model.insertItems(81, 4);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 0); // New items falls outside of buffer as buffer is moved up
+    QVERIFY(requestedIndexes.count() == 0); // // Buffer is moved up to 85
     requestedIndexes.clear();
-    // Last item is now 124
+    // Last item is now 114
 
-    // Add one item to the end
-    model.insertItems(124, 1);
+    // Add one item to the end of the buffer
+    model.insertItems(114, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // The new item is requested
-    QVERIFY(requestedIndexes.front() == model.index(124, 0));
+    QVERIFY(requestedIndexes.front() == model.index(114, 0));
     requestedIndexes.clear();
-    // Last item is now 125
+    // Last item is now 115
 
     // Add many items to the end
-    model.insertItems(125, 4);
+    model.insertItems(111, 4);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 4); // The new items are requested
-    QVERIFY(requestedIndexes.front() == model.index(125, 0));
-    QVERIFY(requestedIndexes.back() == model.index(128, 0));
+    QVERIFY(requestedIndexes.front() == model.index(111, 0));
+    QVERIFY(requestedIndexes.back() == model.index(114, 0));
     requestedIndexes.clear();
-    // Last item is now 129
+    // Last item is now 119
 
     // Add one item to middle of buffer
-    model.insertItems(110, 1);
+    model.insertItems(100, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // The new item is requested
-    QVERIFY(requestedIndexes.front() == model.index(110, 0));
+    QVERIFY(requestedIndexes.front() == model.index(100, 0));
     requestedIndexes.clear();
     // Last item is now 130
 
     // Add many items to middle of buffer
-    model.insertItems(110, 4);
+    model.insertItems(100, 4);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 4); // The new items are requested
-    QVERIFY(requestedIndexes.front() == model.index(110, 0));
-    QVERIFY(requestedIndexes.back() == model.index(113, 0));
+    QVERIFY(requestedIndexes.front() == model.index(100, 0));
+    QVERIFY(requestedIndexes.back() == model.index(103, 0));
     requestedIndexes.clear();
     // Last item is now 134
 
     // Add items to the buffer limit (beginning of buffer)
-    model.insertItems(90, 20);
+    model.insertItems(70, 20);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New item falls outside of buffer as buffer is moved up
     // Last item is now 154
@@ -1357,86 +1408,79 @@ void TestGanesWidgets::test_addItemsCoverFlow()
     requestedIndexes.clear();
 
     // Move buffer to the beginning of items
-    mWidget->scrollTo(model.index(0, 0));
+    mWidget->setCurrentIndex(model.index(15, 0));
+    mWidget->scrollTo(model.index(15, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Add one item to beginning
     model.insertItems(0, 1);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 1); // The new item is requested
-    QVERIFY(requestedIndexes.front() == model.index(0, 0));
-    requestedIndexes.clear();
+    QVERIFY(requestedIndexes.count() == 0); // Buffer is moved up
 
     // Add many items to beginning
-    model.insertItems(0, 5);
+    model.insertItems(1, 5);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // The new items are requested
-    QVERIFY(requestedIndexes.front() == model.index(0, 0));
-    QVERIFY(requestedIndexes.back() == model.index(4, 0));
-    requestedIndexes.clear();
+    QVERIFY(requestedIndexes.count() == 0); // Buffer is moved up
 
     // Add one item to middle of buffer
-    model.insertItems(20, 1);
+    model.insertItems(10, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // The new item is requested
-    QVERIFY(requestedIndexes.front() == model.index(20, 0));
+    QVERIFY(requestedIndexes.front() == model.index(10, 0));
     requestedIndexes.clear();
 
     // Add many items to middle of buffer
-    model.insertItems(20, 5);
+    model.insertItems(10, 5);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 5); // The new items are requested
-    QVERIFY(requestedIndexes.front() == model.index(20, 0));
-    QVERIFY(requestedIndexes.back() == model.index(24, 0));
+    QVERIFY(requestedIndexes.front() == model.index(10, 0));
+    QVERIFY(requestedIndexes.back() == model.index(14, 0));
     requestedIndexes.clear();
 
     // Add one item to end of buffer
-    model.insertItems(39, 1);
+    model.insertItems(35, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // The new item is requested
-    QVERIFY(requestedIndexes.front() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(35, 0));
     requestedIndexes.clear();
 
     // Add many items to end of buffer
-    model.insertItems(30, 10);
+    model.insertItems(26, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 10); // The new items are requested
-    QVERIFY(requestedIndexes.front() == model.index(30, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(26, 0));
+    QVERIFY(requestedIndexes.back() == model.index(35, 0));
     requestedIndexes.clear();
 
     // Add items to outside of buffer (after buffer)
-    model.insertItems(40, 10);
+    model.insertItems(50, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // The new items are not requested
     requestedIndexes.clear();
 
     // Add items to the buffer limit (end of buffer)
-    model.insertItems(35, 10);
+    model.insertItems(31, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 5); // The new items inside buffer are requested
-    QVERIFY(requestedIndexes.front() == model.index(35, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(31, 0));
+    QVERIFY(requestedIndexes.back() == model.index(35, 0));
 
     // Move buffer to the middle of items
+    mWidget->setCurrentIndex(model.index(60, 0));
     mWidget->scrollTo(model.index(60, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Add items to the buffer limit (beginning of buffer)
-    model.insertItems(35, 10);
+    model.insertItems(40, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // The new items inside buffer are requested
-    QVERIFY(requestedIndexes.front() == model.index(40, 0));
-    QVERIFY(requestedIndexes.back() == model.index(44, 0));
+    QVERIFY(requestedIndexes.count() == 0); // The buffer is moved up
 
     // Add items over the whole buffer
-    model.insertItems(35, 50);
+    model.insertItems(40, 50);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 40); // The new items inside buffer are requested
-    QVERIFY(requestedIndexes.front() == model.index(40, 0));
-    QVERIFY(requestedIndexes.back() == model.index(79, 0));
+    QVERIFY(requestedIndexes.count() == 0); // The buffer is moved up
 
     QTest::qWait(2000);
 
@@ -1455,20 +1499,21 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
 
     QList<QModelIndex> requestedIndexes;
     TestModel model(&requestedIndexes);
-    model.generateItems(240);
+    model.generateItems(230);
     mWidget->setModel(&model);
     mWindow->addView(mWidget);
     mWindow->show();
 
     QTest::qWait(2000);
 
-    QVERIFY(requestedIndexes.count() == 40); // Scroll buffer size in coverflow mode is assumed to be 40
+    QVERIFY(requestedIndexes.count() == 30); // Scroll buffer size in coverflow mode is assumed to be 40
     QVERIFY(requestedIndexes.front() == model.index(0, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
     requestedIndexes.clear();
 
     // Move buffer to the end of items
-    mWidget->scrollTo(model.index(239, 0));
+    mWidget->setCurrentIndex(model.index(229, 0));
+    mWidget->scrollTo(model.index(229, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
@@ -1478,7 +1523,7 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
     QVERIFY(requestedIndexes.front() == model.index(199, 0));
     requestedIndexes.clear();
-    // Last item is now 238
+    // Last item is now 228
 
     // Remove many items from beginning of buffer
     model.removeItems(199, 4);
@@ -1487,24 +1532,24 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     QVERIFY(requestedIndexes.front() == model.index(195, 0));
     QVERIFY(requestedIndexes.back() == model.index(198, 0));
     requestedIndexes.clear();
-    // Last item is now 234
+    // Last item is now 224
 
     // Remove one item from the end
-    model.removeItems(234, 1);
+    model.removeItems(224, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
     QVERIFY(requestedIndexes.front() == model.index(194, 0));
     requestedIndexes.clear();
-    // Last item is now 233
+    // Last item is now 223
 
     // Remove many items from the end
-    model.removeItems(230, 4);
+    model.removeItems(220, 4);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 4); // New items are fetched to replace the removed ones
     QVERIFY(requestedIndexes.front() == model.index(190, 0));
     QVERIFY(requestedIndexes.back() == model.index(193, 0));
     requestedIndexes.clear();
-    // Last item is now 229
+    // Last item is now 219
 
     // Remove one item from the middle of buffer
     model.removeItems(210, 1);
@@ -1512,7 +1557,7 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
     QVERIFY(requestedIndexes.front() == model.index(189, 0));
     requestedIndexes.clear();
-    // Last item is now 228
+    // Last item is now 218
 
     // Remove many items from the middle of buffer
     model.removeItems(210, 4);
@@ -1521,25 +1566,26 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     QVERIFY(requestedIndexes.front() == model.index(185, 0));
     QVERIFY(requestedIndexes.back() == model.index(188, 0));
     requestedIndexes.clear();
-    // Last item is now 224
+    // Last item is now 214
 
     // Remove items from the buffer limit (beginning of buffer)
     model.removeItems(180, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 5); // New items are fetched to replace the removed ones
-    QVERIFY(requestedIndexes.front() == model.index(175, 0));
-    QVERIFY(requestedIndexes.back() == model.index(179, 0));
+    QVERIFY(requestedIndexes.front() == model.index(180, 0));
+    QVERIFY(requestedIndexes.back() == model.index(184, 0));
     requestedIndexes.clear();
-    // Last item is now 214
+    // Last item is now 204
 
     // Remove items from outside of buffer (before buffer)
     model.removeItems(0, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // Buffer is not moved
     requestedIndexes.clear();
-    // Last item is now 204
+    // Last item is now 194
 
     // Move buffer to the beginning of items
+    mWidget->setCurrentIndex(model.index(0, 0));
     mWidget->scrollTo(model.index(0, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
@@ -1548,70 +1594,71 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     model.removeItems(0, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
-    QVERIFY(requestedIndexes.front() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(29, 0));
     requestedIndexes.clear();
-    // Last item is now 203
+    // Last item is now 193
 
     // Remove many items from beginning
     model.removeItems(0, 5);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 5); // New items are fetched to replace the removed ones
-    QVERIFY(requestedIndexes.front() == model.index(35, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(25, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
     requestedIndexes.clear();
-    // Last item is now 198
+    // Last item is now 188
 
     // Remove one item from the middle of buffer
-    model.removeItems(20, 1);
+    model.removeItems(15, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
-    QVERIFY(requestedIndexes.front() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(29, 0));
     requestedIndexes.clear();
-    // Last item is now 197
+    // Last item is now 187
 
     // Remove many items from the middle of buffer
-    model.removeItems(20, 5);
+    model.removeItems(15, 5);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 5); // New items are fetched to replace the removed ones
-    QVERIFY(requestedIndexes.front() == model.index(35, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(25, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
     requestedIndexes.clear();
-    // Last item is now 192
+    // Last item is now 182
 
     // Remove one item from the end of buffer
-    model.removeItems(39, 1);
+    model.removeItems(29, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the removed one
-    QVERIFY(requestedIndexes.front() == model.index(39, 0));
-    requestedIndexes.clear();
-    // Last item is now 191
-
-    // Remove many items from the end of buffer
-    model.removeItems(30, 10);
-    QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 10); // New items are fetched to replace the removed ones
-    QVERIFY(requestedIndexes.front() == model.index(30, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.front() == model.index(29, 0));
     requestedIndexes.clear();
     // Last item is now 181
+
+    // Remove many items from the end of buffer
+    model.removeItems(20, 10);
+    QTest::qWait(1000);
+    QVERIFY(requestedIndexes.count() == 10); // New items are fetched to replace the removed ones
+    QVERIFY(requestedIndexes.front() == model.index(20, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
+    requestedIndexes.clear();
+    // Last item is now 171
 
     // Remove items from outside of buffer (after buffer)
     model.removeItems(50, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // Buffer is not updated
     requestedIndexes.clear();
-    // Last item is now 171
-
-    // Remove items from the buffer limit (end of buffer)
-    model.insertItems(35, 10);
-    QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // The new items inside buffer are requested
-    QVERIFY(requestedIndexes.front() == model.index(35, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
     // Last item is now 161
 
+    // Remove items from the buffer limit (end of buffer)
+    model.removeItems(25, 10);
+    QTest::qWait(1000);
+    QVERIFY(requestedIndexes.count() == 5); // The new items inside buffer are requested
+    QVERIFY(requestedIndexes.front() == model.index(25, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
+    // Last item is now 151
+
     // Move buffer to the middle of items
-    mWidget->scrollTo(model.index(80, 0));
+    mWidget->setCurrentIndex(model.index(75, 0));
+    mWidget->scrollTo(model.index(75, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
@@ -1619,15 +1666,14 @@ void TestGanesWidgets::test_removeItemsCoverFlow()
     model.removeItems(59, 2);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 1); // New item is fetched to replace the one removed from the buffer
-    QVERIFY(requestedIndexes.front() == model.index(99, 0));
-    // Last item is now 159
+    QVERIFY(requestedIndexes.front() == model.index(88, 0)); // Buffer is moved forward, this is the last item
+    requestedIndexes.clear();
+    // Last item is now 149
 
     // Remove items over the whole buffer
     model.removeItems(55, 50);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 40); // Whole buffer is updated
-    QVERIFY(requestedIndexes.front() == model.index(60, 0));
-    QVERIFY(requestedIndexes.back() == model.index(99, 0));
+    QVERIFY(requestedIndexes.count() == 30); // Whole buffer is updated
 
     QTest::qWait(2000);
 
@@ -1653,9 +1699,9 @@ void TestGanesWidgets::test_moveItemsCoverFlow()
 
     QTest::qWait(2000);
 
-    QVERIFY(requestedIndexes.count() == 40); // Scroll buffer size in coverflow mode is assumed to be 40
+    QVERIFY(requestedIndexes.count() == 30); // Scroll buffer size in coverflow mode is assumed to be 40
     QVERIFY(requestedIndexes.front() == model.index(0, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.back() == model.index(29, 0));
     requestedIndexes.clear();
 
     // Move one item forward
@@ -1667,7 +1713,7 @@ void TestGanesWidgets::test_moveItemsCoverFlow()
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(0, 39, 1);
+    model.moveItems(0, 29, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
@@ -1677,20 +1723,20 @@ void TestGanesWidgets::test_moveItemsCoverFlow()
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
     // Move one item backward
-    model.moveItems(39, 20, 1);
+    model.moveItems(29, 20, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(39, 38, 1);
+    model.moveItems(29, 28, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(39, 0, 1);
+    model.moveItems(29, 0, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
     // Move many items backward
-    model.moveItems(30, 20, 10);
+    model.moveItems(20, 5, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
@@ -1700,133 +1746,403 @@ void TestGanesWidgets::test_moveItemsCoverFlow()
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
     // Move items from the border of the buffer forward
-    model.moveItems(35, 50, 10);
+    model.moveItems(25, 50, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // New items are fetched to replace the moved ones
-    QVERIFY(requestedIndexes.front() == model.index(35, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
     requestedIndexes.clear();
 
     // Move items from the border of the buffer backward
-    model.moveItems(35, 20, 10);
+    model.moveItems(25, 10, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // Items that were originally outside of buffer are fetched
-    QVERIFY(requestedIndexes.front() == model.index(25, 0));
-    QVERIFY(requestedIndexes.back() == model.index(29, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
     requestedIndexes.clear();
 
     // Move items from the buffer outside it
     model.moveItems(20, 90, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 10); // New items are fetched to replace the moved ones
-    QVERIFY(requestedIndexes.front() == model.index(30, 0));
-    QVERIFY(requestedIndexes.back() == model.index(39, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
     requestedIndexes.clear();
 
     // Move items from outside the buffer inside it
-    model.moveItems(90, 20, 10);
+    model.moveItems(90, 15, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 10); // Moved items are fetched
-    QVERIFY(requestedIndexes.front() == model.index(20, 0));
-    QVERIFY(requestedIndexes.back() == model.index(29, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
     requestedIndexes.clear();
 
     // Move buffer to the end of items
-    mWidget->scrollTo(model.index(119, 0));
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move one item forward
-    model.moveItems(80, 100, 1);
+    model.moveItems(90, 100, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(80, 82, 1);
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
+
+    model.moveItems(90, 92, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(80, 119, 1);
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
+
+    model.moveItems(90, 119, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
 
     // Move many items forward
-    model.moveItems(80, 100, 5);
+    model.moveItems(90, 100, 5);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(120, 0));
+    mWidget->scrollTo(model.index(120, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
 
     // Move one item backward
     model.moveItems(119, 100, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(120, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
+
     model.moveItems(119, 118, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    model.moveItems(119, 80, 1);
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
+
+    model.moveItems(119, 90, 1);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
 
     // Move many items backward
     model.moveItems(110, 95, 10);
     QTest::qWait(1000);
     QVERIFY(requestedIndexes.count() == 0); // New items are not fetched as the changes happened inside the buffer
 
-    // Move items from the border of the buffer backward
-    model.moveItems(75, 60, 10);
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // New items are fetched to replace the moved ones
-    QVERIFY(requestedIndexes.front() == model.index(80, 0));
-    QVERIFY(requestedIndexes.back() == model.index(84, 0));
+    requestedIndexes.clear();
+
+    // Move items from the border of the buffer backward
+    model.moveItems(85, 60, 10);
+    QTest::qWait(1000);
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move items from the border of the buffer forward
-    model.moveItems(75, 100, 10);
+    model.moveItems(85, 100, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 5); // Items that were originally outside of buffer are fetched
-    QVERIFY(requestedIndexes.front() == model.index(100, 0));
-    QVERIFY(requestedIndexes.back() == model.index(104, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move items from the buffer outside it
     model.moveItems(100, 10, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 10); // New items are fetched to replace the moved ones
-    QVERIFY(requestedIndexes.front() == model.index(80, 0));
-    QVERIFY(requestedIndexes.back() == model.index(89, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move items from outside the buffer inside it
     model.moveItems(10, 100, 10);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 10); // Moved items are fetched
-    QVERIFY(requestedIndexes.front() == model.index(100, 0));
-    QVERIFY(requestedIndexes.back() == model.index(109, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(110, 0));
+    mWidget->scrollTo(model.index(110, 0));
+    QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move buffer to the middle of items
+    mWidget->setCurrentIndex(model.index(60, 0));
+    mWidget->scrollTo(model.index(60, 0));
+    QTest::qWait(1000);
+
+    // Move buffer to the end of items
+    mWidget->setCurrentIndex(model.index(60, 0));
     mWidget->scrollTo(model.index(60, 0));
     QTest::qWait(1000);
     requestedIndexes.clear();
 
     // Move items over the whole buffer forward
-    model.moveItems(35, 110, 50);
+    model.moveItems(40, 110, 50);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 40); // Whole buffer is updated
-    QVERIFY(requestedIndexes.front() == model.index(40, 0));
-    QVERIFY(requestedIndexes.back() == model.index(79, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
+
+    // Move buffer to the middle of items
+    mWidget->setCurrentIndex(model.index(60, 0));
+    mWidget->scrollTo(model.index(60, 0));
+    QTest::qWait(1000);
+    requestedIndexes.clear();
 
     // Move items over the whole buffer backward
-    model.moveItems(35, 10, 50);
+    model.moveItems(40, 10, 50);
     QTest::qWait(1000);
-    QVERIFY(requestedIndexes.count() == 40); // Whole buffer is updated
-    QVERIFY(requestedIndexes.front() == model.index(40, 0));
-    QVERIFY(requestedIndexes.back() == model.index(79, 0));
+    QVERIFY(requestedIndexes.count() == 30); // The whole buffer is reset
 
     QTest::qWait(2000);
 
     delete mWindow;
     mWindow = 0;
+}
+
+void TestGanesWidgets::test_labelPositionsCoverFlow()
+{
+    mWindow = new HbMainWindow;
+    mMediawall = new HgMediawall();
+
+    TestModel model;
+    model.generateItems(50);
+    mWindow->addView(mMediawall);
+    mMediawall->setModel(&model);
+    mWindow->show();
+
+    mMediawall->setTitlePosition(HgMediawall::PositionNone);
+    mMediawall->setDescriptionPosition(HgMediawall::PositionNone);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
+
+    // This updates the title and description label. But how to test they are in correct positions?
+    mMediawall->setCurrentIndex(model.index(1, 0));
+    QTest::qWait(1000);
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
+    mMediawall->setCurrentIndex(model.index(2, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Secondary 2"));
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
+    mMediawall->setCurrentIndex(model.index(3, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Secondary 3"));
+
+    mMediawall->setTitlePosition(HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
+    mMediawall->setCurrentIndex(model.index(4, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Primary 4"));
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Secondary 4"));
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
+    mMediawall->setCurrentIndex(model.index(5, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_top, "Primary 5"));
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_bottom, "Secondary 5"));
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionNone);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
+    mMediawall->setCurrentIndex(model.index(6, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Primary 6"));
+
+    mMediawall->setTitlePosition(HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
+    mMediawall->setCurrentIndex(model.index(7, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Primary 7"));
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
+    mMediawall->setCurrentIndex(model.index(8, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Secondary 8"));
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Primary 8"));
+
+    mMediawall->setDescriptionPosition(HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
+    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
+    mMediawall->setCurrentIndex(model.index(9, 0));
+    QTest::qWait(1000);
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_top, "Primary 9"));
+    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_bottom, "Secondary 9"));
+
+    QTest::qWait(2000);
+
+    delete mWindow;
+    mWindow = 0;
+}
+
+void TestGanesWidgets::test_labelFontSpecsCoverFlow()
+{
+    mWindow = new HbMainWindow;
+    mMediawall = new HgMediawall();
+
+    TestModel model;
+    model.generateItems(50);
+    mWindow->addView(mMediawall);
+    mMediawall->setModel(&model);
+    mWindow->show();
+
+    mMediawall->setTitleFontSpec(HbFontSpec(HbFontSpec::Primary));
+    QVERIFY(mMediawall->titleFontSpec() == HbFontSpec(HbFontSpec::Primary));
+
+    mMediawall->setDescriptionFontSpec(HbFontSpec(HbFontSpec::Secondary));
+    QVERIFY(mMediawall->descriptionFontSpec() == HbFontSpec(HbFontSpec::Secondary));
+
+    mMediawall->setTitleFontSpec(HbFontSpec(HbFontSpec::Title));
+    QVERIFY(mMediawall->titleFontSpec() == HbFontSpec(HbFontSpec::Title));
+
+    mMediawall->setDescriptionFontSpec(HbFontSpec(HbFontSpec::PrimarySmall));
+    QVERIFY(mMediawall->descriptionFontSpec() == HbFontSpec(HbFontSpec::PrimarySmall));
+
+    QTest::qWait(2000);
+
+    delete mWindow;
+    mWindow = 0;
+}
+
+void TestGanesWidgets::test_resetModelCoverFlow()
+{
+    mWindow = new HbMainWindow;
+    mMediawall = new HgMediawall();
+
+    TestModel model;
+    model.generateItems(50);
+    mWindow->addView(mMediawall);
+    mMediawall->setModel(&model);
+    mWindow->show();
+
+    // Reset with same item count
+    model.reset(50);
+    QTest::qWait(2000);
+
+    // Reset with smaller item count
+    model.reset(20);    
+    QTest::qWait(2000);
+
+    // Reset with larger item count
+    model.reset(100);    
+    QTest::qWait(2000);
+
+    delete mWindow;
+    mWindow = 0;
+
+}
+
+void TestGanesWidgets::test_resetModelGrid()
+{
+    mWindow = new HbMainWindow;
+    mWidget = new HgGrid(Qt::Vertical);
+
+    TestModel model;
+    model.generateItems(50);
+    mWindow->addView(mWidget);
+    mWidget->setModel(&model);
+    mWindow->show();
+
+    QTest::qWait(2000);
+
+    // Reset with same item count
+    model.reset(50);
+    QTest::qWait(2000);
+
+    // Reset with smaller item count
+    model.reset(20);    
+    QTest::qWait(2000);
+
+    // Reset with larger item count
+    model.reset(100);    
+    QTest::qWait(2000);
+    
+    delete mWindow;
+    mWindow = 0;
+
+}
+
+bool TestGanesWidgets::checkLabelAt(HbMainWindow *window, const QPointF &pos, const QString &expectedText)
+{
+    HbLabel *label = findLabelAt(window->currentView(), pos);
+    if (label) {
+        if (label->plainText() == expectedText) {
+            return true;
+        }
+        else {
+            qDebug() << "Label text did not match: expected" << expectedText << "got" << label->plainText();
+            return false;
+        }
+    }
+    qDebug() << "Label not found at pos" << pos;
+    return false;
+}
+
+HbLabel *TestGanesWidgets::findLabelAt(QGraphicsItem *parent, const QPointF &pos)
+{
+    QList<QGraphicsItem *> subItems = parent->childItems();
+    int count = subItems.count();
+    for (int i = 0; i < count; i++) {
+        QGraphicsItem *item = subItems.at(i);
+        QRectF itemRect(item->pos(), item->boundingRect().size());
+        if (itemRect.contains(pos)) {
+            HbLabel *label = qgraphicsitem_cast<HbLabel *>(subItems.at(i));
+            if (label) {
+                return label;
+            }
+            else {
+                return findLabelAt(subItems.at(i), pos);
+            }
+        }
+    }
+    return NULL;
 }
 
 #ifdef _UNITTEST_GANESWIDGETS_LOG_TO_C_

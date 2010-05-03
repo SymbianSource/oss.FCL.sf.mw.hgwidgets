@@ -30,18 +30,31 @@
 #include "hggridcontainer.h"
 #include "trace.h"
 
-HgWidget::HgWidget(HbWidgetPrivate* widgetPrivate, QGraphicsItem *parent ):
-    HbWidget(*widgetPrivate, parent)
-{
-    Q_D(HgWidget);
-    d->q_ptr = this;
 
+
+HgWidget::HgWidget( QGraphicsItem *parent ) : HbWidget(parent), p_ptr( new HgWidgetPrivate )
+{
+    
     HbStyleLoader::registerFilePath(":/hgwidget.css");
     HbStyleLoader::registerFilePath(":/hgwidget.widgetml");    
+
+    Q_D( HgWidget );
+    d->q_ptr = this;
+}
+
+HgWidget::HgWidget(HgWidgetPrivate &dd, QGraphicsItem *parent ):
+    HbWidget(parent), p_ptr( &dd )
+{
+    HbStyleLoader::registerFilePath(":/hgwidget.css");
+    HbStyleLoader::registerFilePath(":/hgwidget.widgetml");    
+    Q_D( HgWidget );
+    d->q_ptr = this;
 }
 
 HgWidget::~HgWidget()
 {
+    delete p_ptr;
+    
     HbStyleLoader::unregisterFilePath(":/hgwidget.css");
     HbStyleLoader::unregisterFilePath(":/hgwidget.widgetml");
 }
@@ -129,19 +142,7 @@ void HgWidget::scrollTo(const QModelIndex &index)
 void HgWidget::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight)
 {
     Q_D( HgWidget);
-    // TODO,take columns into count
-    for( int i = topLeft.row(); i <= bottomRight.row(); i++ ){
-        // if data for item outside our current buffer has changed
-        // we just have to ignore it since we dont have resources
-        // to handle it(or we dont want to waste resources).
-        if(d->mBufferManager->positionInsideBuffer(i)){
-            HgWidgetItem* item = d->mContainer->itemByIndex( i );
-            if( item ){
-                item->updateItemData();
-            }
-        }
-    }
-    d->mContainer->itemDataChanged( topLeft, bottomRight );
+    d->dataChanged(topLeft, bottomRight);
 }
 
 /*!
@@ -321,5 +322,48 @@ HgWidget::IndexFeedbackPolicy HgWidget::indexFeedbackPolicy() const
     Q_D(const HgWidget);
     return d->indexFeedbackPolicy();
 }
+
+void HgWidget::setDefaultImage(QImage defaultImage)
+{
+    Q_D(HgWidget);
+    d->setDefaultImage(defaultImage);
+}
+
+void HgWidget::setItemSizePolicy(HgWidget::ItemSizePolicy policy)
+{
+    Q_D(HgWidget);
+    d->setItemSizePolicy(policy);
+}
+
+HgWidget::ItemSizePolicy HgWidget::itemSizePolicy() const
+{
+    Q_D(const HgWidget);
+    return d->itemSizePolicy();
+}
+
+void HgWidget::setItemSize(const QSizeF& size)
+{
+    Q_D(HgWidget);
+    d->setItemSize(size);
+}
+
+QSizeF HgWidget::itemSize() const
+{
+    Q_D(const HgWidget);
+    return d->itemSize();
+}
+
+void HgWidget::setItemSpacing(const QSizeF& spacing)
+{
+    Q_D(HgWidget);
+    d->setItemSpacing(spacing);    
+}
+
+QSizeF HgWidget::itemSpacing() const
+{
+    Q_D(const HgWidget);
+    return d->itemSpacing();
+}
+
 
 // EOF

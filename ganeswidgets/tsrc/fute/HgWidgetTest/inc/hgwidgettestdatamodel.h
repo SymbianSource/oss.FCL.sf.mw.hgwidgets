@@ -23,11 +23,16 @@
 #include <QStringList>
 #include <hbicon>
 #include <thumbnailmanager_qt.h>
+#include <QImage>
+#include <QList>
+#include "buffermanager.h"
+#include "hgtestdefs.h"
 
 class HgWidgetTestAlbumArtManager;
+class ThumbnailManager;
 
 
-class HgWidgetTestDataModel : public QAbstractListModel
+class HgWidgetTestDataModel : public QAbstractListModel, public AbstractDataProvider
 {
     Q_OBJECT
 
@@ -37,7 +42,8 @@ public:
     virtual ~HgWidgetTestDataModel();
 
     void setThumbnailSize(ThumbnailManager::ThumbnailSize size);
-
+    void setBuffer(int buffer, int treshhold);
+    
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const;
     bool setData(const QModelIndex& index, const QVariant& value, int role=Qt::EditRole);
@@ -47,17 +53,21 @@ public:
     void remove(const QItemSelection &selection);
     void move(const QItemSelection &selection, const QModelIndex &target);
     void add(const QModelIndex &target, int count);
+    void reset();
+    
+    HgTestImageType imageDataType() const;
+    void setImageDataType(HgTestImageType type);
 
-    enum ImageType{TypeQIcon, TypeHbIcon, TypeQImage};
-    
-    void setImageDataType(ImageType type);
-    
     void enableLowResImages(bool enabled);
     bool lowResImagesEnabled() const;
+
+public slots:
+    void thumbnailReady( QPixmap , void* , int, int ); 
     
 private:
 
     void init();
+    void getNextThumbnail();
 
 public slots:
 
@@ -65,16 +75,29 @@ public slots:
     void albumCacheReady();
 
 private:
+    
+    void release(int start, int end);
+    void request(int start, int end, requestsOrder order);
+    
+private:
 
-	HgWidgetTestAlbumArtManager     *mAlbumArtManager;  // Own
     bool                            mCachingInProgress;
     QStringList                     mFiles;
-    ImageType                       mImageType;
+    HgTestImageType                 mImageType;
     HbIcon                          mHbIcon;
     QIcon                           mQIcon;
     QImage                          mDefaultIcon;
     QList<bool>                     mVisibility;
     bool                            mUseLowResImages;
+    QList<QImage>                   mImages;
+    BufferManager                   *mBufferManager;
+
+    ThumbnailManager* mWrapper;
+    QStringList mWaitingThumbnails;
+    bool mThumbnailRequestPending;
+    int mThumbnailRequestIndex;
+    int mThumbnailRequestID;
+
 };
 
 #endif // HgWidgetTestDataModel_H

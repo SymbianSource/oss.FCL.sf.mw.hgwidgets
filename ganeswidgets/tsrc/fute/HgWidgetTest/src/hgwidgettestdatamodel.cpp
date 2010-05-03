@@ -54,15 +54,23 @@ typedef QList<Range > RangeList;
 HgWidgetTestDataModel::HgWidgetTestDataModel(QObject *parent)
     : QAbstractListModel(parent),
       mCachingInProgress(false),
-      mImageType(TypeQImage),	  
+      mImageType(ImageTypeNone),
       mDefaultIcon((":/images/default.svg")),
-      mUseLowResImages(false)
+      mUseLowResImages(false),
+      mWrapper( new ThumbnailManager() ),
+      mThumbnailRequestPending(false),
+      mThumbnailRequestIndex(-1),
+      mThumbnailRequestID(-1),
+      mBufferManager(0)
 {
     FUNC_LOG;
+    mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
 
-    mAlbumArtManager = new HgWidgetTestAlbumArtManager;
-    connect( mAlbumArtManager, SIGNAL(albumArtReady(int)), this, SLOT(updateAlbumArt(int)) );
-    connect( mAlbumArtManager, SIGNAL(albumCacheReady()), this, SLOT(albumCacheReady()) );
+    mWrapper->setProperty("qimageSupport","true");
+
+    QObject::connect( mWrapper, SIGNAL(thumbnailReady( QPixmap , void* , int, int ) ),
+                      this, SLOT( thumbnailReady( QPixmap , void* , int , int )));
+
     init();
 }
 
@@ -73,14 +81,14 @@ HgWidgetTestDataModel::~HgWidgetTestDataModel()
 {
     FUNC_LOG;
 
-    disconnect( mAlbumArtManager, SIGNAL(albumArtReady(int)), this, SLOT(updateAlbumArt(int)) );
-    disconnect( mAlbumArtManager, SIGNAL(albumCacheReady()), this, SLOT(albumCacheReady()) );
-    delete mAlbumArtManager;
+    disconnect( mWrapper, SIGNAL(thumbnailReady( QPixmap , void* , int , int )), this, SLOT(thumbnailReady( QPixmap , void* , int , int )) );
+    delete mWrapper;
+    delete mBufferManager;
 }
 
 void HgWidgetTestDataModel::setThumbnailSize(ThumbnailManager::ThumbnailSize size)
 {
-    mAlbumArtManager->setThumbnailSize(size);
+    mWrapper->setThumbnailSize(size);
 }
 
 void HgWidgetTestDataModel::init()
@@ -103,6 +111,7 @@ void HgWidgetTestDataModel::init()
             QString s = fileInfo.filePath();
             if (s.indexOf(QString(".jpg"),0,Qt::CaseInsensitive)>0){
                 mFiles.append(s);
+                mImages.append(QImage());
                 mVisibility.append(true);
             }
         }
@@ -112,7 +121,7 @@ void HgWidgetTestDataModel::init()
     if (!pixmap.isNull()){
         mQIcon = QIcon(pixmap);
         if (!mQIcon.isNull()){
-            mHbIcon = HbIcon(mQIcon);    
+            mHbIcon = HbIcon(mQIcon);
         }
     }
 }
@@ -146,9 +155,12 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
 
     int row = index.row();
 
-    if( row >= mFiles.count() ){
+    if( row < 0 && row >= mFiles.count() ){
         return returnValue;
     }
+
+    if( mBufferManager )
+        mBufferManager->setPosition( row );
 
     switch ( role )
         {
@@ -175,35 +187,35 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
                 returnValue = mDefaultIcon;
             }
             else {
-                QImage icon = mAlbumArtManager->albumArt(mFiles.at(row), row);
+                QImage icon = mImages.at(row);
                 if ( !icon.isNull() )
                     {
-                    if (mUseLowResImages) {                        
+                    if (mUseLowResImages) {
                         QSize size = icon.size();
                         icon = icon.scaled(QSize(size.width()/4, size.height()/4));
                     }
 
                     switch(mImageType)
                         {
-                        case TypeHbIcon:
+                        case ImageTypeHbIcon:
                             {
                             returnValue = mHbIcon;
                             break;
                             }
-                        case TypeQImage:
+                        case ImageTypeQImage:
                             {
                             returnValue = icon;
                             break;
                             }
-                        case TypeQIcon:
+                        case ImageTypeQIcon:
                             {
                             returnValue = mQIcon;
                             break;
                             }
                         default:
-                            break;                    
+                            break;
                         }
-                
+
                     }
                 else
                     {
@@ -231,10 +243,10 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
             }
             break;
             }
-            
+
         case (Qt::UserRole+2):
             {
-                QImage icon = mAlbumArtManager->albumArt(mFiles.at(row), row);
+                QImage icon = mImages.at(row);
                 if (!icon.isNull())
                 {
                     returnValue = icon;
@@ -252,30 +264,9 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
 void HgWidgetTestDataModel::refreshModel()
 {
     // Cancel all outstanding album art request first, then reset the model.
-    mAlbumArtManager->cancel();
 
-    // Before providing the new data to the view (list, grid, etc.), we want
-    // to make sure that we have enough album arts for the first screen.
-/*    mFiles.count() = mCollectionData->count();
-    if ( mFiles.count() > 0 ) {
-        int initCount = ( mFiles.count() > KInitCacheSize ) ? KInitCacheSize : mFiles.count();
-        QStringList albumArtList;
-        QString albumArtUri;
-        for ( int i = 0; i < initCount; i++ ) {
-            albumArtUri = mCollectionData->itemData(i, MpMpxCollectionData::AlbumArtUri);
-            if ( !albumArtUri.isEmpty() ) {
-                 albumArtList << albumArtUri;
-            }
-        }
-        mCachingInProgress = mAlbumArtManager->cacheAlbumArt(albumArtList);
-        if ( !mCachingInProgress ) {
-            reset();
-        }
-    }
-    else {
-        reset();
-    }
-    */
+    // TODO FIX
+
 }
 
 /*!
@@ -368,6 +359,14 @@ void HgWidgetTestDataModel::add(const QModelIndex &target, int count)
     }
 }
 
+void HgWidgetTestDataModel::reset()
+{
+    emit beginResetModel();
+    mImages.removeAt(0);
+    mFiles.removeAt(0);
+    emit endResetModel();
+}
+
 /*!
  Slot to be called when album art for the \a index needs to be updated.
  */
@@ -390,7 +389,12 @@ void HgWidgetTestDataModel::albumCacheReady()
     }
 }
 
-void HgWidgetTestDataModel::setImageDataType(ImageType type)
+HgTestImageType HgWidgetTestDataModel::imageDataType() const
+{
+    return mImageType;
+}
+
+void HgWidgetTestDataModel::setImageDataType(HgTestImageType type)
 {
     mImageType = type;
 }
@@ -414,5 +418,104 @@ void HgWidgetTestDataModel::enableLowResImages(bool enabled) {
 bool HgWidgetTestDataModel::lowResImagesEnabled() const {
 
     return mUseLowResImages;
+}
+
+void HgWidgetTestDataModel::getNextThumbnail()
+{
+    if ( !mThumbnailRequestPending && mWaitingThumbnails.count()){
+        QString image = mWaitingThumbnails.takeFirst();
+        int index = mFiles.indexOf(image);
+        int *clientData = new int(index);
+        mThumbnailRequestID = mWrapper->getThumbnail(image, clientData, -1);
+        mThumbnailRequestIndex = index;
+        mThumbnailRequestPending = true;
+    }
+}
+
+void HgWidgetTestDataModel::setBuffer(int buffer, int treshhold)
+{
+    mWaitingThumbnails.clear();
+
+    if (mThumbnailRequestID!=-1){
+        mWrapper->cancelRequest(mThumbnailRequestID);
+    }
+
+    mThumbnailRequestID = -1;
+    mThumbnailRequestIndex = -1;
+    mThumbnailRequestPending = false;
+
+    delete mBufferManager;
+    mBufferManager = 0;
+    mBufferManager = new BufferManager(this, buffer, treshhold, 0, mFiles.count());
+    for (int i = 0; i<mImages.count();i++) {
+        mImages.replace(i, QImage());
+    }
+}
+
+void HgWidgetTestDataModel::release(int start, int end)
+{
+    bool requestNew = false;
+    int first = (start<=end)?start:end;
+    if (first<0)
+        first =0;
+
+    int last = end>=start?end:start;
+    if (last>=mFiles.count())
+        last=mFiles.count()-1;
+
+
+    for (int i(first); i<=last; i++){
+        mWaitingThumbnails.removeOne(mFiles.at(i));
+        if (mThumbnailRequestIndex==i && mThumbnailRequestID!=-1){
+            mWrapper->cancelRequest(mThumbnailRequestID);
+            requestNew = true;
+        }
+        mImages.replace(i,QImage());
+    }
+
+    if (requestNew){
+        mThumbnailRequestIndex = -1;
+        mThumbnailRequestID = -1;
+        mThumbnailRequestPending = false;
+        getNextThumbnail();
+    }
+}
+
+void HgWidgetTestDataModel::request(int start, int end, requestsOrder order)
+{
+    int first = start;
+    int last = end;
+
+    if (first<0)
+        first =0;
+
+    if (last>=mFiles.count())
+        last=mFiles.count()-1;
+
+    if (order == ascending){
+        for (int i(first); i<=last; i++){
+            mWaitingThumbnails.append(mFiles.at(i));
+        }
+    } else if (order ==descending){
+        for (int i(last); i>=first; i--){
+            mWaitingThumbnails.append(mFiles.at(i));
+        }
+    }
+
+    getNextThumbnail();
+}
+
+void HgWidgetTestDataModel::thumbnailReady( QPixmap pixmap, void* data, int /*id*/, int error )
+{
+    if (!error && !pixmap.isNull() ){
+//        int idx = reinterpret_cast<int>(data);
+        mImages.replace(mThumbnailRequestIndex,pixmap.toImage().convertToFormat(QImage::Format_RGB16));
+        QModelIndex modelIndex = QAbstractItemModel::createIndex(mThumbnailRequestIndex, 0);
+        emit dataChanged(modelIndex, modelIndex);
+    }
+    mThumbnailRequestIndex = -1;
+    mThumbnailRequestID = -1;
+    mThumbnailRequestPending = false;
+    getNextThumbnail();
 }
 

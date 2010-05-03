@@ -16,6 +16,7 @@
 */
 
 #include <QGesture>
+#include <QGraphicsSceneResizeEvent>
 #include <QPainter>
 #include <hblabel.h>
 #include "hgcoverflowcontainer.h"
@@ -34,8 +35,9 @@ HgCoverflowContainer::HgCoverflowContainer(
     mDescriptionLabel(0),
     mTitlePosition(HgMediawall::PositionAboveImage),
     mDescriptionPosition(HgMediawall::PositionNone),
-    mCenterIconTop(0),
-    mPrevPos(-1)
+    mPrevPos(-1),
+    mAspectRatio(1),
+    mDrawableRect(rect())
 {
     mTitleLabel = new HbLabel(this);
     mTitleLabel->setZValue(zValue()+1);
@@ -46,6 +48,9 @@ HgCoverflowContainer::HgCoverflowContainer(
     mDescriptionLabel->setZValue(zValue()+1);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setVisible(false);
+    
+    mUserItemSize = QSize(250,250);
+    mUserItemSpacing = QSize(1,1);
 }
 
 HgCoverflowContainer::~HgCoverflowContainer()
@@ -64,24 +69,18 @@ void HgCoverflowContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
 
     HbWidget::resizeEvent(event);
 
-    QSizeF s(size());
-    qreal side = qMin(s.height()/1.8, s.width()/1.8);
-    INFO("Setting image size to:" << side << "," << side);
-    mRenderer->setImageSize(QSizeF(side, side));
-    mCenterIconTop = (s.height()-side)/2;
-
-    positionLabels();
+    updatePositions();    
 }
 
 // from HgContainer
-HgMediaWallRenderer* HgCoverflowContainer::createRenderer()
+HgMediaWallRenderer* HgCoverflowContainer::createRenderer(Qt::Orientation scrollDirection)
 {
-    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this);
-    renderer->setImageSize(QSizeF(200, 200));
+    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, true);
+    renderer->setImageSize(mUserItemSize);
     renderer->enableCoverflowMode(true);
     renderer->setRowCount(1, renderer->getImageSize(), false);
     renderer->enableReflections(true);
-    renderer->setSpacing(QSizeF(1,1));
+    renderer->setSpacing(mUserItemSpacing);
     renderer->setFrontCoverElevationFactor(0.5);
     return renderer;
 }
@@ -121,12 +120,16 @@ void HgCoverflowContainer::onScrollPositionChanged(qreal pos)
 {
     HgContainer::onScrollPositionChanged(pos);
 
-    if (mPrevPos != (int)pos) {
-        mPrevPos = (int)pos;
-        HgWidgetItem* item = itemByIndex((int)pos);
+    qreal ipos = floorf(pos);
+    qreal frac = pos - ipos;
+    qreal p = frac > 0.5 ? ipos + 1.0f : ipos;
+
+    if (mPrevPos != (int)p) {
+        mPrevPos = (int)p;        
+        HgWidgetItem* item = itemByIndex((int)p);
         if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
             mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-        }            
+        }
     }
 }
 
@@ -152,6 +155,15 @@ void HgCoverflowContainer::itemDataChanged(const int &firstIndex, const int &las
             updateLabels(current);
         }
     }
+
+    if (firstIndex == 0) {
+        // Take preferred aspect ratio from the first image
+        const HgImage *firstImage = image(0);
+        if (firstImage && firstImage->height() != 0) {
+            mAspectRatio = qMax((qreal)0.1, (qreal)firstImage->width()/firstImage->height()); // Don't let aspect ratio go to 0
+            updatePositions();
+        }
+    }
 }
 
 void HgCoverflowContainer::setTitlePosition(HgMediawall::LabelPosition position)
@@ -160,7 +172,7 @@ void HgCoverflowContainer::setTitlePosition(HgMediawall::LabelPosition position)
 
     if (mTitlePosition != position) {
         mTitlePosition = position;
-        positionLabels();
+        updatePositions();
     }
 }
 
@@ -177,7 +189,7 @@ void HgCoverflowContainer::setDescriptionPosition(HgMediawall::LabelPosition pos
 
     if (mDescriptionPosition != position) {
         mDescriptionPosition = position;
-        positionLabels();
+        updatePositions();
     }
 }
 
@@ -195,7 +207,7 @@ void HgCoverflowContainer::setTitleFontSpec(const HbFontSpec &fontSpec)
     if (!mTitleLabel) return;
     if (mTitleLabel->fontSpec() != fontSpec) {
         mTitleLabel->setFontSpec(fontSpec);
-        positionLabels();
+        updatePositions();
     }
 }
 
@@ -214,7 +226,7 @@ void HgCoverflowContainer::setDescriptionFontSpec(const HbFontSpec &fontSpec)
     if (!mDescriptionLabel) return;
     if (mDescriptionLabel->fontSpec() != fontSpec) {
         mDescriptionLabel->setFontSpec(fontSpec);
-        positionLabels();
+        updatePositions();
     }
 }
 
@@ -226,12 +238,114 @@ HbFontSpec HgCoverflowContainer::descriptionFontSpec() const
     return mDescriptionLabel->fontSpec();
 }
 
+void HgCoverflowContainer::calculatePositions()
+{
+    FUNC_LOG;
+    HANDLE_ERROR_NULL(mTitleLabel);
+    HANDLE_ERROR_NULL(mDescriptionLabel);
+    
+    int height = size().height();
+    int width = size().width();
+    int titleHeight = QFontMetrics(mTitleLabel->effectiveFontSpec().font()).height();
+    int descriptionHeight = QFontMetrics(mDescriptionLabel->effectiveFontSpec().font()).height();
+    qreal usableHeight = height-KLabelMargin;
+    if (mTitlePosition != HgMediawall::PositionNone) {
+        usableHeight -= (titleHeight+KLabelMargin);
+    }
+    if (mDescriptionPosition != HgMediawall::PositionNone) {
+        usableHeight -= (descriptionHeight+KLabelMargin);
+    }
+
+    usableHeight *= 0.8; // Leave some space for the reflection
+    if (usableHeight <= 0) return;
+
+    qreal usableWidth = width/2;
+    if (usableWidth <= 0) return;
+
+    mDrawableRect = rect();
+    QSizeF imageSize;
+    if (usableWidth/usableHeight > mAspectRatio) {
+        imageSize.setHeight(usableHeight);
+        imageSize.setWidth(mAspectRatio*usableHeight);
+    }
+    else {
+        imageSize.setWidth(usableWidth);
+        imageSize.setHeight(usableWidth/mAspectRatio);
+        mDrawableRect.setTop((usableHeight-imageSize.height())/2);
+    }
+
+    QRectF titleGeometry(0, mDrawableRect.top()+KLabelMargin, width, titleHeight);
+    QRectF descriptionGeometry(0, mDrawableRect.top()+KLabelMargin, width, descriptionHeight);
+
+    if (mTitlePosition == HgMediawall::PositionAboveImage &&
+        mDescriptionPosition == HgMediawall::PositionAboveImage) {
+        // titleGeometry default is ok
+        descriptionGeometry.moveTop(titleGeometry.bottom()+KLabelMargin);
+        mDrawableRect.setTop(descriptionGeometry.bottom()+KLabelMargin);
+    }
+    else if (mTitlePosition == HgMediawall::PositionBelowImage &&
+             mDescriptionPosition == HgMediawall::PositionBelowImage) {
+        titleGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+        descriptionGeometry.moveTop(titleGeometry.bottom()+KLabelMargin);
+    }
+    else {
+        if (mTitlePosition == HgMediawall::PositionAboveImage) {
+            // titleGeometry default is ok
+            mDrawableRect.setTop(titleGeometry.bottom()+KLabelMargin);
+        }
+        else if (mDescriptionPosition == HgMediawall::PositionAboveImage) {
+            // descriptionGeometry default is ok
+            mDrawableRect.setTop(descriptionGeometry.bottom()+KLabelMargin);
+        }
+
+        if (mTitlePosition == HgMediawall::PositionBelowImage) {
+            titleGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+        }
+        else if (mDescriptionPosition == HgMediawall::PositionBelowImage) {
+            descriptionGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+        }
+    }
+
+    INFO("Setting image size to:" << imageSize << "(total size:" << QSize(width, height)
+        << "usable size:" << QSizeF(usableWidth, usableHeight) << ", aspect ratio is:" << mAspectRatio << ")" << "Drawable rect:" << mDrawableRect);
+    mRenderer->setImageSize(imageSize);
+    mAutoSize = imageSize;
+    mDrawableRect.setHeight(imageSize.height()/0.8);
+
+    if (mTitlePosition != HgMediawall::PositionNone) {
+        INFO("Title geometry:" << titleGeometry);
+        mTitleLabel->setGeometry(titleGeometry);
+        mTitleLabel->setVisible(true);
+    }
+    else {
+        mTitleLabel->setVisible(false);
+    }
+    if (mDescriptionPosition != HgMediawall::PositionNone) {
+        INFO("Description geometry:" << descriptionGeometry);
+        mDescriptionLabel->setGeometry(descriptionGeometry);
+        mDescriptionLabel->setVisible(true);
+    }
+    else {
+        mDescriptionLabel->setVisible(false);
+    }
+
+    // This may be called before selection model is set.
+    if (mSelectionModel && mSelectionModel->currentIndex().isValid()) {
+        updateLabels(mSelectionModel->currentIndex().row());
+    }
+    
+    mRenderer->setSpacing(QSizeF(1,1));
+        
+}
+
 void HgCoverflowContainer::positionLabels()
 {
     FUNC_LOG;
     HANDLE_ERROR_NULL(mTitleLabel);
     HANDLE_ERROR_NULL(mDescriptionLabel);
     HANDLE_ERROR_NULL(mSelectionModel);
+
+    int centerIconTop = (size().height() - mRenderer->getImageSize().height()) / 2;
 
     int height = size().height();
     int width = size().width();
@@ -242,7 +356,7 @@ void HgCoverflowContainer::positionLabels()
         mDescriptionPosition == HgMediawall::PositionAboveImage) {
         mTitleLabel->setGeometry(QRectF(
             0,
-            qMax(KLabelMargin, mCenterIconTop-2*KLabelMargin-titleHeight-descriptionHeight),
+            qMax(KLabelMargin, centerIconTop-2*KLabelMargin-titleHeight-descriptionHeight),
             width, titleHeight));
         mDescriptionLabel->setGeometry(QRectF(
             0,
@@ -264,7 +378,7 @@ void HgCoverflowContainer::positionLabels()
         if (mTitlePosition == HgMediawall::PositionAboveImage) {
             mTitleLabel->setGeometry(QRectF(
                 0,
-                qMax(KLabelMargin, mCenterIconTop-KLabelMargin-titleHeight),
+                qMax(KLabelMargin, centerIconTop-KLabelMargin-titleHeight),
                 width, titleHeight));
         }
         else if (mTitlePosition == HgMediawall::PositionBelowImage) {
@@ -277,7 +391,7 @@ void HgCoverflowContainer::positionLabels()
         if (mDescriptionPosition == HgMediawall::PositionAboveImage) {
             mDescriptionLabel->setGeometry(QRectF(
                 0,
-                qMax(KLabelMargin, mCenterIconTop-KLabelMargin-descriptionHeight),
+                qMax(KLabelMargin, centerIconTop-KLabelMargin-descriptionHeight),
                 width, descriptionHeight));
         }
         else if (mDescriptionPosition == HgMediawall::PositionBelowImage) {
@@ -294,10 +408,11 @@ void HgCoverflowContainer::positionLabels()
     INFO("Title geometry:" << mTitleLabel->geometry() << "visible:" << mTitleLabel->isVisible());
     INFO("Description geometry:" << mDescriptionLabel->geometry() << "visible:" << mDescriptionLabel->isVisible());
 
-    if (mSelectionModel->currentIndex().isValid()) {
+    if ( mSelectionModel &&  mSelectionModel->currentIndex().isValid()) {
         updateLabels(mSelectionModel->currentIndex().row());
     }
 }
+
 
 void HgCoverflowContainer::updateLabels(int itemIndex)
 {
@@ -317,3 +432,75 @@ void HgCoverflowContainer::scrollToPosition(const QPointF& pos, bool animate)
     p.setX((int)pos.x());
     HgContainer::scrollToPosition(p,animate);
 }
+
+QRectF HgCoverflowContainer::drawableRect() const
+{
+    if (mItemSizePolicy == HgWidget::ItemSizeAutomatic)
+        return mDrawableRect;
+    
+    return rect();
+}
+
+void HgCoverflowContainer::setDefaultImage(QImage defaultImage)
+{
+    HgContainer::setDefaultImage(defaultImage);
+
+    if (!defaultImage.isNull()) {
+        mAspectRatio = qMax((qreal)0.1, (qreal)defaultImage.width()/defaultImage.height()); // Don't let aspect ratio go to 0
+        updatePositions();
+    }
+}
+
+QSizeF HgCoverflowContainer::getAutoItemSize() const
+{
+    return mAutoSize;
+}
+
+QSizeF HgCoverflowContainer::getAutoItemSpacing() const
+{    
+    return QSizeF(1,1);
+}
+
+void HgCoverflowContainer::updateItemSizeAndSpacing()
+{
+    HgContainer::updateItemSizeAndSpacing();
+    
+    updatePositions();
+}
+
+
+void HgCoverflowContainer::updatePositions()
+{
+    if (mItemSizePolicy == HgWidget::ItemSizeAutomatic)
+        calculatePositions();
+    else
+    {
+        positionLabels();
+    }
+}
+
+void HgCoverflowContainer::setFrontItemPositionDelta(const QPointF& position)
+{
+    if (!mRenderer)
+        return;
+    
+    mRenderer->setFrontItemPosition(position);
+}
+
+QPointF HgCoverflowContainer::frontItemPositionDelta() const
+{
+    return mRenderer ? mRenderer->frontItemPosition() : QPointF();
+}
+
+void HgCoverflowContainer::enableReflections(bool enabled)
+{
+    if (mRenderer)
+        mRenderer->enableReflections(enabled);
+}
+
+bool HgCoverflowContainer::reflectionsEnabled() const
+{
+    return mRenderer ? mRenderer->reflectionsEnabled() : false;
+}
+
+

@@ -11,7 +11,7 @@
 *
 * Contributors:
 *
-* Description:    
+* Description:
 *
 */
 
@@ -37,20 +37,22 @@ public:
 
     int width() const;
     int height() const;
-    
+
     VGImage image() const;
-    
+
     int mirrorImageWidth() const;
     int mirrorImageHeight() const;
-    
+
     VGImage mirrorImage() const;
-    
-    void setImage(QImage& image);
+
+    void setImage(const QImage& image);
     void releaseImage();
     
+    QImage getQImage() const;
+
     void upload(bool mirror=false);
-  
-private:    
+
+private:
     VGImage mVgImage;
     VGImage mMirrorImage;
     QSize mMirrorSize;

@@ -54,3 +54,29 @@ void HgQuadRenderer::setImageFader(HgImageFader* fader)
     mImageFader = fader;
 }
 
+void HgQuadRenderer::setDefaultImage(QImage defaultImage)
+{    
+    mDefaultImage = defaultImage;
+}
+
+void HgQuadRenderer::setTranslation(const QVector2D& translate)
+{
+    mTranslation = translate;
+}
+
+HgQuad* HgQuadRenderer::getQuadByUserData(const QVariant& userData) const
+{
+    for (int i = 0; i < mQuads.count(); i++)
+    {
+        HgQuad* quad = mQuads[i];
+        if (quad->userData() == userData)
+            return quad;
+    }
+    return NULL;
+}
+
+QImage HgQuadRenderer::getDefaultImage() const
+{
+    return mDefaultImage;
+}
+

@@ -29,11 +29,13 @@ class HG_WIDGETS_EXPORT HgMediawall : public HgWidget
     Q_PROPERTY(LabelPosition descriptionPosition READ descriptionPosition WRITE setDescriptionPosition)
     Q_PROPERTY(HbFontSpec titleFontSpec READ titleFontSpec WRITE setTitleFontSpec)
     Q_PROPERTY(HbFontSpec descriptionFontSpec READ descriptionFontSpec WRITE setDescriptionFontSpec)
+    Q_PROPERTY(QPointF frontItemPositionDelta READ frontItemPositionDelta WRITE setFrontItemPositionDelta)
+    Q_PROPERTY(bool reflectionsEnabled READ reflectionsEnabled WRITE enableReflections)
     Q_ENUMS(LabelPosition)
 
 public:
 
-    HgMediawall(QGraphicsItem *parent = 0 );
+    explicit HgMediawall(QGraphicsItem *parent = 0 );
     virtual ~HgMediawall();
 
     enum LabelPosition {
@@ -51,8 +53,17 @@ public:
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
 
+    void setFrontItemPositionDelta(const QPointF& position);
+    QPointF frontItemPositionDelta() const;
+
+    void enableReflections(bool enabled);
+    bool reflectionsEnabled() const;
+        
+protected:
+    HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent);
+
 private:
-    Q_DECLARE_PRIVATE_D(d_ptr, HgMediawall)
+    Q_DECLARE_PRIVATE_D(p_ptr, HgMediawall)
     Q_DISABLE_COPY(HgMediawall)
 };
 

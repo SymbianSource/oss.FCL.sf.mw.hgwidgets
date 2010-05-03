@@ -59,13 +59,13 @@ static const QString STRING_OFFSET = QLatin1String("string-offset");
 */
 HgIndexFeedback::HgIndexFeedback(QGraphicsItem *parent)
     : HbWidget( *new HgIndexFeedbackPrivate, parent, 0)
-    
+
 {
     Q_D( HgIndexFeedback );
     d->q_ptr = this;
 
     HbStyleLoader::registerFilePath(":/hgindexfeedback.css");
-    
+
     d->init();
 }
 
@@ -134,7 +134,7 @@ void HgIndexFeedback::setWidget(HgWidget *widget)
     }
 
     d->connectModelToIndexFeedback(d->mWidget->selectionModel());
-    
+
     d->connectScrollBarToIndexFeedback(d->mWidget->scrollBar());
 
     connect(d->mWidget, SIGNAL(destroyed(QObject*)),
@@ -178,7 +178,7 @@ QGraphicsItem* HgIndexFeedback::primitive(HbStyle::Primitive primitive) const
         case HbStyle::P_IndexFeedback_popup_text:
             retVal = d->mTextItem;
             break;
-            
+
         case HbStyle::P_IndexFeedback_popup_background:
             retVal = d->mPopupItem;
             break;
@@ -203,12 +203,12 @@ bool HgIndexFeedback::sceneEventFilter(QGraphicsItem *watched, QEvent *ev)
     if (ev->type() == QEvent::GraphicsSceneResize) {
         d->calculatePopupRects();
     }
-    
+
     return QGraphicsItem::sceneEventFilter(watched, ev);
 }
 
 /*
-    Rather than adding signals to HbScrollBar specifically to implement 
+    Rather than adding signals to HbScrollBar specifically to implement
     index feedback, an event filter is used.
 
     Specifically, if a scrollbar which is interactive is pressed or released
@@ -235,7 +235,7 @@ bool HgIndexFeedback::eventFilter(QObject *obj, QEvent *ev)
                     d->scrollBarReleased();
                 }
                 break;
-        
+
             case QEvent::GraphicsSceneResize:
             case QEvent::Resize:
                     d->_q_hideIndexFeedbackNow();
@@ -276,14 +276,14 @@ void HgIndexFeedback::initStyleOption(HbStyleOptionIndexFeedback *option) const
         case HgWidget::IndexFeedbackSingleCharacter:
             {
                 fontSpec = HbFontSpec(HbFontSpec::Primary);
-                fontSpec.setTextPaneHeight(d->textHeight());
+                fontSpec.setTextHeight(d->textHeight());
             }
             break;
-            
+
         case HgWidget::IndexFeedbackThreeCharacter:
             {
                 fontSpec = HbFontSpec(HbFontSpec::Primary);
-                fontSpec.setTextPaneHeight(d->textHeight());
+                fontSpec.setTextHeight(d->textHeight());
             }
             break;
 
@@ -292,7 +292,7 @@ void HgIndexFeedback::initStyleOption(HbStyleOptionIndexFeedback *option) const
                 fontSpec = HbFontSpec(HbFontSpec::Primary);
                 qreal textPaneHeight = 0;
                 style()->parameter(QLatin1String("hb-param-text-height-primary"), textPaneHeight);
-                fontSpec.setTextPaneHeight( textPaneHeight );
+                fontSpec.setTextHeight( textPaneHeight );
             }
             break;
 

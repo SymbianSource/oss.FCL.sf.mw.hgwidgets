@@ -49,7 +49,8 @@ public:
         OpeningAnimationZoomOver
     };
             
-    explicit HgMediaWallRenderer(HgMediaWallDataProvider* provider);
+    explicit HgMediaWallRenderer(HgMediaWallDataProvider* provider, 
+        Qt::Orientation orientation, bool coverflowMode);
     
     virtual ~HgMediaWallRenderer();
 
@@ -114,8 +115,11 @@ public:
     HgQuadRenderer* getRenderer();    
 
     bool getItemPoints(int index, QPolygonF& points) const;
-    
+        
     QList<HgQuad*> getVisibleQuads() const;
+    
+    void setFrontItemPosition(const QPointF& position);
+    QPointF frontItemPosition() const;
     
 signals:
     void renderingNeeded();
@@ -189,6 +193,7 @@ protected:
     void setupIndicator(HgQuad* parent, 
         HgQuad* indicator, const HgImage* indicatorImage, int itemIndex);    
     bool initializeRenderer(QPainter* painter);
+    
         
 protected:
     
@@ -261,6 +266,9 @@ protected:
     int mColumnCount;
     
     ItemState mOpenedItemState;
+    
+    QPointF mFrontItemPosition;
+    bool mFrontItemPositionSet;
     
 private:
     Q_DISABLE_COPY(HgMediaWallRenderer)

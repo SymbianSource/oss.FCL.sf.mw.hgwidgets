@@ -23,3 +23,4 @@ CONFIG += ordered
 
 SUBDIRS += hgwidgets_plat/hgwidgets_plat.pro
 SUBDIRS += ganeswidgets/ganeswidgets.pro
+SUBDIRS += hgcacheproxymodel/hgcacheproxymodel.pro

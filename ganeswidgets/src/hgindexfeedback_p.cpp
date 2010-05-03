@@ -83,7 +83,8 @@ HgIndexFeedbackPrivate::HgIndexFeedbackPrivate() :
     mThreeCharHeight(1.0),
     mThreeCharWidth(1.0),
     mStringOffset(0.0),
-    mWidget(0)
+    mWidget(0),
+    mScrollBarPressed(false)
 {
 
 }

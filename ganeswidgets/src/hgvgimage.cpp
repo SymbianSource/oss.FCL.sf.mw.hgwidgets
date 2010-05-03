@@ -75,7 +75,7 @@ VGImage HgVgImage::mirrorImage() const
 }
 
 
-void HgVgImage::setImage(QImage& image)
+void HgVgImage::setImage(const QImage& image)
 {
     if (image.isNull())
         return;
@@ -88,6 +88,12 @@ void HgVgImage::setImage(QImage& image)
     mMirrorSize = getMirrorSize(mQImage);
 
 }
+
+QImage HgVgImage::getQImage() const
+{
+    return mQImage;
+}
+
 
 void HgVgImage::releaseImage()
 {
@@ -108,6 +114,8 @@ void HgVgImage::releaseImage()
 
 void HgVgImage::upload(bool mirror)
 {
+    if( mQImage.isNull())
+        return;    
     
     if (mVgImage == VG_INVALID_HANDLE)
     {            
@@ -140,8 +148,12 @@ void HgVgImage::upload(bool mirror)
             return;
         }
         
-        vgImageSubData(mVgImage, mQImage.bits(), mQImage.bytesPerLine(), 
-            format, 0, 0, mQImage.width(), mQImage.height() );        
+        // bits function performs deep copy if we dont fetch data with const specifier.
+        const uchar *bits = mQImage.bits();
+        
+        vgImageSubData(mVgImage, bits, mQImage.bytesPerLine(), 
+            format, 0, 0, mQImage.width(), mQImage.height() );
+        
     }
     
     if (mirror && mMirrorImage == VG_INVALID_HANDLE)
@@ -162,10 +174,10 @@ void HgVgImage::upload(bool mirror)
         {
             qreal t = qreal(i) / qreal(mirrorImage.height());
             int a = (int)(t * 255.0);
+            uchar* scanline = mirrorImage.scanLine(i);
             for (int j = 0; j < mirrorImage.width(); j++)
             {
-                QRgb rgb = mirrorImage.pixel(j, i);
-                mirrorImage.setPixel(j, i, qRgba(qRed(rgb), qGreen(rgb), qBlue(rgb), a));
+                scanline[j*4+3] = a;
             }        
         }
         

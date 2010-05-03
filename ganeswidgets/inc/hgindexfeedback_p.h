@@ -32,7 +32,7 @@ class QRectF;
 class QItemSelectionModel;
 QT_END_NAMESPACE
 
-class HgIndexFeedbackPrivate : public HbWidgetPrivate
+class HgIndexFeedbackPrivate: public HbWidgetPrivate
 {
     Q_DECLARE_PUBLIC( HgIndexFeedback )
 

@@ -19,7 +19,6 @@
 #define HGWIDGET_P_H
 
 #include <hgwidgets/hgwidgets.h>
-#include <hbwidget_p.h>
 #include <QTimer>
 #include <QTime>
 
@@ -29,7 +28,7 @@ class HgScrollBufferManager;
 class QGraphicsLinearLayout;
 class HgIndexFeedback;
 
-class HgWidgetPrivate : public HbWidgetPrivate
+class HgWidgetPrivate
 {
     Q_DECLARE_PUBLIC(HgWidget)
 
@@ -65,6 +64,18 @@ public:
 
     void setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy);
     HgWidget::IndexFeedbackPolicy indexFeedbackPolicy() const;
+    void setDefaultImage(QImage defaultImage);
+    
+    void setItemSizePolicy(HgWidget::ItemSizePolicy policy);
+    HgWidget::ItemSizePolicy itemSizePolicy() const;
+
+    void setItemSize(const QSizeF& size);
+    QSizeF itemSize() const;
+    
+    void setItemSpacing(const QSizeF& size);
+    QSizeF itemSpacing() const;
+    
+    HgWidget *q_ptr;
     
 private:
 
@@ -99,8 +110,13 @@ private:
     void _q_moveRows(const QModelIndex &sourceParent, int sourceStart,
                      int sourceEnd, const QModelIndex &destinationParent,
                      int destinationRow);
+    void _q_modelReset();
     void _q_groovePressed(qreal value, Qt::Orientation orientation);
 
+    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
+
+    void initBufferManager(int itemCount);
+    
 protected:
 
     QGraphicsLinearLayout *mLayout;
@@ -115,12 +131,13 @@ protected:
     HbScrollBar *mScrollBar;
     HgWidget::ScrollBarPolicy mScrollBarPolicy;
     bool mAbleToScroll;
-    QTimer mScrollBarHideTimer;
+    QTimer* mScrollBarHideTimer;
 
     bool mHandleLongPress;
     bool mForeground;
     int mBufferSize;
     HgIndexFeedback *mIndexFeedback;
+    bool mStaticScrollDirection;
 };
 
 #endif  //HGWIDGET_p_H

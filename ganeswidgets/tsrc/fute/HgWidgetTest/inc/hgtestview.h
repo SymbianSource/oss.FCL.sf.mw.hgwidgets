@@ -29,14 +29,13 @@ class HgTestView : public HbView
 public:
 	HgTestView(const QString &title1, const QString &title2, const QPixmap &pixmap, QGraphicsItem *parent=0);
 
-private slots:
-    void closeView();
+signals:
+    void closeRequested();
 
 private:
     void resizeEvent(QGraphicsSceneResizeEvent *event);
 
 private:
-    HbAction *mBackAction;
     HbLabel *mIconLabel;
     QPixmap mPixmap;
 };

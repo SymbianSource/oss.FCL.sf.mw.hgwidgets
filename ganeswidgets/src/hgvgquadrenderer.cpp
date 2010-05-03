@@ -38,18 +38,20 @@ public:
     int index() const;
     bool isPointInside(const QPointF& point) const;
     void transformQuad(int index, const QMatrix4x4& matrix, HgQuad* quad, 
-        const QRectF& rect, qreal mirroringPlaneY);
+        const QRectF& rect, qreal mirroringPlaneY, const QVector2D& translate);
     void draw();
 
     void getTransformedPoints(QPolygonF& polygon) const;
         
     void computeMirrorMatrix(const QMatrix4x4& tm, const QMatrix4x4& projView, 
-        const QRectF& rect, qreal mirroringPlaneY);
+        const QRectF& rect, qreal mirroringPlaneY, 
+        const QVector2D& translate);
     
     bool perspectiveTransformPoints(QVector2D* points, const QMatrix4x4& matrix, 
         const QRectF& rect);
     
-    void computeWarpMatrix(VGfloat* matrix, int pxWidth, int pxHeight, const QVector2D* points);
+    void computeWarpMatrix(VGfloat* matrix, int pxWidth, int pxHeight, const QVector2D* points, 
+        const QVector2D& translate);
     
     void drawImage(HgVgImage* image, qreal alpha);
     
@@ -99,7 +101,7 @@ bool HgVgQuad::isPointInside(const QPointF& point) const
 
 
 void HgVgQuad::computeMirrorMatrix(const QMatrix4x4& trans, const QMatrix4x4& projView, 
-    const QRectF& rect, qreal mirroringPlaneY)
+    const QRectF& rect, qreal mirroringPlaneY, const QVector2D& translate)
 {
     HgQuad* quad = mQuad;
 
@@ -122,16 +124,19 @@ void HgVgQuad::computeMirrorMatrix(const QMatrix4x4& trans, const QMatrix4x4& pr
     if (image == NULL)
     {
         image = mRenderer->defaultImage();
+        if (!image) {
+            return;
+        }
     }
     
     int pxWidth = image->mirrorImageWidth();
     int pxHeight = image->mirrorImageHeight();
 
-    computeWarpMatrix(mMirrorMatrix, pxWidth, pxHeight, temp);
+    computeWarpMatrix(mMirrorMatrix, pxWidth, pxHeight, temp, translate);
 }
 
 void HgVgQuad::transformQuad(int index, const QMatrix4x4& projView, HgQuad* quad, 
-    const QRectF& rect, qreal mirroringPlaneY)
+    const QRectF& rect, qreal mirroringPlaneY, const QVector2D& translate)
 {
     mIndex = index;
     mQuad = quad;
@@ -142,7 +147,7 @@ void HgVgQuad::transformQuad(int index, const QMatrix4x4& projView, HgQuad* quad
 
     if (mQuad->mirrorImageEnabled())
     {
-        computeMirrorMatrix(tm, projView, rect, mirroringPlaneY);
+        computeMirrorMatrix(tm, projView, rect, mirroringPlaneY, translate);
     }
     
     tm.translate(quad->position());    
@@ -163,12 +168,18 @@ void HgVgQuad::transformQuad(int index, const QMatrix4x4& projView, HgQuad* quad
     if (image == NULL)
     {
         image = mRenderer->defaultImage();
+        if (!image)
+            return;
     }
     
     int pxWidth = image->width();
     int pxHeight = image->height();
     
-    computeWarpMatrix(mMatrix, pxWidth, pxHeight, mTransformedPoints);
+    
+    computeWarpMatrix(mMatrix, pxWidth, pxHeight, mTransformedPoints, translate);
+    
+    for (int i = 0; i < 4; i++)
+        mTransformedPoints[i] += translate;
     
 }
 
@@ -199,13 +210,15 @@ bool HgVgQuad::perspectiveTransformPoints(QVector2D* outPoints, const QMatrix4x4
     return true;
 }
 
-void HgVgQuad::computeWarpMatrix(VGfloat* matrix, int pxWidth, int pxHeight, const QVector2D* points)
+void HgVgQuad::computeWarpMatrix(VGfloat* matrix, int pxWidth, int pxHeight, const QVector2D* points, 
+    const QVector2D& translate)
 {        
+
     vguComputeWarpQuadToQuad(
-        points[0].x(), points[0].y(), 
-        points[1].x(), points[1].y(),
-        points[2].x(), points[2].y(),
-        points[3].x(), points[3].y(),
+        points[0].x() + translate.x(), points[0].y() + translate.y(), 
+        points[1].x() + translate.x(), points[1].y() + translate.y(),
+        points[2].x() + translate.x(), points[2].y() + translate.y(),
+        points[3].x() + translate.x(), points[3].y() + translate.y(),
         0, pxHeight,
         pxWidth, pxHeight,
         pxWidth, 0,
@@ -232,8 +245,9 @@ void HgVgQuad::draw()
     
     if (image == NULL  || image->alpha() == 0)
     {
-        return;
-        //drawImage(mRenderer->defaultImage(), 1.0f);
+        if (mRenderer->defaultImage()) {
+            drawImage(mRenderer->defaultImage(), 1.0f);
+        }
     }
     else
     {
@@ -241,14 +255,18 @@ void HgVgQuad::draw()
         
         if (image->image() == VG_INVALID_HANDLE)
         {
-            drawImage(mRenderer->defaultImage(), 1.0f);
+            if (mRenderer->defaultImage()) {
+                drawImage(mRenderer->defaultImage(), 1.0f);
+            }
         }
         else
         {
 
             if ( mQuad->alpha() < 1.0f )
             {
-                drawImage(mRenderer->defaultImage(), 1.0f - mQuad->alpha());            
+                if (mRenderer->defaultImage()) {
+                    drawImage(mRenderer->defaultImage(), 1.0f - mQuad->alpha());            
+                }
             }
             
             drawImage(image, mQuad->alpha());
@@ -354,7 +372,7 @@ void HgVgQuadRenderer::transformQuads(const QMatrix4x4& view, const QMatrix4x4& 
         
         if (q->visible())
         {
-            tq->transformQuad(i, pv, q, rect, mMirroringPlaneY);   
+            tq->transformQuad(i, pv, q, rect, mMirroringPlaneY, mTranslation);   
             mSortedQuads.append(tq);
         }
     }
@@ -434,7 +452,10 @@ HgImage* HgVgQuadRenderer::createNativeImage()
 
 HgVgImage* HgVgQuadRenderer::defaultImage()
 {
-    if (mDefaultVgImage == NULL)
+    if (mDefaultVgImage && mDefaultVgImage->image() == VG_INVALID_HANDLE) {
+        mDefaultVgImage->upload(true);
+    }
+/*    if (mDefaultVgImage == NULL)
     {
         QImage defaultImage(64,64,QImage::Format_RGB16);
         defaultImage.fill(qRgb(255,0,0));
@@ -442,7 +463,18 @@ HgVgImage* HgVgQuadRenderer::defaultImage()
         mDefaultVgImage->setImage(defaultImage);
         mDefaultVgImage->upload(true);        
     }
+    */
     return mDefaultVgImage;
+}
+
+void HgVgQuadRenderer::setDefaultImage(QImage defaultImage)
+{
+    HgQuadRenderer::setDefaultImage(defaultImage);
+    delete mDefaultVgImage;
+    mDefaultVgImage = 0;
+    mDefaultVgImage = static_cast<HgVgImage*>(createNativeImage());
+    mDefaultVgImage->setImage(mDefaultImage);
+    mDefaultVgImage->upload(true);    
 }
 
 HgImageFader* HgVgQuadRenderer::imageFader()

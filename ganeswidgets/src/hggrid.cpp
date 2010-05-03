@@ -20,13 +20,23 @@
 #include "hggridcontainer.h"
 
 HgGrid::HgGrid( Qt::Orientation scrollDirection, QGraphicsItem *parent ):
-    HgWidget(new HgGridPrivate, parent)
+    HgWidget( *new HgGridPrivate, parent )
 {
     Q_D(HgGrid);
     d->q_ptr = this;
 
     d->init(scrollDirection);
 }
+
+HgGrid::HgGrid( Qt::Orientation scrollDirection, HgGridPrivate &dd, QGraphicsItem *parent) : 
+    HgWidget( dd, parent )
+{
+    Q_D( HgGrid );
+    d->q_ptr = this;    
+    
+    d->init(scrollDirection);
+}
+
 
 HgGrid::~HgGrid()
 {

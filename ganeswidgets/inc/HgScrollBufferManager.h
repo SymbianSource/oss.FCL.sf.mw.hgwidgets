@@ -22,6 +22,41 @@
 #include <qobject>
 #include <QTimer>
 
+class UpdatePair
+{
+public:
+    UpdatePair(int start, int count);
+
+    int start() const;
+    int end() const;
+
+    bool adjacent(int start, int count) const;
+    bool contains(const UpdatePair &other) const;
+    void extend(int start, int count);
+    void subtract(int start, int count);
+
+    void shiftRight(int count);
+    void shiftLeft(int count);
+
+    bool operator== (const UpdatePair &other) const;
+    bool operator< (const UpdatePair &other) const;
+
+private:
+    int mStart;
+    int mCount;
+};
+
+class UpdateBuffer : public QList<UpdatePair>
+{
+public:
+    UpdateBuffer();
+
+    void add(int start, int count);
+    void remove(int start, int count);
+    void shiftRight(int startingFrom, int amount);
+    void shiftLeft(int startingFrom, int amount);
+};
+
 class HgScrollBufferManager: public QObject
     {
     Q_OBJECT
@@ -41,9 +76,11 @@ public:
 
     bool positionInsideBuffer(int position);
 
-    void removeItems(int start, int end, int totalCount);
-    void addItems(int start, int end, int totalCount);
-    void moveItems(int start, int end, int target, int totalCount);
+    void addItems(int start, int count);
+    void removeItems(int start, int end);
+    void moveItems(int start, int end, int target);
+
+    void flushRequestBuffers();
 
     void currentBuffer(int& bufferStart, int& bufferEnd);
 
@@ -60,8 +97,14 @@ protected:
 
     void init();
     void asyncUpdate();
-    bool isInsideBuffer(int pos);
-    bool isInsideBuffer(int start, int end);
+
+    int changeBufferPosition(int newPos);
+
+    void simpleAddItems(int start, int end);
+    void simpleRemoveItems(int start, int end);
+
+    void appendRequestBuffer(int start, int end);
+    void appendReleaseBuffer(int start, int end);
 
 private:
 
@@ -78,6 +121,9 @@ private:
     int mReleaseStart;
     int mReleaseCount;
     QTimer mTimer;
+
+    UpdateBuffer mRequestBuffer;
+    UpdateBuffer mReleaseBuffer;
 
 private:
     Q_DISABLE_COPY(HgScrollBufferManager)

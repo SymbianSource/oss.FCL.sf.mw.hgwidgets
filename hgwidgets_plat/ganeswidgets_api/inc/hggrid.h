@@ -27,11 +27,14 @@ class HG_WIDGETS_EXPORT HgGrid : public HgWidget
     Q_OBJECT
 public:
 
-    HgGrid(Qt::Orientation scrollDirection, QGraphicsItem *parent = 0 );
+    explicit HgGrid(Qt::Orientation scrollDirection, QGraphicsItem *parent = 0 );
     virtual ~HgGrid();
 
+protected:
+    HgGrid(Qt::Orientation scrollDirection, HgGridPrivate &dd, QGraphicsItem *parent);
+
 private:
-    Q_DECLARE_PRIVATE_D(d_ptr, HgGrid)
+    Q_DECLARE_PRIVATE_D(p_ptr, HgGrid)
     Q_DISABLE_COPY(HgGrid)
 };
 

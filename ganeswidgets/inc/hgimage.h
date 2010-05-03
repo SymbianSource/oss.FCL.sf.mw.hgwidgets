@@ -29,8 +29,11 @@ public:
     virtual ~HgImage() {}
     virtual void setAlpha(qreal alpha) { mAlpha = alpha; }
     virtual qreal alpha() const { return mAlpha; }
-    virtual void setImage(QImage& image)=0;
+    virtual void setImage(const QImage& image)=0;
+    virtual QImage getQImage() const=0;
     virtual void releaseImage()=0;
+    virtual int width() const = 0;
+    virtual int height() const = 0;
 private:
     qreal mAlpha;
 };

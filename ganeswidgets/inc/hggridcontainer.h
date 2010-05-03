@@ -40,11 +40,12 @@ protected:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
     
     // from HgContainer
-    virtual HgMediaWallRenderer* createRenderer();
+    virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection);
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemindex);
+    virtual void onScrollPositionChanged(qreal pos);
    
 };
 

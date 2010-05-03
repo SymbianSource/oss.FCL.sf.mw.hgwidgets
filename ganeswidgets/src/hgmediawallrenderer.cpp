@@ -35,7 +35,6 @@
 #include <qpainter>
 #include <qpaintengine>
 
-const Qt::Orientation KDefaultOrientation(Qt::Vertical);
 const qreal KPi = 3.1415926535897932384626433832795;
 
 static qreal lerp(qreal start, qreal end, qreal t)
@@ -99,13 +98,14 @@ public:
     MyVectorAnimation mScaleAnimation;
 };
 
-HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider) :
+HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider, 
+    Qt::Orientation scrollDirection, bool coverflowMode) :
     mDataProvider(provider),
     mRenderer(NULL),
     mIndicatorRenderer(NULL),
     mRendererInitialized(false),
-    mOrientation(KDefaultOrientation),
-    mNextOrientation(KDefaultOrientation),
+    mOrientation(scrollDirection),
+    mNextOrientation(scrollDirection),
     mStateAnimationAlpha(0),
     mStateAnimationOnGoing(false),
     mAnimationAlpha(0),
@@ -113,7 +113,7 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider) :
     mOpenedItem(-1),
     mFlipAngle(qreal(360)),
     mZoomAmount(qreal(0.5)),
-    mCoverflowMode(false),
+    mCoverflowMode(coverflowMode),
     mRowCount(1),
     mNextRowCount(1),
     mStateAnimationDuration(300),
@@ -127,12 +127,18 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider) :
     mFrontCoverElevation(0.4),
     mReflectionsEnabled(true),
     mItemCountChanged(false),
-    mOpenedItemState(ItemClosed)
+    mOpenedItemState(ItemClosed),
+    mFrontItemPosition(0,0),
+    mFrontItemPositionSet(false)    
 {
     createStateMachine();
     mImageFader = new HgImageFader();    
     mRenderer = new HgVgQuadRenderer(256);
     mRendererInitialized = true;
+    if (mCoverflowMode) {
+        mOrientation = Qt::Horizontal;
+        mNextOrientation = mOrientation;
+    }
 }
 
 HgMediaWallRenderer::~HgMediaWallRenderer()
@@ -369,6 +375,14 @@ void HgMediaWallRenderer::onOpenedState()
 
 void HgMediaWallRenderer::setOrientation(Qt::Orientation orientation, bool animate)
 {
+    // coverflow is always horizontal
+    if (mCoverflowMode)
+    {
+        mOrientation = Qt::Horizontal;
+        mNextOrientation = mOrientation;
+        return;
+    }
+    
     if (mOrientation != orientation)
     {
         mStateMachine->setAnimated(animate);
@@ -390,6 +404,7 @@ Qt::Orientation HgMediaWallRenderer::getOrientation() const
 
 void HgMediaWallRenderer::drawQuads(QPainter* painter)
 {
+    
     mRenderer->transformQuads(mViewMatrix, mProjMatrix, mRect);
 
     mRenderer->drawQuads(mRect, painter);    
@@ -530,10 +545,20 @@ void HgMediaWallRenderer::updateCameraMatrices()
 
     mViewMatrix = view;
     mProjMatrix = proj;
-    
-    qreal mirrorPlaneY = getRowPosY(mRowCount-1)-mImageSize3D.height()/2;
+
+    qreal mirrorPlaneY;
+    if (mCoverflowMode)
+    {
+        mirrorPlaneY = -mImageSize3D.height()/2;
+    }
+    else // grid
+    {
+        mirrorPlaneY = getRowPosY(mRowCount-1)-mImageSize3D.height()/2;
+    }
+
     mRenderer->setMirroringPlaneY(mirrorPlaneY);
 }
+
 
 void HgMediaWallRenderer::updateSpacingAndImageSize()
 {
@@ -645,14 +670,16 @@ void HgMediaWallRenderer::applyOpeningAnimation(HgQuad* quad)
 
 qreal HgMediaWallRenderer::getWorldWidth() const
 {   
-    qreal width = (qreal)mDataProvider->imageCount() / (qreal)mRowCount - 1.0f;
+    qreal width = ceil((qreal)mDataProvider->imageCount() / (qreal)mRowCount - 1.0f);
     
+    // if we are in vertical orientation we want last and first item
+    // to place at the top and bottom of the screen instead of center
     if (mOrientation == Qt::Vertical)
     {
         qreal step = mSpacing2D.height() + mImageSize2D.height(); 
         width -= (mRect.height() / step - 1.0f);
     }
-   
+       
     return width;
 }
 
@@ -731,8 +758,8 @@ void HgMediaWallRenderer::setupCoverflow(const QPointF& startPosition,
     qreal frac = (position.x() - ipos) * step;
     qreal posX = -(qreal)(selectedItemIndex + 0) * step - frac;
     qreal zFar = -mFrontCoverElevation;
-    qreal posY = 0;    
-    
+    qreal posY = 0;
+
     int count = mDataProvider->imageCount();
     int quadIndex = 0;
     int itemIndex = ((int)(ipos - (qreal)selectedItemIndex));
@@ -974,4 +1001,15 @@ QList<HgQuad*> HgMediaWallRenderer::getVisibleQuads() const
     return mRenderer->getVisibleQuads(QRectF(0, 0, mRect.width(), mRect.height()));
 }
 
+void HgMediaWallRenderer::setFrontItemPosition(const QPointF& position)
+{
+    mFrontItemPosition = position;
+    
+    mRenderer->setTranslation(
+        QVector2D(position.x(), position.y()));    
+}
 
+QPointF HgMediaWallRenderer::frontItemPosition() const
+{
+    return mFrontItemPosition;
+}

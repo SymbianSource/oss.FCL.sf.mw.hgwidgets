@@ -32,7 +32,7 @@ public:
     HgMediawallPrivate();
     virtual ~HgMediawallPrivate();
 
-    void init();
+    void init(Qt::Orientation orientation);
 
     void setTitlePosition(HgMediawall::LabelPosition position);
     HgMediawall::LabelPosition titlePosition() const;
@@ -43,7 +43,7 @@ public:
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
 
-private:
+    
     HgCoverflowContainer *container();
     const HgCoverflowContainer *container() const;
 };

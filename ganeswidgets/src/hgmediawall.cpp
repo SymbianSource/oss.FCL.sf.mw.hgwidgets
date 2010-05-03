@@ -19,13 +19,22 @@
 #include "hgmediawall_p.h"
 #include "hgwidgets_p.h"
 #include "hgcoverflowcontainer.h"
+#include <hbmainwindow>
 
-HgMediawall::HgMediawall(QGraphicsItem *parent ):
-    HgWidget(new HgMediawallPrivate, parent)
+HgMediawall::HgMediawall(QGraphicsItem *parent ) :
+    HgWidget( *new HgMediawallPrivate, parent )
 {
     Q_D(HgMediawall);
     d->q_ptr = this;
-    d->init();
+    d->init(mainWindow()->orientation());
+}
+
+HgMediawall::HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent) : 
+    HgWidget( dd, parent )
+{
+    Q_D(HgMediawall);
+    d->q_ptr = this;    
+    d->init(mainWindow()->orientation());
 }
 
 HgMediawall::~HgMediawall()
@@ -108,6 +117,42 @@ HbFontSpec HgMediawall::descriptionFontSpec() const
 {
     Q_D(const HgMediawall);
     return d->descriptionFontSpec();
+}
+
+/*!
+ *  Sets front item delta from the center of the widget.
+ */
+void HgMediawall::setFrontItemPositionDelta(const QPointF& position)
+{
+    Q_D(HgMediawall);
+    return d->container()->setFrontItemPositionDelta(position);
+}
+
+/*!
+ * Gets current front items position delta.
+ */
+QPointF HgMediawall::frontItemPositionDelta() const
+{
+    Q_D(const HgMediawall);
+    return d->container()->frontItemPositionDelta();
+}
+
+/**
+ * Enables/disables reflections in the mediawall.
+ */
+void HgMediawall::enableReflections(bool enabled)
+{
+    Q_D(HgMediawall);
+    d->container()->enableReflections(enabled);
+}
+
+/**
+ * Returns true if reflections are enabled.
+ */
+bool HgMediawall::reflectionsEnabled() const
+{
+    Q_D(const HgMediawall);
+    return d->container()->reflectionsEnabled();
 }
 
 // EOF

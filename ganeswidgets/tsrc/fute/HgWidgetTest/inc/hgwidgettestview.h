@@ -19,7 +19,8 @@
 #define HGWIDGETTESTVIEW_H_
 
 #include <hbview.h>
-#include <hgwidgets/hgwidgets.h>
+#include <hgwidgets/hgmediawall.h>
+#include "hgtestdefs.h"
 
 class HbAction;
 class QGraphicsLinearLayout;
@@ -27,6 +28,9 @@ class HgWidgetTestDataModel;
 class HbListWidget;
 class HgFlipWidget;
 class HbLabel;
+class HbDialog;
+
+class HgItemSizeDialog;
 
 class HgWidgetTestView : public HbView
 {
@@ -38,62 +42,68 @@ public:
     ~HgWidgetTestView();
 
 private slots:
-
-    void switchWidget(HbAction* action);
+    void initWidget(HgTestWidgetType type);
+    void changeScrollBarVisibility(HgWidget::ScrollBarPolicy policy);
+    void changeScrollBarInteractivity(bool value);
+    void changeModelImageType(HgTestImageType);
+    void changeLowResImageUse(bool value);
+    void changeTitlePosition(HgMediawall::LabelPosition);
+    void changeTitleFont(const HbFontSpec &);
+    void changeDescriptionPosition(HgMediawall::LabelPosition);
+    void changeDescriptionFont(const HbFontSpec &);
+    void changeWidgetHeight(int);
+    void changeWidgetWidth(int);
     void toggleScrollDirection();
     void openDialog(const QModelIndex &index);
     void openView(const QModelIndex& index);
+    void closeCurrentView();
     void openDeleteItemsDialog();
     void openMoveItemsDialog();
     void openAddItemsDialog();
-    void autoHideScrollBar();
-    void scrollBarAlwaysOn();
-    void scrollBarAlwaysOff();
-    void interactiveScrollBar();
-    void unInteractiveScrollBar();
-    void feedqimages();
-    void feedqicons();
-    void feedhbicons();
     void flipClosed();
-    void orientationChanged();
     void onScrollingStarted();
     void onScrollingEnded();
-    void setDescriptionAboveImage();
-    void setDescriptionBelowImage();
-    void setDescriptionHidden();
-    void setTitleAboveImage();
-    void setTitleBelowImage();
-    void setTitleHidden();
-    void toggleLowResForCoverflow();
-
-private:
+    void showOptions();
+    void hideOptions();
+    void orientationChanged(Qt::Orientation);
     
-    enum WidgetType {
-        HgWidgetGrid,
-        HgWidgetCoverflow
-    };
+    void startItemSizeChange();
+    void itemSizeDialogClosed();
+    void updateItemSizeAndSpacing();
+
+    void startItemPosChange();
+    void updateItemPos();
+    void itemPosDialogClosed();
+
+    void resetOptions();
+    void changeReflectionsEnabled(bool);
+    void resetModel();
+private:
 
     void createMenu();
-    void initWidget( WidgetType type );
-    void setScrollBarPolicy( HgWidget::ScrollBarPolicy policy );
-    void setScrollBarInteractive( bool value );
-    HgWidget *createWidget(WidgetType type) const;
+    void setupWidget();
+    void setupWidgetOptions();
+    void setupWidgetSize();
+    HgWidget *createWidget(HgTestWidgetType type) const;
     HgWidget *copyWidget() const;
+    void resizeEvent(QGraphicsSceneResizeEvent *event);
+    Qt::Orientation orientation() const;
 
 private: // data
 
     HgWidget                *mWidget;
     QGraphicsLinearLayout   *mLayout;
     HgWidgetTestDataModel   *mModel;
-    WidgetType              mWidgetType;
+    HgTestWidgetType        mWidgetType;
     HbListWidget            *mListWidget;
     bool                    mToggleOrientation;
-    bool                    mTBone;
     QItemSelectionModel     *mSelectionModel;
     HgFlipWidget*           mFlipWidget;
     QModelIndex             mFlippedIndex;
     HbLabel*                mFrontItem;
-    HbAction*               mUseLowResAction;
+    HbView                  *mOptionsView;
+    HgItemSizeDialog       *mItemSizeDialog;
+    HgItemSizeDialog       *mItemPosDialog;
 };
 
 

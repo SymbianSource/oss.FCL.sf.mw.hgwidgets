@@ -41,10 +41,14 @@ class HG_WIDGETS_EXPORT HgWidget : public HbWidget
     Q_PROPERTY(ScrollBarPolicy scrollBarPolicy READ scrollBarPolicy WRITE setScrollBarPolicy)
     Q_PROPERTY(SelectionMode selectionMode READ selectionMode WRITE setSelectionMode)
     Q_PROPERTY(IndexFeedbackPolicy IndexFeedbackPolicy READ indexFeedbackPolicy WRITE setIndexFeedbackPolicy)
+    Q_PROPERTY(ItemSizePolicy ItemSizePolicy READ itemSizePolicy WRITE setItemSizePolicy)
+    Q_PROPERTY(QSizeF itemSize READ itemSize WRITE setItemSize)
+    Q_PROPERTY(QSizeF itemSpacing READ itemSpacing WRITE setItemSpacing)
     Q_ENUMS(ScrollBarPolicy)
     Q_ENUMS(HgWidgetType)
     Q_ENUMS(SelectionMode)
     Q_ENUMS(IndexFeedbackPolicy)
+    Q_ENUMS(ItemSizePolicy)
 public:
 
     enum HgDataRole
@@ -59,14 +63,20 @@ public:
         IndexFeedbackString
     };    
     
-    virtual ~HgWidget ();
-
     enum ScrollBarPolicy {
         ScrollBarAsNeeded = Qt::ScrollBarAsNeeded,
         ScrollBarAlwaysOff = Qt::ScrollBarAlwaysOff,
         ScrollBarAlwaysOn = Qt::ScrollBarAlwaysOn,
         ScrollBarAutoHide
     };
+    
+    enum ItemSizePolicy {
+        ItemSizeAutomatic,
+        ItemSizeUserDefined
+    };
+
+    explicit HgWidget (QGraphicsItem *parent = 0);
+    virtual ~HgWidget ();
 
     virtual void setModel(QAbstractItemModel *model);
     QAbstractItemModel *model() const;
@@ -108,6 +118,17 @@ public:
     void setIndexFeedbackPolicy( IndexFeedbackPolicy policy);
     IndexFeedbackPolicy indexFeedbackPolicy() const;
     
+    void setDefaultImage(QImage defaultImage);
+
+    void setItemSizePolicy(ItemSizePolicy policy);
+    ItemSizePolicy itemSizePolicy() const;
+    
+    void setItemSize(const QSizeF& size);
+    QSizeF itemSize() const;
+    
+    void setItemSpacing(const QSizeF& spacing);
+    QSizeF itemSpacing() const;
+    
 signals:
     void activated(const QModelIndex &index);
     void longPressed(const QModelIndex &index, const QPointF &coords);
@@ -123,15 +144,15 @@ protected slots:
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 
 protected:
+    HgWidgetPrivate * const p_ptr;
+    HgWidget(HgWidgetPrivate &dd, QGraphicsItem *parent);
 
     bool eventFilter(QObject *obj,QEvent *event);
 
     bool event(QEvent *event);
-
-    HgWidget(HbWidgetPrivate* widgetPrivate, QGraphicsItem *parent = 0);
     
 private:
-    Q_DECLARE_PRIVATE_D(d_ptr, HgWidget)
+    Q_DECLARE_PRIVATE_D(p_ptr, HgWidget)
     Q_DISABLE_COPY(HgWidget)
     Q_PRIVATE_SLOT(d_func(), void _q_scrollPositionChanged(qreal index, bool scrollBarAnimation))
     Q_PRIVATE_SLOT(d_func(), void _q_releaseItems(int releaseStart, int releaseEnd))
@@ -142,6 +163,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_removeRows(const QModelIndex &parent, int start, int end))
     Q_PRIVATE_SLOT(d_func(), void _q_moveRows(const QModelIndex &sourceParent, int sourceStart, int sourceEnd, const QModelIndex &destinationParent, int destinationRow))
     Q_PRIVATE_SLOT(d_func(), void _q_groovePressed(qreal, Qt::Orientation))
+    Q_PRIVATE_SLOT(d_func(), void _q_modelReset())
 };
 
 #endif  //HGWIDGET_H

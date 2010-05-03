@@ -46,11 +46,13 @@ public:
     virtual bool getQuadTranformedPoints(QPolygonF& points, int index) const;
     virtual HgImage* createNativeImage();
     virtual QList<HgQuad*> getVisibleQuads(const QRectF& rect) const;
-
+    virtual void setDefaultImage(QImage defaultImage);
+    
     // new functions
     HgVgImage* defaultImage();
     QSize imageSize(bool mirror=false) const;
     HgImageFader* imageFader();
+    
 private:
     
     QList<HgVgQuad*> mTransformedQuads;
