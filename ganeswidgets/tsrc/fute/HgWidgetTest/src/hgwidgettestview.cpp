@@ -20,11 +20,14 @@
 #include <hbinstance.h>
 #include <hblabel.h>
 #include <hblistwidget.h>
+#include <hblistwidgetitem.h>
 #include <hbmenu.h>
 #include <hbscrollbar>
 #include <QActionGroup>
 #include <QGraphicsLinearLayout>
 #include <QSettings>
+#include <QParallelAnimationGroup>
+#include <QPropertyAnimation>
 #include "hgwidgettestview.h"
 #include "hgtestview.h"
 #include "hgwidgetoptionsview.h"
@@ -34,12 +37,13 @@
 #include "hgitemsizedialog.h"
 #include "hgcoverflowwidget.h"
 #include "trace.h"
+#include "hgcoveritem.h"
 #include <hgwidgets/hggrid.h>
 #include <hgwidgets/hgmediawall.h>
 
 
 static const int GRIDBUFFERSIZE(400);
-static const int COVERFLOWBUFFERSIZE(130);
+static const int COVERFLOWBUFFERSIZE(150);
 
 HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
     HbView(parent),
@@ -52,11 +56,16 @@ HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
     mFrontItem(0),
     mOptionsView(0),
     mItemSizeDialog(0),
-    mItemPosDialog(0)
-{
+    mItemPosDialog(0),
+    mDialog(0),
+    mCoverItem(0),
+    mAnimationGroup(0)
+{    
     mModel = new HgWidgetTestDataModel(this);
     mSelectionModel = new QItemSelectionModel(mModel, this);
 
+    mAnimationGroup = new QParallelAnimationGroup();
+    
     createMenu();
 
     mLayout = new QGraphicsLinearLayout(Qt::Vertical);
@@ -67,6 +76,7 @@ HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
 
 HgWidgetTestView::~HgWidgetTestView()
 {
+    delete mAnimationGroup;
 }
 
 void HgWidgetTestView::createMenu()
@@ -123,20 +133,26 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
             	setItemVisible(Hb::AllItems, true);
                 mModel->enableLowResImages(false);
                 // TODO, init grid different model,
-                mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
+//                mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
                 break;
             case HgWidgetCoverflow:
-                mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
+//                mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
                 setItemVisible(Hb::AllItems, orientation() != Qt::Horizontal);
                 break;
             case HgWidgetTBone:
             	setItemVisible(Hb::AllItems, true);
-                mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
+//                mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
                 mListWidget = new HbListWidget;
                 mLayout->addItem(mListWidget);
-                mListWidget->addItem( "List item 1");
+                /*mListWidget->addItem( "List item 1");
                 mListWidget->addItem( "List item 2");
-                mListWidget->addItem( "List item 3");
+                mListWidget->addItem( "List item 3");*/
+                
+                HgMediawall* mediawall = qobject_cast<HgMediawall*>( mWidget );
+                if (mediawall) {
+                    connect(mediawall, SIGNAL(animationAboutToEnd(QModelIndex)),
+                            SLOT(animationAboutToEnd(QModelIndex)));
+                }
                 break;
             default:
                 break;
@@ -157,6 +173,27 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
 
         connect(mWidget, SIGNAL(scrollingStarted()), SLOT(onScrollingStarted()));
         connect(mWidget, SIGNAL(scrollingEnded()), SLOT(onScrollingEnded()));
+    }
+}
+
+void HgWidgetTestView::animationAboutToEnd(const QModelIndex& targetIndex)
+{
+    FUNC_LOG;
+
+    QVariant texts = mModel->data(targetIndex, Qt::DisplayRole);
+    if (texts.canConvert<QStringList>()) {
+        QStringList strList = texts.toStringList();
+        if (strList.count() > 0) {
+            if( mListWidget->count() >= 5 ) {
+                //delete the last itme in the list and insert the new row to the beginning of the list
+                HbListWidgetItem* delItem = mListWidget->takeItem(4);
+                if (delItem) {
+                    delete delItem;
+                    delItem = 0;                    
+                }
+            }
+            mListWidget->insertItem(0, strList.at(0));
+        }
     }
 }
 
@@ -277,14 +314,53 @@ void HgWidgetTestView::changeWidgetWidth(int value)
     mLayout->setContentsMargins(margin, top, margin, bottom);
 }
 
-void HgWidgetTestView::openDialog(const QModelIndex& index)
+void HgWidgetTestView::changeReflectionsEnabled(bool enabled)
+{
+    HgMediawall* wall = qobject_cast<HgMediawall*>(mWidget);
+    if (wall)
+        wall->enableReflections(enabled);
+}
+
+void HgWidgetTestView::changeItemSizePolicy(HgMediawall::ItemSizePolicy policy)
 {
     FUNC_LOG;
 
-    QVariant image = mModel->data(index, Qt::DecorationRole);
-    QVariant texts = mModel->data(index, Qt::DisplayRole);
+    if (mWidget && mWidget->itemSizePolicy() != policy) {
+        mWidget->setItemSizePolicy(policy);
+    }
+}
 
-    if (mWidgetType == HgWidgetCoverflow || mWidgetType == HgWidgetTBone)
+void HgWidgetTestView::activated()
+{
+    mAnimationGroup->setDirection(QAbstractAnimation::Backward);
+    connect(mAnimationGroup, SIGNAL(finished()), this, SLOT(animationFinished()));
+    mAnimationGroup->start();
+}
+
+void HgWidgetTestView::animationFinished()
+{
+    delete mCoverItem;
+    mCoverItem = 0;
+    mAnimationGroup->disconnect(this, SIGNAL(animationFinished()));
+    mAnimationGroup->setDirection(QAbstractAnimation::Forward);
+    mAnimationGroup->clear();
+    delete mDialog;
+    mDialog = 0;
+}
+
+void HgWidgetTestView::openDialog(const QModelIndex& index)
+{
+    FUNC_LOG;
+    
+    QVariant image = mModel->silentData(index, Qt::DecorationRole);
+    QVariant texts = mModel->silentData(index, Qt::DisplayRole);
+
+    if (mWidgetType == HgWidgetCoverflow )
+    {
+        startAnimation(index);
+        return;
+    }
+    else if(mWidgetType == HgWidgetTBone)
     {
         if (image.canConvert<QPixmap>() && texts.canConvert<QStringList>())
         {
@@ -351,12 +427,78 @@ void HgWidgetTestView::openDialog(const QModelIndex& index)
     dlg.exec();
 }
 
+void HgWidgetTestView::startAnimation(const QModelIndex& index)
+{
+    if( mAnimationGroup->state() == QAbstractAnimation::Running ||
+        mDialog || mCoverItem ) return;
+
+    QPolygonF poly;
+    if (!mWidget->getItemOutline(index, poly))
+        return;
+    
+    
+    mFlippedIndex = index;
+    
+    QRectF itemRect = poly.boundingRect();
+    itemRect.moveTo(itemRect.topLeft() + mWidget->geometry().topLeft());
+    
+    QVariant image = mModel->silentData(index, Qt::DecorationRole);
+    QPixmap pixmap;
+    QImage temp = image.value<QImage>();
+    QImage scaled = temp.scaled(itemRect.size().toSize());
+    if (scaled.isNull()) return;
+    QPixmap pixmap2 = pixmap.fromImage(scaled);    
+    if(pixmap2.isNull()) return;
+    
+    mCoverItem = new HgCoverItem(pixmap2, this);
+    mCoverItem->setPos(itemRect.topLeft());
+    mCoverItem->setZValue(mWidget->zValue()+2);
+    mCoverItem->show();
+    
+    QPropertyAnimation* animation = new QPropertyAnimation(mCoverItem, "geometry");
+    animation->setDuration(400);        
+    animation->setStartValue(itemRect);
+
+    QRectF endRect = itemRect;
+    int topLeftX = (mWidget->size().width() - itemRect.size().width()*2)/2;
+    endRect.moveTo(topLeftX,endRect.topLeft().y());
+    animation->setEndValue(endRect);
+    
+    mAnimationGroup->addAnimation(animation);
+        
+    HgListWidget* list = new HgListWidget(this);
+    mDialog = new HbDialog(this);
+    mDialog->setZValue(mWidget->zValue()+1);
+    mDialog->setContentWidget(list);
+    mDialog->setDismissPolicy(HbPopup::TapOutside);
+    list->addItem( "List item 1");
+    list->addItem( "List item 2");
+    list->addItem( "List item 3");
+    list->addItem( "List item 4");
+    list->addItem( "List item 5");
+    list->addItem( "List item 6");
+    list->addItem( "List item 7");
+    
+    connect(list,SIGNAL(activated(HbListWidgetItem*)),this, SLOT(activated()));
+    connect(list,SIGNAL(close()),this, SLOT(activated()));
+    connect(mCoverItem,SIGNAL(close()),this, SLOT(activated()));
+    
+    animation = new QPropertyAnimation(mDialog, "geometry");
+    animation->setDuration(400);
+    animation->setStartValue(itemRect);
+    endRect.moveTo(endRect.topRight());
+    animation->setEndValue(endRect);
+
+    mAnimationGroup->addAnimation(animation);
+    mAnimationGroup->start();    
+}
+
 void HgWidgetTestView::openView(const QModelIndex& index)
 {
     FUNC_LOG;
 
-    QVariant image = mModel->data(index, Qt::DecorationRole);
-    QVariant texts = mModel->data(index, Qt::DisplayRole);
+    QVariant image = mModel->silentData(index, Qt::DecorationRole);
+    QVariant texts = mModel->silentData(index, Qt::DisplayRole);
 
     if (image.canConvert<QImage>() && texts.canConvert<QStringList>())
     {
@@ -515,6 +657,8 @@ void HgWidgetTestView::showOptions()
                 SLOT(changeDescriptionFont(HbFontSpec)));
             connect(view, SIGNAL(reflectionsEnabledChanged(bool)), 
                 SLOT(changeReflectionsEnabled(bool)));
+            connect(view, SIGNAL(itemSizePolicyChanged(HgWidget::ItemSizePolicy)),
+                SLOT(changeItemSizePolicy(HgWidget::ItemSizePolicy)));
 
             mOptionsView = view;
             primaryWindow->addView(mOptionsView);
@@ -603,6 +747,10 @@ void HgWidgetTestView::setupWidgetOptions()
         changeReflectionsEnabled(value.toBool());
     }
 
+    value = settings.value(SETT_ITEM_SIZE_POLICY);
+    if (value.isValid()) {
+        changeItemSizePolicy(static_cast<HgMediawall::ItemSizePolicy>(value.toInt()));
+    }
 }
 
 void HgWidgetTestView::setupWidgetSize()
@@ -631,13 +779,15 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
     if (mainWindows.count() > 0)
     {
         HbMainWindow *primaryWindow = mainWindows[0];
+        primaryWindow->scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
+        primaryWindow->setOptimizationFlag(QGraphicsView::DontSavePainterState, true);
         if (primaryWindow->orientation() == Qt::Horizontal) {
             scrollDirection = Qt::Horizontal;
         }
     }
 
     HgWidget* widget = 0;
-    HgCoverflowWidget* temp = 0;
+    HgMediawall* temp = 0;
     
     switch (type) {
         case HgWidgetGrid:
@@ -646,18 +796,21 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
             widget = new HgGrid(scrollDirection);
             break;
         case HgWidgetCoverflow:
+            {
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
-            widget = new HgCoverflowWidget();
-            temp = (HgCoverflowWidget*)widget;
-            temp->setTitlePosition(HgMediawall::PositionNone);
+            widget = new HgMediawall();
+            temp = (HgMediawall*)widget;
+            temp->setDescriptionPosition(HgMediawall::PositionAboveImage);
             break;
+            }
         case HgWidgetTBone:
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
-            widget = new HgCoverflowWidget();
-            temp = (HgCoverflowWidget*)widget;
-            temp->setTitlePosition(HgMediawall::PositionNone);
+            widget = new HgMediawall();
+            temp = (HgMediawall*)widget;
+            temp->setDescriptionPosition(HgMediawall::PositionAboveImage);
+            temp->enableReflections(false);
             break;
         default:
             break;
@@ -670,6 +823,9 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
     widget->setLongPressEnabled(true);
 	widget->scrollTo(widget->currentIndex());
 
+    QImage defaultImage(":/images/default.svg");
+    widget->setDefaultImage(defaultImage);
+    
     return widget;
 }
 
@@ -736,7 +892,7 @@ void HgWidgetTestView::onScrollingEnded()
             return;
 
         // fetch highresolution image from the model
-        QVariant imgVariant = mModel->data(index, Qt::UserRole+2);
+        QVariant imgVariant = mModel->silentData(index, Qt::UserRole+2);
         if (imgVariant.isNull())
             return;
 
@@ -762,19 +918,26 @@ void HgWidgetTestView::onScrollingEnded()
 
 void HgWidgetTestView::orientationChanged(Qt::Orientation orientation)
 {
+    if (mDialog) {
+        mModel->setData(mFlippedIndex, true, Qt::UserRole+1);
+    }
+    mAnimationGroup->stop();            
+    delete mDialog;
+    mDialog = 0;
+    delete mCoverItem;
+    mCoverItem = 0;
+    mAnimationGroup->clear();
+
+    
     if (orientation == Qt::Horizontal && mWidgetType == HgWidgetCoverflow ) {
         setItemVisible(Hb::AllItems, false);
     }
     else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetTBone) {
         initWidget(HgWidgetCoverflow);
-//        HbEffect::add(mWidget,":/effect1.fxml", "end");
-//        HbEffect::start(mWidget, "end");
         setItemVisible(Hb::AllItems, false);
     }            
     else if (orientation == Qt::Vertical && mWidgetType == HgWidgetCoverflow) {
         initWidget(HgWidgetTBone);
-//        HbEffect::add(mWidget,":/effect1.fxml", "end");
-//        HbEffect::start(mWidget, "end");
         setItemVisible(Hb::AllItems, true);
     }
     
@@ -872,13 +1035,13 @@ void HgWidgetTestView::updateItemPos()
     if (!mItemPosDialog)
         return;
     
-    HgCoverflowWidget* wall = qobject_cast<HgCoverflowWidget*>(mWidget);
+    HgMediawall* wall = qobject_cast<HgMediawall*>(mWidget);
     if (!wall)
         return;
 
     QSizeF s = mItemPosDialog->itemSize();
     wall->setFrontItemPositionDelta(QPointF(s.width(), s.height()));
-    wall->updateTextPositions();
+//    wall->updateTextPositions();
     mWidget->update();
 }
 
@@ -898,13 +1061,6 @@ void HgWidgetTestView::resetOptions()
     QSettings settings(SETT_ORGANIZATION, SETT_APPLICATION);
     settings.clear();
     setupWidget();
-}
-
-void HgWidgetTestView::changeReflectionsEnabled(bool enabled)
-{
-    HgMediawall* wall = qobject_cast<HgMediawall*>(mWidget);
-    if (wall)
-        wall->enableReflections(enabled);
 }
 
 void HgWidgetTestView::resetModel()

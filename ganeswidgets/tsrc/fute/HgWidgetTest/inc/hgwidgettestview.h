@@ -29,6 +29,8 @@ class HbListWidget;
 class HgFlipWidget;
 class HbLabel;
 class HbDialog;
+class QParallelAnimationGroup;
+class HgCoverItem;
 
 class HgItemSizeDialog;
 
@@ -53,6 +55,9 @@ private slots:
     void changeDescriptionFont(const HbFontSpec &);
     void changeWidgetHeight(int);
     void changeWidgetWidth(int);
+    void changeReflectionsEnabled(bool);
+    void changeItemSizePolicy(HgWidget::ItemSizePolicy);
+
     void toggleScrollDirection();
     void openDialog(const QModelIndex &index);
     void openView(const QModelIndex& index);
@@ -76,8 +81,11 @@ private slots:
     void itemPosDialogClosed();
 
     void resetOptions();
-    void changeReflectionsEnabled(bool);
     void resetModel();
+    void activated(/*HbListWidgetItem *item*/);
+    void animationFinished();
+    void animationAboutToEnd(const QModelIndex& targetIndex);
+    
 private:
 
     void createMenu();
@@ -88,22 +96,26 @@ private:
     HgWidget *copyWidget() const;
     void resizeEvent(QGraphicsSceneResizeEvent *event);
     Qt::Orientation orientation() const;
-
+    void startAnimation(const QModelIndex& index);
+    
 private: // data
 
-    HgWidget                *mWidget;
-    QGraphicsLinearLayout   *mLayout;
-    HgWidgetTestDataModel   *mModel;
+    HgWidget*               mWidget;
+    QGraphicsLinearLayout*  mLayout;
+    HgWidgetTestDataModel*  mModel;
     HgTestWidgetType        mWidgetType;
-    HbListWidget            *mListWidget;
+    HbListWidget*           mListWidget;
     bool                    mToggleOrientation;
-    QItemSelectionModel     *mSelectionModel;
+    QItemSelectionModel*    mSelectionModel;
     HgFlipWidget*           mFlipWidget;
     QModelIndex             mFlippedIndex;
     HbLabel*                mFrontItem;
-    HbView                  *mOptionsView;
-    HgItemSizeDialog       *mItemSizeDialog;
-    HgItemSizeDialog       *mItemPosDialog;
+    HbView*                 mOptionsView;
+    HgItemSizeDialog*       mItemSizeDialog;
+    HgItemSizeDialog*       mItemPosDialog;
+    QParallelAnimationGroup* mAnimationGroup;
+    HbDialog*               mDialog;
+    HgCoverItem*            mCoverItem;
 };
 
 

@@ -19,7 +19,7 @@
 &EN
 
 ; standard SIS file header
-#{"hgcacheproxymodel"},(0x2002EA2A),10,0,0, TYPE=SA
+#{"hgcacheproxymodel"},(0x2002EA2A),1,0,0, TYPE=SA
 
 ;Localised Vendor name
 %{"Nokia"}

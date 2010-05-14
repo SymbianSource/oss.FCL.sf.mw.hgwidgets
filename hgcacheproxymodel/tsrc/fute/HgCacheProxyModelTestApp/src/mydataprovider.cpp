@@ -62,7 +62,7 @@ MyDataProvider::~MyDataProvider()
 void MyDataProvider::changeIconSize(ThumbnailManager::ThumbnailSize aThumbnailsize)
 {
 //    TX_ENTRY
-//	we could  remove all iconsfrom cache and put default ones, but probably that would be waste of time, and it's better just to load new icons with correct sizes.
+//	we could  remove all icons from cache and put default ones, but probably that would be waste of time, and it's better just to load new icons with correct sizes.
 	mThumbnailsize = aThumbnailsize;
 	mWrapper->setThumbnailSize( mThumbnailsize );
 //    TX_EXIT
@@ -76,7 +76,7 @@ void MyDataProvider::doRequestData(QList<int> list, bool silent)
     int i = 0;
 	for (int idx=0; idx<list.count(); idx++){
         i = list[idx];
-		if (containsRole(i, KItemIdRole) && !containsRole(i, Qt::DecorationRole)) {//if there is icon, don't request new one
+		if (containsRole(i, KItemIdRole) ) {
             items += QString("%0 ").arg(i);
 			mWaitingThumbnails.append(i);
 		}
@@ -94,7 +94,7 @@ void MyDataProvider::getNextThumbnail()
             if (i >=0 && i < count() && containsRole(i, KItemIdRole)) {
                 int id = (data(i, KItemIdRole)).toInt();
                 unsigned long int uId = (unsigned long int)id;
-//                TX_LOG_ARGS(QString("getThumbnail for index:%0 uID:%1").arg(i).arg(uId));
+                TX_LOG_ARGS(QString("getThumbnail for index:%0 uID:%1").arg(i).arg(uId));
                 void *clientData = reinterpret_cast<void *>(i);
                 mThumbnailRequestID = mWrapper->getThumbnail(uId, clientData, KThumbnailsPriority);
                 mThumbnailRequestIndex = i;
@@ -113,9 +113,11 @@ void MyDataProvider::thumbnailReady( QPixmap pixmap, void* data, int id, int err
 {
 //    TX_ENTRY    
     Q_UNUSED(id);
-    if (!error && pixmap.rect().height()>0  && pixmap.rect().width()>0 ){
+    if (!error && pixmap.rect().height()>0  && pixmap.rect().width()>0 ) {
         int idx = reinterpret_cast<int>(data);
-//        TX_LOG_ARGS(QString("thumbnailReady idx = %0").arg(idx));
+        TX_LOG_ARGS(QString("thumbnailReady idx = %0").arg(idx));
+//        updateIcon(idx, HbIcon( QIcon( pixmap ) ) );
+//        update(idx, HbIcon( QIcon( pixmap ) ), Qt::DecorationRole, false);
         updateIcon(idx, createIcon(idx, pixmap));
 	} else {
         TX_LOG_ARGS(QString("error:%0 id:%0").arg(error).arg(id));
@@ -129,7 +131,7 @@ void MyDataProvider::thumbnailReady( QPixmap pixmap, void* data, int id, int err
 
 void MyDataProvider::doReleaseData(QList<int> list, bool silent)
 {
-//    TX_ENTRY    
+    TX_ENTRY    
     Q_UNUSED(silent);
     int i = 0;
     QString items = "Released items:";
@@ -149,7 +151,7 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
     TX_LOG_ARGS(items);
 
     getNextThumbnail();
-//    TX_EXIT        
+    TX_EXIT        
 }
 
 QVariant MyDataProvider::defaultIcon() const
@@ -203,7 +205,7 @@ void MyDataProvider::HandleQueryCompleted(CMdEQuery& aQuery, TInt aError)
 
 void MyDataProvider::doResetModel()
 {
-
+    TX_ENTRY
     if (mThumbnailRequestPending && mThumbnailRequestID!=-1){
         mWrapper->cancelRequest(mThumbnailRequestID);
     }
@@ -231,6 +233,6 @@ void MyDataProvider::doResetModel()
     );    
     
     
-//    TX_EXIT    
+    TX_EXIT    
 }
 

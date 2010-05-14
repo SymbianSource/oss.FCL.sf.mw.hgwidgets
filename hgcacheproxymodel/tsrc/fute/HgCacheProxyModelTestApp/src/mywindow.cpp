@@ -127,7 +127,7 @@ void MyWindow::processAction( HbAction* action )
 			view->setColumnCount( 3 );
 			view->setRowCount( 5 );			
 		}
-        view->setTextVisible(false);
+//        view->setTextVisible(false);
 		view->setUniformItemSizes( true );
 		view->setItemRecycling( true );
 		//this could be done to change mode, for images it doesn't make sence, becouse images thumbnails are created by default only for medium and fullsize
@@ -167,15 +167,15 @@ void MyWindow::processAction( HbAction* action )
         mModel->sort(0);
     } else if (command == 201) { //disable filter
         QRegExp reg = QRegExp();
-//        mModel->setFilterRegExp(reg);
+        mModel->setFilterRegExp(reg);
     } else if (command == 202) { //Filter ITEM* (Case Sensitive)
         QRegExp reg = QRegExp("ITEM*", Qt::CaseSensitive, QRegExp::Wildcard);
-//        mModel->setFilterCaseSensitivity(Qt::CaseSensitive);
-//        mModel->setFilterRegExp(reg);        
+        mModel->setFilterCaseSensitivity(Qt::CaseSensitive);
+        mModel->setFilterRegExp(reg);        
     } else if (command == 203) { //Filter ITEM1*(Case Insensitive)
         QRegExp reg = QRegExp("ITEM1*", Qt::CaseInsensitive, QRegExp::Wildcard);
-//        mModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-//        mModel->setFilterRegExp(reg);
+        mModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+        mModel->setFilterRegExp(reg);
     } else if (command == 1000) { //reset
         mMyDataProvider->resetModel();
     } else if (command == 1001) { //reset
@@ -190,7 +190,7 @@ void MyWindow::processAction( HbAction* action )
         mTestVal = 500;
         timeout();
     } else if (command == 1003) {
-        mTestVal = 0;
+        mTestVal = -1;
     }
 }
 
@@ -205,9 +205,13 @@ void MyWindow::timeout()
     action.setData ( QVariant(101 + mTestVal%4) );
     processAction(&action);
 
-    if (mTestVal>0){
+    
+    if (mTestVal>=0){
         mTestVal--;
-        mTimer->start(1000);
+        if (mTestVal==0){
+            mTestVal = 500;
+        }
+        mTimer->start(2000);
     }
 }
 

@@ -35,7 +35,8 @@ SOURCES += src/hgcoverflowwidget.cpp \
     src/hgselectiondialog.cpp \
     src/hgflipwidget.cpp \
     src/buffermanager.cpp \
-    src/hgitemsizedialog.cpp
+    src/hgitemsizedialog.cpp \
+    src/hgcoveritem.cpp
 HEADERS += inc/hgcoverflowwidget.h \
 	inc/hgwidgetoptionsview.h \
     inc/hgwidgettestdatamodel.h \
@@ -45,7 +46,10 @@ HEADERS += inc/hgcoverflowwidget.h \
     inc/hgselectiondialog.h \
     inc/hgflipwidget.h \
     inc/buffermanager.h \
-    inc/hgitemsizedialog.h
+    inc/hgitemsizedialog.h \
+    inc/hgcoveritem.h
 LIBS += -lganeswidgets.dll \
     -lthumbnailmanagerqt.dll
 RESOURCES += data/hgwidgettest.qrc
+
+DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT

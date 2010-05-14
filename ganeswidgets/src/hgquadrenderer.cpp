@@ -49,11 +49,6 @@ void HgQuadRenderer::setMirroringPlaneY(qreal mirroringPlaneY)
     mMirroringPlaneY = mirroringPlaneY;
 }
 
-void HgQuadRenderer::setImageFader(HgImageFader* fader)
-{
-    mImageFader = fader;
-}
-
 void HgQuadRenderer::setDefaultImage(QImage defaultImage)
 {    
     mDefaultImage = defaultImage;
@@ -78,5 +73,15 @@ HgQuad* HgQuadRenderer::getQuadByUserData(const QVariant& userData) const
 QImage HgQuadRenderer::getDefaultImage() const
 {
     return mDefaultImage;
+}
+
+void HgQuadRenderer::enableReflections(bool enabled)
+{
+    mReflectionsEnabled = enabled;
+}
+
+bool HgQuadRenderer::reflectionsEnabled() const
+{
+    return mReflectionsEnabled;
 }
 

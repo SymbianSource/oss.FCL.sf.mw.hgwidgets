@@ -19,7 +19,7 @@
 #define HGIMAGE_H
 
 class QImage;
-
+class QPixmap;
 /**
  * Interface class for Images provided to HgQuadRenderer.
  */
@@ -30,6 +30,7 @@ public:
     virtual void setAlpha(qreal alpha) { mAlpha = alpha; }
     virtual qreal alpha() const { return mAlpha; }
     virtual void setImage(const QImage& image)=0;
+    virtual void setPixmap(const QPixmap& pixmap)=0;
     virtual QImage getQImage() const=0;
     virtual void releaseImage()=0;
     virtual int width() const = 0;

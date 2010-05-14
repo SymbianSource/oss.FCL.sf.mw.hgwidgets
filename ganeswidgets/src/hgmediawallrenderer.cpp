@@ -21,6 +21,7 @@
 #include "hgimage.h"
 #include "HgImageFader.h"
 #include "hgvgquadrenderer.h"
+#include "hgqtquadrenderer.h"
 #include <qvector3d>
 #include <qtimer>
 #include <qpropertyanimation>
@@ -36,6 +37,7 @@
 #include <qpaintengine>
 
 const qreal KPi = 3.1415926535897932384626433832795;
+
 
 static qreal lerp(qreal start, qreal end, qreal t)
 {
@@ -57,66 +59,183 @@ private:
     QVector3D mValue;
 };
 
+class MyQuaternionAnimation : public QVariantAnimation
+{
+public:
+    virtual void updateCurrentValue(const QVariant& value)
+    {
+        mValue = value.value<QQuaternion>();
+    }
+    QQuaternion getValue() const
+    {
+        return mValue;
+    }
+private:
+    QQuaternion mValue;
+};
+
+
 class HgAnimatedQuad
 {
 public:
-    
-    HgAnimatedQuad(HgQuad* start, HgQuad* end, 
-        int duration) : mQuad(start)
-    {        
-        mPositionAnimation.setDuration(duration);
-        mPositionAnimation.setKeyValueAt(0, start->position());
-        mPositionAnimation.setKeyValueAt(1.0, end->position());
-        mPositionAnimation.setEasingCurve(QEasingCurve::Linear);
 
-        mScaleAnimation.setDuration(duration);
-        mScaleAnimation.setKeyValueAt(0, QVector3D(start->scale().x(), start->scale().y(), 0));
-        mScaleAnimation.setKeyValueAt(1, QVector3D(end->scale().x(), end->scale().y(), 0));
-        mScaleAnimation.setEasingCurve(QEasingCurve::Linear);
-    
-    }
-    
-    ~HgAnimatedQuad()
+    static HgAnimatedQuad* createScrollDirectionChangeAnimation(
+        HgQuad* a, HgQuad* b, const QMatrix4x4& tm, const QMatrix4x4& rm, 
+        const QQuaternion& rot, Qt::Orientation orientation, 
+        int duration)
     {
+        HgAnimatedQuad* q = new HgAnimatedQuad();
+        q->mQuad = a;
+
+        q->mPosition.setEasingCurve(QEasingCurve::InOutCubic);
+        q->mPosition.setDuration(duration);
+        QVector3D pos = tm * (a->position() * rm);
+        q->mPosition.setKeyValueAt(0, pos);
+        
+        QVector3D pos2;
+        
+        if (orientation == Qt::Horizontal)
+        {
+            pos2 = QVector3D(pos.x(), 0, pos.z() + (pos.y() > b->position().y() ? -0.5f : -0.5f));
+        }
+        else
+        {
+            pos2 = QVector3D(0, pos.y(), pos.z() + (pos.x() > b->position().x() ? -0.5f : -0.5f));            
+        }
+                
+        q->mPosition.setKeyValueAt(0.5f, pos2);
+        q->mPosition.setKeyValueAt(1, b->position());
+        
+        q->mRotation.setEasingCurve(QEasingCurve::InOutCubic);
+        q->mRotation.setDuration(duration);
+        q->mRotation.setKeyValueAt(0, rot);
+        q->mRotation.setKeyValueAt(0.5f, QQuaternion::fromAxisAndAngle(QVector3D(1,1,0), 180));
+        q->mRotation.setKeyValueAt(1, b->rotation());
+    
+        return q;
     }
     
+    static HgAnimatedQuad* createBasicAnimation(HgQuad* a, HgQuad* b, int duration)
+    {
+        HgAnimatedQuad* q = new HgAnimatedQuad();
+        q->mQuad = a;
+
+        q->mPosition.setDuration(duration);
+        q->mPosition.setKeyValueAt(0, a->position());
+        q->mPosition.setKeyValueAt(1, b->position());
+        
+        q->mRotation.setDuration(duration);
+        q->mRotation.setKeyValueAt(0, a->rotation());
+        q->mRotation.setKeyValueAt(1, b->rotation());        
+    
+        return q;
+    }
+            
     void start()
     {
-        mPositionAnimation.start();
-        mScaleAnimation.start();
+        mPosition.start();
+        mRotation.start();
     }
            
     void update()
     {
-        mQuad->setPosition(mPositionAnimation.currentValue().value<QVector3D>());
-        QVector3D scale = mScaleAnimation.currentValue().value<QVector3D>();
-        mQuad->setScale(QVector2D(scale.x(), scale.y()));
+        mQuad->setPosition(mPosition.currentValue().value<QVector3D>());
+        mQuad->setRotation(mRotation.currentValue().value<QQuaternion>());
     }
     
+    const HgQuad* quad() const
+    {
+        return mQuad;
+    }
+
+private:
     HgQuad* mQuad;
-    MyVectorAnimation mPositionAnimation;
-    MyVectorAnimation mScaleAnimation;
+    MyVectorAnimation mPosition;
+    //MyVectorAnimation mScale;
+    MyQuaternionAnimation mRotation;
+    
 };
 
+class HgAnimatedQuadFactory
+{
+public:
+    virtual HgAnimatedQuad* createQuad(HgQuad* qA, HgQuad* qB) const=0;
+};
+
+class HgScrollDirChangeQuadFactory : public HgAnimatedQuadFactory
+{
+public:
+    void setup(Qt::Orientation nextScrollDirection, 
+        const QRectF& rect, const QSizeF& spacing, const QSizeF& size, 
+        int duration)
+    {
+        mNextScrollDirection = nextScrollDirection;
+        mDuration = duration;
+        
+        if (mNextScrollDirection == Qt::Horizontal)
+        {
+            qreal stepY = spacing.height() + size.height();
+            qreal posY = 0.5f - (rect.height() / rect.width() / 2.0 - stepY / 2.0);                
+            tm.translate(-posY,0);
+            rm.rotate(-90, QVector3D(0,0,1));
+            rot = QQuaternion::fromAxisAndAngle(QVector3D(0,0,1), -90);
+        }
+        else if (mNextScrollDirection == Qt::Vertical)
+        {
+            tm.translate(0,0.5f);
+            rm.rotate(90, QVector3D(0,0,1));
+            rot = QQuaternion::fromAxisAndAngle(QVector3D(0,0,1), -90);                
+        }
+        
+        
+    }
+    
+    HgAnimatedQuad* createQuad(HgQuad* qA, HgQuad* qB) const
+    {
+        return HgAnimatedQuad::createScrollDirectionChangeAnimation(qA, qB, 
+            tm, rm, rot, mNextScrollDirection, mDuration);        
+    }
+private:
+    QMatrix4x4 tm;
+    QMatrix4x4 rm;
+    QQuaternion rot;
+    Qt::Orientation mNextScrollDirection;
+    int mDuration;
+};
+
+class HgRowCountChangeQuadFactory : public HgAnimatedQuadFactory
+{
+public:
+    HgRowCountChangeQuadFactory(int duration) : mDuration(duration)
+    {
+        
+    }
+    
+    HgAnimatedQuad* createQuad(HgQuad* qA, HgQuad* qB) const
+    {
+        return HgAnimatedQuad::createBasicAnimation(qA, qB, mDuration);
+    }
+private:
+    int mDuration;
+};
+
+
 HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider, 
-    Qt::Orientation scrollDirection, bool coverflowMode) :
+    Qt::Orientation orientation, Qt::Orientation scrollDirection, bool coverflowMode) :
     mDataProvider(provider),
     mRenderer(NULL),
     mIndicatorRenderer(NULL),
     mRendererInitialized(false),
-    mOrientation(scrollDirection),
-    mNextOrientation(scrollDirection),
+    mScrollDirection(scrollDirection),
+    mNextScrollDirection(scrollDirection),
+    mOrientation(orientation),
     mStateAnimationAlpha(0),
     mStateAnimationOnGoing(false),
     mAnimationAlpha(0),
-    mOpeningAnimationDuration(500),
-    mOpenedItem(-1),
-    mFlipAngle(qreal(360)),
-    mZoomAmount(qreal(0.5)),
     mCoverflowMode(coverflowMode),
     mRowCount(1),
     mNextRowCount(1),
-    mStateAnimationDuration(300),
+    mStateAnimationDuration(500),
     mStep(1.1),
     mZfar(-2),
     mSpacing2D(10,10),
@@ -125,26 +244,21 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider,
     mCameraRotationY(0),
     mCameraRotationZ(0),
     mFrontCoverElevation(0.4),
-    mReflectionsEnabled(true),
-    mItemCountChanged(false),
-    mOpenedItemState(ItemClosed),
-    mFrontItemPosition(0,0),
-    mFrontItemPositionSet(false)    
+    mFrontItemPosition(0,0)
 {
     createStateMachine();
-    mImageFader = new HgImageFader();    
-    mRenderer = new HgVgQuadRenderer(256);
+    mRenderer = new HgQtQuadRenderer(64);
+    mRenderer->enableReflections(true);
     mRendererInitialized = true;
     if (mCoverflowMode) {
-        mOrientation = Qt::Horizontal;
-        mNextOrientation = mOrientation;
+        mScrollDirection = Qt::Horizontal;
+        mNextScrollDirection = mScrollDirection;
     }
 }
 
 HgMediaWallRenderer::~HgMediaWallRenderer()
 {
     delete mRenderer;
-    delete mImageFader;
     delete mStateMachine;
 }
 
@@ -184,31 +298,28 @@ void HgMediaWallRenderer::draw(
     const QPointF& position, 
     const QPointF& targetPosition, 
     qreal springVelocity,
-    QPainter* painter)
+    QPainter* painter, 
+    const QTransform& sceneTransform,
+    const QRectF& rect)
 {
+    // save new rect
+    mRect = rect;
+    
     // if still not initialized we cant draw anything
     if (!mRendererInitialized)
         return;
         
-    if (mOrientation != mNextOrientation ||
-        mRowCount != mNextRowCount)
+    if (mScrollDirection != mNextScrollDirection)
     {
-                
-        // save old state of the quads         
-        recordState(mOldState);
-        
-        // goto wanted orientation / rowcount
-        mOrientation = mNextOrientation;
-        mRowCount = mNextRowCount;
-        setImageSize(mNextImageSize);
-        
-        // setup quads to new state
-        setupRows(startPosition, position, targetPosition, springVelocity, painter);
-
-        // record state for animation
-        recordState(mNextState);
-
-        startStateAnimation(painter);
+        startScrollDirectionChangeAnimation(startPosition, position, 
+            targetPosition, springVelocity, painter, sceneTransform,
+            rect);
+    }
+    else if (mRowCount != mNextRowCount)
+    {
+        startRowCountChangeAnimation(startPosition, position, 
+            targetPosition, springVelocity, painter, sceneTransform,
+            rect);
     }
     else
     {
@@ -223,7 +334,7 @@ void HgMediaWallRenderer::draw(
     }
     
     updateCameraMatrices();
-    drawQuads(painter);
+    drawQuads(painter, sceneTransform);
 }
 
 void HgMediaWallRenderer::setupRows(const QPointF& startPosition,
@@ -243,7 +354,7 @@ void HgMediaWallRenderer::setupRows(const QPointF& startPosition,
     }
     else
     {
-        if (mOrientation == Qt::Vertical)
+        if (mScrollDirection == Qt::Vertical)
         {
             setupGridPortrait(startPosition, position, targetPosition, 
               springVelocity, painter);            
@@ -256,21 +367,6 @@ void HgMediaWallRenderer::setupRows(const QPointF& startPosition,
     }        
 }
 
-void HgMediaWallRenderer::setFlipAnimationAngle(qreal angleInDegrees)
-{
-    mFlipAngle = angleInDegrees;
-}
-    
-void HgMediaWallRenderer::setOpeningAnimationType(HgMediaWallRenderer::OpeningAnimationType type)
-{
-    mOpeningAnimationType = type;
-}
-
-void HgMediaWallRenderer::setOpeningAnimationDuration(int msecs)
-{
-    mOpeningAnimationDuration = msecs;
-}
-
 qreal HgMediaWallRenderer::animationAlpha() const
 {
     return mAnimationAlpha;
@@ -279,13 +375,7 @@ qreal HgMediaWallRenderer::animationAlpha() const
 void HgMediaWallRenderer::setAnimationAlpha(qreal alpha)
 {
     mAnimationAlpha = alpha;
-    
-    if (mOpenedItemState == ItemClosing && alpha == 0.0f)
-        mOpenedItemState = ItemClosed;
-    
-    if (mOpenedItemState == ItemOpening && alpha == 1.0f)
-        mOpenedItemState = ItemOpened;
-    
+        
     emit renderingNeeded();
 }
 
@@ -310,33 +400,8 @@ void HgMediaWallRenderer::createStateMachine()
     mStateMachine->setAnimated(true);
     
     QState* root = new QState(QState::ParallelStates);
-    QState* p1 = new QState(root);
     QState* p2 = new QState(root);
-    
-    // create idle/opened states
-    {            
-        QState* idle = new QState(p1);
-        QState* opened = new QState(p1);
-
-        idle->assignProperty(this, "animationAlpha", qreal(0));                                
-        opened->assignProperty(this, "animationAlpha", qreal(1));
-
-        // add opening animation
-        QPropertyAnimation* anim1 = new QPropertyAnimation(this, "animationAlpha");
-        anim1->setDuration(mOpeningAnimationDuration);
-        idle->addTransition(this, SIGNAL(toggleItem()), opened)->addAnimation(anim1);
-            
-        // add closing animation
-        QPropertyAnimation* anim2 = new QPropertyAnimation(this, "animationAlpha");
-        anim2->setDuration(mOpeningAnimationDuration);
-        opened->addTransition(this, SIGNAL(toggleItem()), idle)->addAnimation(anim2);
-
-        QObject::connect(idle, SIGNAL(entered()), this, SLOT(onIdleState()));
-        QObject::connect(opened, SIGNAL(entered()), this, SLOT(onOpenedState()));
-    
-        p1->setInitialState(idle);
-    }
-    
+        
     // create two states to animate between
     {
         QState* s1 = new QState(p2);
@@ -356,58 +421,47 @@ void HgMediaWallRenderer::createStateMachine()
         p2->setInitialState(s1);        
     }
 
-    root->setInitialState(p1);
+    root->setInitialState(p2);
     mStateMachine->addState(root);    
     mStateMachine->setInitialState(root);
     mStateMachine->start();
 
 }
 
-void HgMediaWallRenderer::onIdleState()
-{
-    emit itemClosed(mOpenedItem);
-}
-
-void HgMediaWallRenderer::onOpenedState()
-{
-    emit itemOpened(mOpenedItem);
-}
-
-void HgMediaWallRenderer::setOrientation(Qt::Orientation orientation, bool animate)
+void HgMediaWallRenderer::setScrollDirection(Qt::Orientation scrollDirection, bool animate)
 {
     // coverflow is always horizontal
     if (mCoverflowMode)
     {
-        mOrientation = Qt::Horizontal;
-        mNextOrientation = mOrientation;
+        mScrollDirection = Qt::Horizontal;
+        mNextScrollDirection = mScrollDirection;
         return;
     }
     
-    if (mOrientation != orientation)
+    if (mScrollDirection != scrollDirection)
     {
         mStateMachine->setAnimated(animate);
-        mNextOrientation = orientation;
+        mNextScrollDirection = scrollDirection;
 
         if (!animate)
-            mOrientation = orientation;
+            mScrollDirection = scrollDirection;
         else
         {
-            emit renderingNeeded();            
+            //emit renderingNeeded();            
         }
     }
 }
 
-Qt::Orientation HgMediaWallRenderer::getOrientation() const
+Qt::Orientation HgMediaWallRenderer::getScrollDirection() const
 {
-    return mOrientation;
+    return mScrollDirection;
 }
 
-void HgMediaWallRenderer::drawQuads(QPainter* painter)
+void HgMediaWallRenderer::drawQuads(QPainter* painter, 
+    const QTransform& sceneTransform)
 {
-    
-    mRenderer->transformQuads(mViewMatrix, mProjMatrix, mRect);
-
-    mRenderer->drawQuads(mRect, painter);    
+    mRenderer->drawQuads(painter, mRect, mViewMatrix, mProjMatrix, mOrientation, 
+        sceneTransform);    
 }
 
 
@@ -453,11 +507,7 @@ int HgMediaWallRenderer::getRowCount() const
 void HgMediaWallRenderer::recordState(HgMediaWallRenderer::State& state)
 {
     // cleanup old quads
-    for (int i = 0; i < state.mQuads.size(); i++)
-    {
-        delete state.mQuads[i];
-    }
-    
+    qDeleteAll(state.mQuads.begin(), state.mQuads.end());    
     state.mQuads.clear();
     
     // record new quads
@@ -467,7 +517,8 @@ void HgMediaWallRenderer::recordState(HgMediaWallRenderer::State& state)
         if (!quad->visible())
             continue;
         
-        state.mQuads.append(quad->copy());
+        int index = quad->userData().toInt();
+        state.mQuads[index] = quad->copy();
     }    
 }
 
@@ -476,12 +527,18 @@ void HgMediaWallRenderer::setupStateAnimation(QPainter* painter)
     Q_UNUSED(painter)
     
     resetQuads();
+    updateSpacingAndImageSize();
+
     // setup quads from animated state
-    for (int i = 0; i < mOldState.mQuads.size(); i++)
+    for (int i = 0; i < mAnimatedQuads.count(); i++)
     {
-        mAnimatedQuads[i]->update();
-        mRenderer->quad(i)->copyFrom(*mOldState.mQuads[i]);
+        if (i >= mRenderer->quadCount())
+            return;
+        
+        mAnimatedQuads[i]->update();        
+        mRenderer->quad(i)->copyFrom(*mAnimatedQuads[i]->quad());
     }
+    
 }
 
 void HgMediaWallRenderer::resetQuads()
@@ -495,22 +552,7 @@ HgQuad* HgMediaWallRenderer::getQuadAt(const QPointF& position) const
     if (!mRendererInitialized)
         return NULL;
         
-    return mRenderer->getQuadAt(position);//mapFromWindow(position));
-}
-
-bool HgMediaWallRenderer::isItemOpen() const
-{
-    return (mOpenedItem != -1 && mAnimationAlpha > 0);
-}
-
-void HgMediaWallRenderer::setRect(const QRectF& windowRect)
-{
-    mRect = windowRect;
-}
-
-const QRectF& HgMediaWallRenderer::getRect() const
-{
-    return mRect;
+    return mRenderer->getQuadAt(position);
 }
 
 void HgMediaWallRenderer::updateCameraMatrices()
@@ -523,26 +565,18 @@ void HgMediaWallRenderer::updateCameraMatrices()
         QVector3D(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 1.0f, 0.0f));
 
     QMatrix4x4 rot;
-    rot.rotate(mCameraRotationZ, QVector3D(0,0,1));
+    //rot.rotate(mCameraRotationZ, QVector3D(0,0,1));
     rot.rotate(mCameraRotationY, QVector3D(0,1,0));
     view *= rot;
-        
-    qreal aspect = mRect.width() / mRect.height();
-    
+            
     QMatrix4x4 proj;
     proj.setToIdentity();
     
-    if (mRect.width() <= mRect.height())
-    {
-        qreal aspect = mRect.height() / mRect.width();
-        proj.frustum(-0.5f, 0.5f, -0.5f*aspect, 0.5f*aspect, 1.0f, 1000.0f);
-    }
-    else
-    {
-        qreal aspect = mRect.width() / mRect.height();
-        proj.frustum(-0.5f*aspect, 0.5f*aspect, -0.5f, 0.5f, 1.0f, 1000.0f);
-    }
-
+    // setup projection matrix so that width of the item wichi has the 
+    // width of the screen has width of 1 in 3D space
+    qreal aspect = mRect.height() / mRect.width();
+    proj.frustum(-0.5f, 0.5f, -0.5f * aspect, 0.5f * aspect, 1.0f, 1000.0f);
+        
     mViewMatrix = view;
     mProjMatrix = proj;
 
@@ -562,7 +596,7 @@ void HgMediaWallRenderer::updateCameraMatrices()
 
 void HgMediaWallRenderer::updateSpacingAndImageSize()
 {
-    qreal div = mRect.width() <= mRect.height() ? mRect.width() : mRect.height();
+    qreal div = mRect.width();
     
     mSpacing3D = mSpacing2D / div;
     mImageSize3D = mImageSize2D / div;
@@ -599,32 +633,6 @@ qreal HgMediaWallRenderer::getFrontCoverElevationFactor() const
     return mFrontCoverElevation;
 }
 
-void HgMediaWallRenderer::openItem(int index, bool animate)
-{
-    if (isItemOpen())
-        return;
-    
-    mOpenedItem = index;
-    mOpenedItemState = animate ? ItemOpening : ItemOpened;
-
-    mStateMachine->setAnimated(animate);
-    emit toggleItem();
-    
-}
-
-void HgMediaWallRenderer::closeItem(bool animate)
-{
-    if (!isItemOpen())
-        return;
-
-    mOpenedItemState = animate ? ItemClosing : ItemClosed;
-    if (!animate)
-        mOpenedItem = -1;
-
-    mStateMachine->setAnimated(animate);
-    emit toggleItem();
-}
-
 qreal HgMediaWallRenderer::getRowPosY(int row)
 {
     qreal step = mSpacing3D.height() + mImageSize3D.height();            
@@ -637,95 +645,99 @@ qreal HgMediaWallRenderer::getColumnPosX(int col)
     return mColumnCount == 1 ? qreal(0) : (((qreal)mColumnCount/qreal(2)-qreal(0.5)) - (qreal)col) * step; 
 }
 
-
 void HgMediaWallRenderer::enableReflections(bool enabled)
 {
-    mReflectionsEnabled = enabled;
+    mRenderer->enableReflections(enabled);
 }
 
 bool HgMediaWallRenderer::reflectionsEnabled() const
 {
-    return mReflectionsEnabled;
+    return mRenderer->reflectionsEnabled();
 }
     
-QPointF HgMediaWallRenderer::mapFromWindow(const QPointF& point) const
-{
-    return QPointF(point.x(), mRect.height() - point.y());
-}
-
-void HgMediaWallRenderer::emitUpdate()
-{
-    emit renderingNeeded();
-}
-
-void HgMediaWallRenderer::applyOpeningAnimation(HgQuad* quad)
-{
-    QQuaternion rot(0,0,0,1);
-    qreal rotAngle = mAnimationAlpha * mFlipAngle;
-    rot = QQuaternion::fromAxisAndAngle(QVector3D(0,1,0), rotAngle);
-    quad->setRotation(rot);
-    quad->setPosition(quad->position() + QVector3D(0,0,mAnimationAlpha * mZoomAmount));    
-}
-
-
 qreal HgMediaWallRenderer::getWorldWidth() const
 {   
     qreal width = ceil((qreal)mDataProvider->imageCount() / (qreal)mRowCount - 1.0f);
     
     // if we are in vertical orientation we want last and first item
     // to place at the top and bottom of the screen instead of center
-    if (mOrientation == Qt::Vertical)
+    if (mScrollDirection == Qt::Vertical)
     {
         qreal step = mSpacing2D.height() + mImageSize2D.height(); 
         width -= (mRect.height() / step - 1.0f);
+    }
+    else if (mScrollDirection == Qt::Horizontal && !mCoverflowMode)
+    {
+        qreal step = mSpacing2D.width() + mImageSize2D.width();
+        width -= (mRect.width() / step - 1.0f);
     }
        
     return width;
 }
 
-void HgMediaWallRenderer::beginRemoveRows(int start, int end)
+
+void HgMediaWallRenderer::createAnimatedQuads(const HgAnimatedQuadFactory& factory)
 {
-    mRemoveStart = start;
-    mRemoveEnd = end;
-    mItemCountChanged = true;
-    
-    recordState(mOldState);
-
-}
-
-void HgMediaWallRenderer::endRemoveRows()
-{
-        
-    mStateMachine->setAnimated(true);
-
-    emit renderingNeeded();            
-    
-}
-
-void HgMediaWallRenderer::startStateAnimation(QPainter* painter)
-{
-    
     // clear previous animation quads
-    for (int i = 0; i < mAnimatedQuads.size(); i++)
-    {
-        delete mAnimatedQuads[i];
-    }        
+    qDeleteAll(mAnimatedQuads.begin(), mAnimatedQuads.end());
     mAnimatedQuads.clear();
     
-    // setup animated quads
+    // default quad is used if no counterpart for the current quad exits.
     HgQuad* defaultQuad = new HgQuad();
     defaultQuad->setPosition(QVector3D(100,100,-100));
-    int n = mOldState.mQuads.count() < mNextState.mQuads.count() ? mNextState.mQuads.count() : mOldState.mQuads.count();
-    for (int i = 0; i < n; i++)
-    {
-        HgQuad* qA = (i >= mOldState.mQuads.count()) ? defaultQuad : mOldState.mQuads[i];
-        HgQuad* qB = (i >= mNextState.mQuads.count()) ? defaultQuad : mNextState.mQuads[i];
-        
-        HgAnimatedQuad* q = new HgAnimatedQuad(qA, qB, mStateAnimationDuration);
-        mAnimatedQuads.append(q);
-        q->start();
-    }
     
+    // setup new animated quads
+    QMap<int, HgQuad*>::iterator i = mNextState.mQuads.begin();
+    while(i != mNextState.mQuads.end())
+    {
+        HgQuad* qB = i.value();
+        HgQuad* qA = NULL;
+        QMap<int, HgQuad*>::iterator j = mOldState.mQuads.find(i.key());
+        if (j != mOldState.mQuads.end())
+        {
+            qA = j.value();
+        }
+        else
+        {
+            qA = defaultQuad->copy();
+        }
+        
+        HgAnimatedQuad* q = factory.createQuad(qA, qB);
+        mAnimatedQuads.append(q);
+        
+        q->start();
+        i++;
+    }    
+}
+
+void HgMediaWallRenderer::startScrollDirectionChangeAnimation(
+    const QPointF& startPosition,
+    const QPointF& position, 
+    const QPointF& targetPosition, 
+    qreal springVelocity,
+    QPainter* painter, 
+    const QTransform& sceneTransform,
+    const QRectF& rect)
+{
+
+    // save state for current orientation
+    setupRows(startPosition, position, targetPosition, springVelocity, painter);
+    recordState(mOldState);
+    
+    // goto wanted orientation
+    mScrollDirection = mNextScrollDirection;
+    
+    // setup quads to new state
+    setupRows(startPosition, position, targetPosition, springVelocity, painter);
+
+    // record state for animation
+    recordState(mNextState);
+    
+    HgScrollDirChangeQuadFactory factory;
+    factory.setup(mNextScrollDirection, mRect, mSpacing3D, mImageSize3D, mStateAnimationDuration);
+
+    createAnimatedQuads(factory);
+        
     mStateAnimationOnGoing = true;
     
     // setup first frame of the animation
@@ -733,7 +745,38 @@ void HgMediaWallRenderer::startStateAnimation(QPainter* painter)
 
     // toggle state animation on
     toggleState();
+    
+}
 
+void HgMediaWallRenderer::startRowCountChangeAnimation(
+    const QPointF& startPosition,
+    const QPointF& position, 
+    const QPointF& targetPosition, 
+    qreal springVelocity,
+    QPainter* painter, 
+    const QTransform& sceneTransform,
+    const QRectF& rect)
+{
+    setupRows(startPosition, position, targetPosition, springVelocity, painter);
+    recordState(mOldState);
+    
+    mRowCount = mNextRowCount;
+    setImageSize(mNextImageSize);
+    
+    setupRows(startPosition, position, targetPosition, springVelocity, painter);
+    recordState(mNextState);
+
+    HgRowCountChangeQuadFactory factory(mStateAnimationDuration);    
+
+    createAnimatedQuads(factory);
+        
+    mStateAnimationOnGoing = true;
+    
+    // setup first frame of the animation
+    setupStateAnimation(painter);        
+
+    // toggle state animation on
+    toggleState();
 }
 
 void HgMediaWallRenderer::setupCoverflow(const QPointF& startPosition,
@@ -746,10 +789,7 @@ void HgMediaWallRenderer::setupCoverflow(const QPointF& startPosition,
     Q_UNUSED(targetPosition)
     Q_UNUSED(springVelocity)
     Q_UNUSED(painter)
-    
-    // save selected item for coverflow
-    mSelectedItem = ceil(position.x());
-    
+        
     int quadsVisible = (mRect.width() / mImageSize2D.width() + 1) * 4;
     int selectedItemIndex = quadsVisible / 2;
 
@@ -794,7 +834,7 @@ void HgMediaWallRenderer::setupCoverflow(const QPointF& startPosition,
                 
         // setup quad for this item
         HgQuad* quad = mRenderer->quad(quadIndex);
-        setupDefaultQuad(QVector3D(posX, posY, posZ), itemIndex, mReflectionsEnabled, quadIndex);
+        setupDefaultQuad(QVector3D(posX, posY, posZ), itemIndex, reflectionsEnabled(), quadIndex);
                          
         // step to next item                    
         posX += step;        
@@ -816,8 +856,10 @@ void HgMediaWallRenderer::setupGridPortrait(const QPointF& startPosition,
     Q_UNUSED(springVelocity)
     Q_UNUSED(painter)
     
-    int rowCount = (mRect.height() / mImageSize2D.height() + 1) * 4;
-    int rowsUp = rowCount/2;
+    // we need to setup 2 times more rows than visible, because we need
+    // more quads for the orientation switch
+    int rowCount = (mRect.height() / mImageSize2D.height() + 1) * 3;       
+    int rowsUp = rowCount / 3;
         
     qreal stepY = mSpacing3D.height() + mImageSize3D.height();
     qreal ipos = floorf(position.x());
@@ -825,8 +867,7 @@ void HgMediaWallRenderer::setupGridPortrait(const QPointF& startPosition,
     qreal posY = -(qreal)rowsUp * stepY - frac;
         
     // adjust height so that we begin from top
-    qreal div = mRect.width() <= mRect.height() ? mRect.width() : mRect.height();
-    posY -= mRect.height() / div / 2.0 - stepY / 2.0;
+    posY -= mRect.height() / mRect.width() / 2.0 - stepY / 2.0;
     
     int count = mDataProvider->imageCount();
     int itemIndex = ((int)(ipos - (qreal)rowsUp)) * mColumnCount;
@@ -839,7 +880,6 @@ void HgMediaWallRenderer::setupGridPortrait(const QPointF& startPosition,
         {
             itemIndex+=mColumnCount;
             posY += stepY;
-            row++;
             continue;
         }
         else if (itemIndex >= count || quadIndex >= mRenderer->quadCount() || row >= rowCount)
@@ -851,7 +891,6 @@ void HgMediaWallRenderer::setupGridPortrait(const QPointF& startPosition,
                         
         posY += stepY;
         row++;
-        itemIndex+=mColumnCount;
     }
     
 }
@@ -866,15 +905,17 @@ void HgMediaWallRenderer::setupGridLandscape(const QPointF& startPosition,
     Q_UNUSED(targetPosition)
     Q_UNUSED(springVelocity)
     Q_UNUSED(painter)
-    
+        
     int colCount = (mRect.width() / mImageSize2D.width() + 1) * 3;
-    int colsLeft = colCount/2;
+    int colsLeft = colCount / 3;
 
     qreal stepX = mSpacing3D.width() + mImageSize3D.width();
     qreal ipos = floorf(position.x());
     qreal frac = (position.x() - ipos) * stepX;
     qreal posX = -(qreal)colsLeft * stepX - frac;    
     
+    posX -= 0.5f - stepX / 2.0;
+
     int count = mDataProvider->imageCount();
     int itemIndex = ((int)(ipos - (qreal)colsLeft)) * mRowCount;
     int col = 0;
@@ -886,7 +927,6 @@ void HgMediaWallRenderer::setupGridLandscape(const QPointF& startPosition,
         {
             itemIndex+=mColumnCount;
             posX += stepX;
-            col++;
             continue;
         }
         else if (itemIndex >= count || col >= colCount || quadIndex >= mRenderer->quadCount())
@@ -898,34 +938,36 @@ void HgMediaWallRenderer::setupGridLandscape(const QPointF& startPosition,
                         
         posX += stepX;
         col++;
-        itemIndex+=mRowCount;
     }
 }
 
-void HgMediaWallRenderer::setupGridColumn(qreal posX, int itemIndex, int& quadIndex)
+void HgMediaWallRenderer::setupGridColumn(qreal posX, int& itemIndex, int& quadIndex)
 {
     for (int i = 0; i < mRowCount; i++)
     {
+        if (quadIndex >= mRenderer->quadCount() || itemIndex >= mDataProvider->imageCount())
+            return;
+        
         qreal posY = getRowPosY(i);
         
         // enable reflections for the last row needed
-        bool reflections = (i == (mRowCount-1) && mReflectionsEnabled);
+        bool reflections = (i == (mRowCount-1) && reflectionsEnabled());
 
         setupDefaultQuad(QVector3D(posX, posY, 0), itemIndex++, reflections, quadIndex);
         
-        if (itemIndex >= mDataProvider->imageCount())
-            return;    
     }    
 }
 
-void HgMediaWallRenderer::setupGridRow(qreal posY, int itemIndex, int& quadIndex)
+void HgMediaWallRenderer::setupGridRow(qreal posY, int& itemIndex, int& quadIndex)
 {
     for (int i = 0; i < mColumnCount; i++)
     {
+        if (quadIndex >= mRenderer->quadCount() || itemIndex >= mDataProvider->imageCount())
+            return;
+
         qreal posX = getColumnPosX(i);
+
         setupDefaultQuad(QVector3D(posX, posY, 0), itemIndex++, false, quadIndex);
-        if (itemIndex >= mDataProvider->imageCount())
-            return;     
     }    
 }
 
@@ -943,14 +985,10 @@ void HgMediaWallRenderer::setupDefaultQuad(const QVector3D& pos, int itemIndex, 
     quad->enableMirrorImage(reflectionsEnabled);
     quad->setAlpha(1.0f);
     
-    // apply opening animation if needed
- /*   if (itemIndex == mOpenedItem)
-        applyOpeningAnimation(quad);
-*/
     // setup indicator/decorator for the item if needed 
     int flags = mDataProvider->flags(itemIndex);
     const HgImage* indicatorImage = mDataProvider->indicator(flags);
-    if (flags != 0 && indicatorImage)
+    if (flags != 0 && indicatorImage && quadIndex < mRenderer->quadCount())
     {
         HgQuad* indicator = mRenderer->quad(quadIndex++);
         setupIndicator(quad, indicator, indicatorImage, 
@@ -976,9 +1014,6 @@ void HgMediaWallRenderer::setupIndicator(HgQuad* parent,
     indicator->enableMirrorImage(false);
     indicator->setAlpha(parent->alpha());
 
-    // apply opening animation to indicator if needed
-    if (itemIndex == mOpenedItem)
-        applyOpeningAnimation(indicator);
 }
 
 HgQuadRenderer* HgMediaWallRenderer::getRenderer()
@@ -989,7 +1024,7 @@ HgQuadRenderer* HgMediaWallRenderer::getRenderer()
 bool HgMediaWallRenderer::getItemPoints(int index, QPolygonF& points) const
 {
     QPolygonF poly;
-    if (!mRenderer->getQuadTranformedPoints(poly, index))
+    if (!mRenderer->getQuadTranformedPointsByUserData(poly, QVariant(index)))
         return false;
     
     points = poly;
@@ -1012,4 +1047,9 @@ void HgMediaWallRenderer::setFrontItemPosition(const QPointF& position)
 QPointF HgMediaWallRenderer::frontItemPosition() const
 {
     return mFrontItemPosition;
+}
+
+void HgMediaWallRenderer::setOrientation(Qt::Orientation orientation)
+{
+    mOrientation = orientation;
 }

@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 3 %
+*  Version     : %version: 5 %
 */
 #ifndef TestCacheProxy_H
 #define TestCacheProxy_H
@@ -62,7 +62,7 @@ private slots:
     void testCP_ResizeCache();
     void testCP_Data();
     void testCP_Sort();
-//    void testCP_Filter();
+    void testCP_Filter();
     
 private:
     BMHelper* bmh;

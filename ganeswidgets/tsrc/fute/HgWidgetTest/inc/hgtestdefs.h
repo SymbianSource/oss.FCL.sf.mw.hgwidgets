@@ -29,7 +29,8 @@ enum HgTestImageType {
     ImageTypeNone = 0,
     ImageTypeQIcon,
     ImageTypeHbIcon,
-    ImageTypeQImage
+    ImageTypeQImage,
+    ImageTypeQPixmap
 };
 
 static const QString SETT_ORGANIZATION = "Nokia";
@@ -46,5 +47,6 @@ static const QString SETT_TITLE_FONT = "TitleFont";
 static const QString SETT_DESCRIPTION_POSITION = "DescriptionPosition";
 static const QString SETT_DESCRIPTION_FONT = "DescriptionFont";
 static const QString SETT_REFLECTIONS_ENABLED = "Reflections enabled";
+static const QString SETT_ITEM_SIZE_POLICY = "ItemSizePolicy";
 
 #endif /* HGTESTDEFS_H_ */

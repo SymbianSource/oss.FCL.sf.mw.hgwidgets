@@ -22,7 +22,6 @@ INCLUDEPATH += . \
     $$MW_LAYER_SYSTEMINCLUDE \
     /sf/mw/hb/src/hbcore/gui
 LIBS += -lestor.dll \
-    -lmpxcommon.dll \
     -lhbcore \
     -lhbwidgets \
     -llibOpenVG.dll \
@@ -48,12 +47,15 @@ SOURCES += src/hgwidgets.cpp \
     src/hglongpressvisualizer.cpp \
     src/hgcoverflowcontainer.cpp \
     src/hggridcontainer.cpp \
-    src/hgindexfeedback.cpp \
-    src/hgindexfeedback_p.cpp \
+#    src/hgindexfeedback.cpp \
+#    src/hgindexfeedback_p.cpp \
     src/hggrid.cpp \
     src/hggrid_p.cpp \
     src/hgmediawall.cpp \
-    src/hgmediawall_p.cpp
+    src/hgmediawall_p.cpp \
+    src/hgqtquadrenderer.cpp \
+    src/hgtransformedquad.cpp \
+    src/hgtransformedquadrenderer.cpp
 HEADERS = inc/trace.h \
     ../hgwidgets_plat/ganeswidgets_api/inc/hgwidgets.h \
     ../hgwidgets_plat/ganeswidgets_api/inc/hggrid.h \
@@ -70,9 +72,13 @@ HEADERS = inc/trace.h \
     inc/hglongpressvisualizer.h \
     inc/hgcoverflowcontainer.h \
     inc/hggridcontainer.h \
-    inc/hgindexfeedback.h
+#    inc/hgindexfeedback.h \
+    inc/hgqtquadrenderer.h \
+    inc/hgtransformedquad.h \
+    inc/hgtransformedquadrenderer.h
 RESOURCES += data/ganeswidgets.qrc
 
+DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT
 
 include(rom/rom.pri)
 include(sis/stub.pri)

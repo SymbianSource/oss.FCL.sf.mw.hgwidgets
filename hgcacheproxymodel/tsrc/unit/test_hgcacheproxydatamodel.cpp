@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 3 %
+*  Version     : %version: 5 %
 */
 #include <QtTest/QtTest>
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -294,9 +294,8 @@ void TestCacheProxy::testBM_ItemCountChanged()
     int bufferSize = 100;
     bmh = new BMHelper(totalsize);
     bm = new HgBufferManager(bmh, bufferSize, 40, 0, totalsize);    
-    
     totalsize--;
-    bmh->itemCountChanged(0, true, totalsize);
+    bmh->itemCountChanged(0, true, totalsize);    
     bm->itemCountChanged(0, true, totalsize);
     QVERIFY(bmh->isIntergal(bufferSize));
 
@@ -833,6 +832,12 @@ void TestCacheProxy::testCP_QAbstractItemModel()
     testQAbstractItemModel(cp, 200, 1);
     cp->setDataProvider(0);
     QVERIFY(cp->DataProvider() == 0);
+
+    cp->setDataProvider(dph);
+    QVERIFY(cp->DataProvider() == dph);
+
+    cp->setDataProvider(dph);
+    QVERIFY(cp->DataProvider() == dph);
 }
 
 void TestCacheProxy::testCP_SignalsForward()
@@ -1034,50 +1039,50 @@ void TestCacheProxy::testCP_Sort()
     
 }
 
-//void TestCacheProxy::testCP_Filter()
-//{
-//    cp = new HgCacheProxyModel();
-//    cph = new CacheProxyHelper(cp);
-//    dph = new DataProviderHelper(200);
-//    cp->setDataProvider(dph, 50, 20);
-//
-//    QModelIndex idx = cp->index(1, 0);
-//    QVariant res = cp->data(idx, Qt::DisplayRole);
-//    QCOMPARE(res.isValid(), true);
-//    QCOMPARE(res.toString().startsWith("item"), true);
-//    
-//    QRegExp regexp = QRegExp("ITEM*", Qt::CaseSensitive, QRegExp::Wildcard);
-//    
-//    cp->setFilterRegExp(regexp);
-//    QVERIFY(cp->filterRegExp() == regexp);
-//    cp->setFilterCaseSensitivity(Qt::CaseSensitive);
-//    QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseSensitive);   
-//    
-//    idx = cp->index(1, 0);
-//    res = cp->data(idx, Qt::DisplayRole);
-//    QCOMPARE(res.isValid(), true);
-//    QCOMPARE(res.toString().startsWith("item"), false);
-//    
-//    cp->setFilterKeyColumn(1);
-//    QCOMPARE(cp->filterKeyColumn (), 1);
-//    cp->setFilterKeyColumn(0);
-//    
-//    cp->setFilterRole(Qt::UserRole+1);
-//    QCOMPARE(cp->filterRole(), Qt::UserRole+1);
-//    cp->setFilterRole(Qt::DisplayRole);     
-//    
-//    regexp = QRegExp("ITEM*", Qt::CaseInsensitive, QRegExp::Wildcard);
-//    cp->setFilterRegExp(regexp);
-//    QVERIFY(cp->filterRegExp() == regexp);
-//    cp->setFilterCaseSensitivity(Qt::CaseInsensitive);
-//    QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseInsensitive);   
-//
-//    idx = cp->index(1, 0);
-//    res = cp->data(idx, Qt::DisplayRole);
-//    QCOMPARE(res.isValid(), true);
-//    QCOMPARE(res.toString().startsWith("item"), true);
-//
-//}
+void TestCacheProxy::testCP_Filter()
+{
+    cp = new HgCacheProxyModel();
+    cph = new CacheProxyHelper(cp);
+    dph = new DataProviderHelper(200);
+    cp->setDataProvider(dph, 50, 20);
+
+    QModelIndex idx = cp->index(1, 0);
+    QVariant res = cp->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), true);
+    QCOMPARE(res.toString().startsWith("item"), true);
+    
+    QRegExp regexp = QRegExp("ITEM*", Qt::CaseSensitive, QRegExp::Wildcard);
+    
+    cp->setFilterRegExp(regexp);
+    QVERIFY(cp->filterRegExp() == regexp);
+    cp->setFilterCaseSensitivity(Qt::CaseSensitive);
+    QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseSensitive);   
+    
+    idx = cp->index(1, 0);
+    res = cp->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), true);
+    QCOMPARE(res.toString().startsWith("item"), false);
+    
+    cp->setFilterKeyColumn(1);
+    QCOMPARE(cp->filterKeyColumn (), 1);
+    cp->setFilterKeyColumn(0);
+    
+    cp->setFilterRole(Qt::UserRole+1);
+    QCOMPARE(cp->filterRole(), Qt::UserRole+1);
+    cp->setFilterRole(Qt::DisplayRole);     
+    
+    regexp = QRegExp("ITEM*", Qt::CaseInsensitive, QRegExp::Wildcard);
+    cp->setFilterRegExp(regexp);
+    QVERIFY(cp->filterRegExp() == regexp);
+    cp->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseInsensitive);   
+
+    idx = cp->index(1, 0);
+    res = cp->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), true);
+    QCOMPARE(res.toString().startsWith("item"), true);
+
+}
 
 
 #ifdef _CACHEPROXYDATAMODEL_UNITTEST_LOG_TO_C
@@ -1085,8 +1090,8 @@ void TestCacheProxy::testCP_Sort()
     {
         QApplication app(argc, argv);
         TestCacheProxy tc;
-        int c = 3;
-        char* v[] = {argv[0], "-o", "c:/test.txt"};
+        int c = 5;
+        char* v[] = {argv[0], "-o", "c:/test.txt", "-maxwarnings", "0"};
         return QTest::qExec(&tc, c, v);
     }
 #else

@@ -103,6 +103,11 @@ signals:
     void scrollingStarted();
     void scrollingEnded();
 
+protected slots:    
+
+    virtual void onScrollingStarted();
+    virtual void onScrollingEnded();
+
 private slots:
 
     void updateBySpringPosition();
@@ -136,7 +141,6 @@ protected:
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
     virtual void handleCurrentChanged(const QModelIndex &current);
-    virtual QRectF drawableRect() const;
 
 protected:
 
@@ -158,7 +162,7 @@ protected:
     bool handleLongTap(Qt::GestureState state, const QPointF &pos);
     bool handleItemAction(const QPointF &pos, ItemActionType action);
 
-    void selectItem();
+    void selectItem(int index);
     void updateSelectedItem();
     void unselectItem();
 
@@ -168,8 +172,6 @@ protected:
     void stopLongPressWatcher();
     bool updateSelectionModel(HgWidgetItem* item);
 
-    QTransform qtToVgTransform() const;
-    QPointF mapQtToVg(const QPointF& p) const;
     
     virtual void updateItemSizeAndSpacing();
     virtual QSizeF getAutoItemSize() const;
@@ -196,7 +198,8 @@ protected: // data
 
     HgWidget::SelectionMode mSelectionMode;
     QItemSelectionModel *mSelectionModel;
-    HgImage *mMarkImage;
+    HgImage *mMarkImageOn;
+    HgImage *mMarkImageOff;
     
     qreal mSpringVelAtDragStart;
     bool mDragged;
@@ -219,6 +222,8 @@ protected: // data
     QSizeF mUserItemSpacing;
     
     Qt::Orientation mOrientation;
+    QModelIndex mDelayedScrollToIndex;
+    bool mIgnoreTap;
 };
 
 #endif

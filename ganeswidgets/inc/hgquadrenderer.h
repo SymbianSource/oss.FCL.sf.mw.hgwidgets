@@ -29,7 +29,7 @@ class QRectF;
 class QMatrix4x4;
 class QPolygonF;
 class HgImage;
-class HgImageFader;
+
 /**
  *
  * Abstract class to be inherited by differend quad renderer implementations.
@@ -58,26 +58,25 @@ public:
      * @return quad under the pointer position or -1 if nothing is there.
      */
     virtual HgQuad* getQuadAt(const QPointF& point) const = 0;
+
     /**
-     * Transform quads with view and projection transformation for rendering.
-     * @param view view transformation matrix.
-     * @param projection transformation matrix.
-     * @rect window rectangle.
-     */
-    virtual void transformQuads(const QMatrix4x4& view, const QMatrix4x4& proj, 
-        const QRectF& rect)=0;
-    /**
-     * Draw transformed quads using painter or underlying Native graphics API.
+     * Rasterize 3D quads to 2D screen using painter or underlying Native graphics API.
      * This should be called inside Widgets draw method.
-     * @param rect window rectangle.
      * @param painter QPainter-object.
+     * @param rect window rectangle.
+     * @param viewMatrix view matrix
+     * @param projectionMatrix projection matrix
+     * @param orientation current screen orientation
      */
-    virtual void drawQuads(const QRectF& rect, QPainter* painter)=0;
+    virtual void drawQuads(QPainter* painter, const QRectF& rect, 
+        const QMatrix4x4& viewMatrix, const QMatrix4x4& projectionMatrix, 
+        const Qt::Orientation orientation, 
+        const QTransform& sceneTransform)=0;
     
     /**
      * 
      */
-    virtual bool getQuadTranformedPoints(QPolygonF& points, int index) const=0;
+    virtual bool getQuadTranformedPointsByUserData(QPolygonF& points, const QVariant& userData) const=0;
     
     /**
      * 
@@ -88,17 +87,15 @@ public:
      * 
      */
     virtual HgImage* createNativeImage()=0;
-    
-    /**
-     * 
-     */
-    virtual void setImageFader(HgImageFader* fader);
-    
+        
     /**
      * 
      */
     virtual QList<HgQuad*> getVisibleQuads(const QRectF& rect) const=0;
     
+    /**
+     * 
+     */
     virtual void setDefaultImage(QImage defaultImage);
 
     /**
@@ -116,14 +113,24 @@ public:
      */
     virtual QImage getDefaultImage() const;
     
+    /**
+     * 
+     */
+    virtual void enableReflections(bool enabled);
+    
+    /**
+     * 
+     */
+    virtual bool reflectionsEnabled() const;
+    
 protected:    
     HgQuadRenderer(int maxQuads);
 
     QList<HgQuad*> mQuads;
     qreal mMirroringPlaneY;
-    HgImageFader* mImageFader;
     QImage mDefaultImage;
     QVector2D mTranslation;
+    bool mReflectionsEnabled;
 };
 
 #endif

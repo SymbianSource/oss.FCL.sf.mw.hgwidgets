@@ -58,7 +58,11 @@ public:
 
     void enableReflections(bool enabled);
     bool reflectionsEnabled() const;
-        
+
+signals:
+
+    void animationAboutToEnd(const QModelIndex& targetIndex);
+
 protected:
     HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent);
 

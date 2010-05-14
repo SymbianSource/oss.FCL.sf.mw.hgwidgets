@@ -121,10 +121,11 @@ private:
     int mReleaseStart;
     int mReleaseCount;
     QTimer mTimer;
-
+    bool mFirstTime;
+    
     UpdateBuffer mRequestBuffer;
     UpdateBuffer mReleaseBuffer;
-
+    
 private:
     Q_DISABLE_COPY(HgScrollBufferManager)
     };

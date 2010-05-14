@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 2 %
+*  Version     : %version: 7 %
 */
 #include <QList>
 #include <QAbstractItemModel>
@@ -27,104 +27,93 @@
 
 
 
-Q_DECL_EXPORT HgCacheProxyModel::HgCacheProxyModel(QObject *parent):
-QAbstractItemModel(parent),
-mBufferManager(0),
-mSortFilterProxyModel(new QSortFilterProxyModel(this)),
-mDataProviderModel(0),
-mResetNeeded(false),
-mSupressBM(false),
-mSortParameterChanged(true),
-mFilterParameterChanged(true)
+HgCacheProxyModel::HgCacheProxyModel(QObject *parent):
+    QAbstractItemModel(parent),
+    mBufferManager(0),
+    mSortFilterProxyModel(new QSortFilterProxyModel(this)),
+    mDataProviderModel(0),
+    mSupressBM(false),
+    mCurrentPos(0)//,
+//    mSortParameterChanged(true)
 {
-    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeInserted(QModelIndex,int,int)),
-            this, SIGNAL(columnsAboutToBeInserted(QModelIndex,int,int)));
+    TX_ENTRY
+    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeInserted(const QModelIndex&, int, int)),
+            this, SLOT(sourceColumnsAboutToBeInserted(const QModelIndex&, int, int)));
+    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(sourceColumnsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeRemoved(const QModelIndex&, int, int)),
+            this, SLOT(sourceColumnsAboutToBeRemoved(const QModelIndex&, int, int)));
     
-    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeMoved(QModelIndex, int, int, QModelIndex, int)),
-            this, SIGNAL(columnsAboutToBeMoved(QModelIndex, int, int, QModelIndex, int)));    
-    
-    connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeRemoved(QModelIndex,int,int)),
-            this, SIGNAL(columnsAboutToBeRemoved(QModelIndex,int,int)));    
-    
-    connect(mSortFilterProxyModel, SIGNAL(columnsInserted(QModelIndex,int,int)),
-            this, SIGNAL(columnsInserted(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(columnsMoved(QModelIndex, int, int, QModelIndex, int)),
-            this, SIGNAL(columnsMoved(QModelIndex, int, int, QModelIndex, int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(columnsRemoved(QModelIndex,int,int)),
-            this, SIGNAL(columnsRemoved(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            this, SLOT(dataUpdated(QModelIndex,QModelIndex)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(headerDataChanged(Qt::Orientation,int,int)),
-            this, SIGNAL(headerDataChanged(Qt::Orientation,int,int)));
-    
+    connect(mSortFilterProxyModel, SIGNAL(columnsInserted(const QModelIndex&, int, int)),
+            this, SLOT(sourceColumnsInserted(const QModelIndex&, int, int)));
+    connect(mSortFilterProxyModel, SIGNAL(columnsMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(sourceColumnsMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    connect(mSortFilterProxyModel, SIGNAL(columnsRemoved(const QModelIndex&, int, int )),
+            this, SLOT(sourceColumnsRemoved(const QModelIndex&, int, int )));
+    connect(mSortFilterProxyModel, SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)),
+            this, SLOT(sourceDataChanged(const QModelIndex&, const QModelIndex&)));
+    connect(mSortFilterProxyModel, SIGNAL(headerDataChanged(Qt::Orientation, int, int)),
+            this, SLOT(sourceHeaderDataChanged(Qt::Orientation, int, int)));
     connect(mSortFilterProxyModel, SIGNAL(layoutAboutToBeChanged()),
-            this, SIGNAL(layoutAboutToBeChanged()));
-    
-    connect(mSortFilterProxyModel, SIGNAL(layoutChanged()), 
-            this, SIGNAL(layoutChanged()));
-    
-    connect(mSortFilterProxyModel, SIGNAL(modelAboutToBeReset()), 
-            this, SLOT(sourceAboutToBeReset()));
-    
-    connect(mSortFilterProxyModel, SIGNAL(modelReset()), 
-            this, SLOT(sourceReset()));    
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
-            this, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeMoved(QModelIndex, int, int, QModelIndex, int)),
-            this, SIGNAL(rowsAboutToBeMoved(QModelIndex, int, int, QModelIndex, int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-            this, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
-            this, SIGNAL(rowsInserted(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
-            this, SLOT(sourceRowsInserted(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, int)),
-            this, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-            this, SIGNAL(rowsRemoved(QModelIndex,int,int)));
-    
-    connect(mSortFilterProxyModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-            this, SLOT(sourceRowsRemoved(QModelIndex,int,int)));
+            this, SLOT(sourceLayoutAboutToBeChanged()));
+    connect(mSortFilterProxyModel, SIGNAL(layoutChanged()),
+            this, SLOT(sourceLayoutChanged()));
+    connect(mSortFilterProxyModel, SIGNAL(modelAboutToBeReset()),
+            this, SLOT(sourceModelAboutToBeReset()));
+    connect(mSortFilterProxyModel, SIGNAL(modelReset()),
+            this, SLOT(sourceModelReset()));
+    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeInserted(const QModelIndex&, int, int)),
+            this, SLOT(sourceRowsAboutToBeInserted(const QModelIndex&, int, int)));
+    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(sourceRowsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    connect(mSortFilterProxyModel, SIGNAL(rowsAboutToBeRemoved(const QModelIndex&, int, int)),
+            this, SLOT(sourceRowsAboutToBeRemoved(const QModelIndex&, int, int)));
+    connect(mSortFilterProxyModel, SIGNAL(rowsInserted(const QModelIndex &, int , int)),
+            this, SLOT(sourceRowsInserted(const QModelIndex &, int , int)));
+    connect(mSortFilterProxyModel, SIGNAL(rowsMoved(const QModelIndex &, int, int, const QModelIndex&, int)),
+            this, SLOT(sourceRowsMoved(const QModelIndex &, int, int, const QModelIndex&, int)));
+    connect(mSortFilterProxyModel, SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
+            this, SLOT(sourceRowsRemoved(const QModelIndex&, int, int)));
+
+    TX_EXIT
 }
 
-Q_DECL_EXPORT HgCacheProxyModel::~HgCacheProxyModel()
+HgCacheProxyModel::~HgCacheProxyModel()
 {
+    TX_ENTRY
     delete mBufferManager;
+    TX_EXIT    
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::setDataProvider(HgDataProviderModel *dataProvider, int cacheSize, int cacheTreshold)
+void HgCacheProxyModel::setDataProvider(HgDataProviderModel *dataProvider, int cacheSize, int cacheTreshold)
 {
     TX_ENTRY
     mDataProviderModel = dataProvider;
     mSortFilterProxyModel->setSourceModel(mDataProviderModel);
     if (mDataProviderModel){
         mDataProviderModel->registerObserver(this);
-        mDataProviderModel->resizeQPixmapPool(cacheSize);
 
-        delete mBufferManager;
-        mBufferManager = NULL;
-        mBufferManager = new HgBufferManager(this, cacheSize, cacheTreshold, 0, count() );
+        mSupressBM = true;
+        resizeCache(cacheSize, cacheTreshold);
+        mSupressBM = false;
+
+        if (mBufferManager == NULL){
+            mBufferManager = new HgBufferManager(this, cacheSize, cacheTreshold, 0, count() );
+        } else {
+            mBufferManager->resetBuffer(0, count());
+        }
+        
+
     }
     TX_EXIT    
 }
 
-Q_DECL_EXPORT HgDataProviderModel* HgCacheProxyModel::DataProvider()
+HgDataProviderModel* HgCacheProxyModel::DataProvider()
 {
     return mDataProviderModel;
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::resizeCache(int newSize, int newTreshold)
+void HgCacheProxyModel::resizeCache(int newSize, int newTreshold)
 {
     TX_ENTRY
     if (mDataProviderModel)
@@ -134,7 +123,7 @@ Q_DECL_EXPORT void HgCacheProxyModel::resizeCache(int newSize, int newTreshold)
     TX_EXIT    
 }
 
-Q_DECL_EXPORT QModelIndex HgCacheProxyModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex HgCacheProxyModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
     if (  row >= rowCount() ){
@@ -147,65 +136,65 @@ Q_DECL_EXPORT QModelIndex HgCacheProxyModel::index(int row, int column, const QM
     return QAbstractItemModel::createIndex(row, column); 
 }
 
-Q_DECL_EXPORT QModelIndex HgCacheProxyModel::parent(const QModelIndex &child) const
+QModelIndex HgCacheProxyModel::parent(const QModelIndex &child) const
 {
     return mSortFilterProxyModel->parent(mapToSource(child));
 }
 
-Q_DECL_EXPORT int HgCacheProxyModel::rowCount(const QModelIndex &parent) const
+int HgCacheProxyModel::rowCount(const QModelIndex &parent) const
 {
     return mSortFilterProxyModel->rowCount(mapToSource(parent));
 }
 
-Q_DECL_EXPORT int HgCacheProxyModel::columnCount(const QModelIndex &parent) const
+int HgCacheProxyModel::columnCount(const QModelIndex &parent) const
 {
     return mSortFilterProxyModel->columnCount(mapToSource(parent));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::hasChildren(const QModelIndex &parent) const
+bool HgCacheProxyModel::hasChildren(const QModelIndex &parent) const
 {
     return mSortFilterProxyModel->hasChildren(mapToSource(parent));
 }
 
-Q_DECL_EXPORT QVariant HgCacheProxyModel::data(const QModelIndex &index, int role) const
+QVariant HgCacheProxyModel::data(const QModelIndex &index, int role) const
 {    
     setBufferPosition(index.row());
     QVariant res = mSortFilterProxyModel->data(mapToSource(index), role);
     return res;
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool HgCacheProxyModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     return mSortFilterProxyModel->setData(mapToSource(index), value, role);
 }
 
-Q_DECL_EXPORT QVariant HgCacheProxyModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant HgCacheProxyModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     return mSortFilterProxyModel->headerData(section, orientation, role);
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+bool HgCacheProxyModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
     return mSortFilterProxyModel->setHeaderData(section, orientation, value, role);
 }
 
-Q_DECL_EXPORT QMap<int, QVariant> HgCacheProxyModel::itemData(const QModelIndex &index) const
+QMap<int, QVariant> HgCacheProxyModel::itemData(const QModelIndex &index) const
 {
     setBufferPosition(index.row());
     return mSortFilterProxyModel->itemData(mapToSource(index));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)
+bool HgCacheProxyModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)
 {
     return mSortFilterProxyModel->setItemData(mapToSource(index), roles);
 }
 
-Q_DECL_EXPORT QStringList HgCacheProxyModel::mimeTypes() const
+QStringList HgCacheProxyModel::mimeTypes() const
 {
     return mSortFilterProxyModel->mimeTypes();
 }
 
-Q_DECL_EXPORT QMimeData *HgCacheProxyModel::mimeData(const QModelIndexList &indexes) const
+QMimeData *HgCacheProxyModel::mimeData(const QModelIndexList &indexes) const
 {
     QModelIndexList list;
     for ( int i=0; i < indexes.count(); i++){
@@ -214,222 +203,217 @@ Q_DECL_EXPORT QMimeData *HgCacheProxyModel::mimeData(const QModelIndexList &inde
     return mSortFilterProxyModel->mimeData(list);
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+bool HgCacheProxyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
     return mSortFilterProxyModel->dropMimeData(data, action, row, column, mapToSource(parent));
 }
 
-Q_DECL_EXPORT Qt::DropActions HgCacheProxyModel::supportedDropActions() const
+Qt::DropActions HgCacheProxyModel::supportedDropActions() const
 {
     return mSortFilterProxyModel->supportedDropActions();
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::insertRows(int row, int count, const QModelIndex &parent)
+bool HgCacheProxyModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     return mSortFilterProxyModel->insertRows(row, count, mapToSource(parent));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::insertColumns(int column, int count, const QModelIndex &parent)
+bool HgCacheProxyModel::insertColumns(int column, int count, const QModelIndex &parent)
 {
     return mSortFilterProxyModel->insertColumns(column, count, mapToSource(parent));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::removeRows(int row, int count, const QModelIndex &parent)
+bool HgCacheProxyModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     return mSortFilterProxyModel->removeRows(row, count, mapToSource(parent));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::removeColumns(int column, int count, const QModelIndex &parent)
+bool HgCacheProxyModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
     return mSortFilterProxyModel->removeColumns(column, count, mapToSource(parent));
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::fetchMore(const QModelIndex &parent)
+void HgCacheProxyModel::fetchMore(const QModelIndex &parent)
 {
     mSortFilterProxyModel->fetchMore(mapToSource(parent));
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::canFetchMore(const QModelIndex &parent) const
+bool HgCacheProxyModel::canFetchMore(const QModelIndex &parent) const
 {
     return mSortFilterProxyModel->canFetchMore(mapToSource(parent));
 }        
 
-Q_DECL_EXPORT Qt::ItemFlags HgCacheProxyModel::flags(const QModelIndex &index) const
+Qt::ItemFlags HgCacheProxyModel::flags(const QModelIndex &index) const
 {
     return mSortFilterProxyModel->flags(mapToSource(index));
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::sort(int column, Qt::SortOrder order)
+void HgCacheProxyModel::sort(int column, Qt::SortOrder order)
 {
-    if ( mSortParameterChanged || (sortColumn() != column) || (sortOrder() != order) ){
-        mSortParameterChanged = false;
-        mResetNeeded = true;
-        cleanupForBMResetIfNeeded();
-        mSortFilterProxyModel->sort(column, order);
-        resetBMIfNeeded();
-    }
+    mSupressBM = true;
+    cleanupForBMReset();
+    mSortFilterProxyModel->sort(column, order);
+    resetBM();
 }
 
-Q_DECL_EXPORT QModelIndex HgCacheProxyModel::buddy(const QModelIndex &index) const
+QModelIndex HgCacheProxyModel::buddy(const QModelIndex &index) const
 {
     return mSortFilterProxyModel->buddy(mapToSource(index));
 }
 
-Q_DECL_EXPORT QModelIndexList HgCacheProxyModel::match(const QModelIndex &start, int role,
+QModelIndexList HgCacheProxyModel::match(const QModelIndex &start, int role,
                               const QVariant &value, int hits,
                               Qt::MatchFlags flags) const
 {
     return mSortFilterProxyModel->match(mapToSource(start), role, value, hits, flags);
 }
 
-Q_DECL_EXPORT QSize HgCacheProxyModel::span(const QModelIndex &index) const
+QSize HgCacheProxyModel::span(const QModelIndex &index) const
 {
     return mSortFilterProxyModel->span(mapToSource(index));
 }
 
-Q_DECL_EXPORT Qt::CaseSensitivity HgCacheProxyModel::sortCaseSensitivity() const
+Qt::CaseSensitivity HgCacheProxyModel::sortCaseSensitivity() const
 {
     return mSortFilterProxyModel->sortCaseSensitivity();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::setSortCaseSensitivity(Qt::CaseSensitivity cs)
+void HgCacheProxyModel::setSortCaseSensitivity(Qt::CaseSensitivity cs)
 {
     if (sortCaseSensitivity() != cs){
-        mSortParameterChanged = true;
-        cleanupForBMResetIfNeeded();
+        mSupressBM = true;
+        cleanupForBMReset();
         mSortFilterProxyModel->setSortCaseSensitivity(cs);
-        resetBMIfNeeded();    
+        resetBM();    
     }
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::isSortLocaleAware() const
+bool HgCacheProxyModel::isSortLocaleAware() const
 {
     return mSortFilterProxyModel->isSortLocaleAware();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::setSortLocaleAware(bool on)
+void HgCacheProxyModel::setSortLocaleAware(bool on)
 {
     if (isSortLocaleAware() != on){
-        mSortParameterChanged = true;    
-        cleanupForBMResetIfNeeded();
+        mSupressBM = true;    
+        cleanupForBMReset();
         mSortFilterProxyModel->setSortLocaleAware(on);
-        resetBMIfNeeded();    
+        resetBM();    
     }
 }
 
-Q_DECL_EXPORT int HgCacheProxyModel::sortColumn() const
+int HgCacheProxyModel::sortColumn() const
 {
     return mSortFilterProxyModel->sortColumn();
 }
 
-Q_DECL_EXPORT Qt::SortOrder HgCacheProxyModel::sortOrder() const
+Qt::SortOrder HgCacheProxyModel::sortOrder() const
 {
     return mSortFilterProxyModel->sortOrder();
 }
 
-Q_DECL_EXPORT bool HgCacheProxyModel::dynamicSortFilter() const
+bool HgCacheProxyModel::dynamicSortFilter() const
 {
     return mSortFilterProxyModel->dynamicSortFilter();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::setDynamicSortFilter(bool enable)
+void HgCacheProxyModel::setDynamicSortFilter(bool enable)
 {
     if (dynamicSortFilter() != enable){
-        mSortParameterChanged = true;   
-        mFilterParameterChanged = true;
-        cleanupForBMResetIfNeeded();
+        mSupressBM = true;   
+        cleanupForBMReset();
         mSortFilterProxyModel->setDynamicSortFilter(enable);
-        resetBMIfNeeded();
+        resetBM();
     }
 }
 
-Q_DECL_EXPORT int HgCacheProxyModel::sortRole() const
+int HgCacheProxyModel::sortRole() const
 {
     return mSortFilterProxyModel->sortRole();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::setSortRole(int role)
+void HgCacheProxyModel::setSortRole(int role)
 {
     if (sortRole() != role){
-        mSortParameterChanged = true;   
-        cleanupForBMResetIfNeeded();
+        mSupressBM = true;
+        cleanupForBMReset();
         mSortFilterProxyModel->setSortRole(role);
-        resetBMIfNeeded();    
+        resetBM();    
     }
 }
 
-//Q_DECL_EXPORT QRegExp HgCacheProxyModel::filterRegExp() const
-//{
-//    return mSortFilterProxyModel->filterRegExp();
-//}
-//
-//Q_DECL_EXPORT void HgCacheProxyModel::setFilterRegExp(const QRegExp &regExp)
-//{
-//    if (filterRegExp() != regExp){   
-//        mFilterParameterChanged = true;
-//        cleanupForBMResetIfNeeded();
-//        mSortFilterProxyModel->setFilterRegExp(regExp);
-//        resetBMIfNeeded();    
-//    }
-//}
-//
-//Q_DECL_EXPORT int HgCacheProxyModel::filterKeyColumn() const
-//{
-//    return mSortFilterProxyModel->filterKeyColumn();
-//}
-//
-//Q_DECL_EXPORT void HgCacheProxyModel::setFilterKeyColumn(int column)
-//{
-//    if (filterKeyColumn() != column){   
-//        mFilterParameterChanged = true;
-//        cleanupForBMResetIfNeeded();
-//        mSortFilterProxyModel->setFilterKeyColumn(column);
-//        resetBMIfNeeded();    
-//    }
-//}
-//
-//Q_DECL_EXPORT Qt::CaseSensitivity HgCacheProxyModel::filterCaseSensitivity() const
-//{
-//    return mSortFilterProxyModel->filterCaseSensitivity();
-//}
-//
-//Q_DECL_EXPORT void HgCacheProxyModel::setFilterCaseSensitivity(Qt::CaseSensitivity cs)
-//{
-//    if ( filterCaseSensitivity() != cs){   
-//        mFilterParameterChanged = true;
-//        cleanupForBMResetIfNeeded();
-//        mSortFilterProxyModel->setFilterCaseSensitivity(cs);
-//        resetBMIfNeeded();    
-//    }
-//}
-//
-//Q_DECL_EXPORT int HgCacheProxyModel::filterRole() const
-//{
-//    return mSortFilterProxyModel->filterRole();
-//}
-//
-//Q_DECL_EXPORT void HgCacheProxyModel::setFilterRole(int role)
-//{
-//    if ( mFilterParameterChanged || (filterRole() != role)){   
-//        mFilterParameterChanged = false;
-//        mResetNeeded = true;
-//        cleanupForBMResetIfNeeded();
-//        mSortFilterProxyModel->setFilterRole(role);
-//        resetBMIfNeeded();
-//    }
-//}
+QRegExp HgCacheProxyModel::filterRegExp() const
+{
+    return mSortFilterProxyModel->filterRegExp();
+}
 
-Q_DECL_EXPORT bool HgCacheProxyModel::submit()
+void HgCacheProxyModel::setFilterRegExp(const QRegExp &regExp)
+{
+    if (filterRegExp() != regExp){
+        mSupressBM = true;
+        cleanupForBMReset();
+        mSortFilterProxyModel->setFilterRegExp(regExp);
+        resetBM();    
+    }
+}
+
+int HgCacheProxyModel::filterKeyColumn() const
+{
+    return mSortFilterProxyModel->filterKeyColumn();
+}
+
+void HgCacheProxyModel::setFilterKeyColumn(int column)
+{
+    if (filterKeyColumn() != column){   
+        mSupressBM = true;
+        cleanupForBMReset();
+        mSortFilterProxyModel->setFilterKeyColumn(column);
+        resetBM();    
+    }
+}
+
+Qt::CaseSensitivity HgCacheProxyModel::filterCaseSensitivity() const
+{
+    return mSortFilterProxyModel->filterCaseSensitivity();
+}
+
+void HgCacheProxyModel::setFilterCaseSensitivity(Qt::CaseSensitivity cs)
+{
+    if ( filterCaseSensitivity() != cs){   
+        mSupressBM = true;
+        cleanupForBMReset();
+        mSortFilterProxyModel->setFilterCaseSensitivity(cs);
+        resetBM();    
+    }
+}
+
+int HgCacheProxyModel::filterRole() const
+{
+    return mSortFilterProxyModel->filterRole();
+}
+
+void HgCacheProxyModel::setFilterRole(int role)
+{
+    if ( filterRole() != role ){   
+        mSupressBM = true;
+        cleanupForBMReset();
+        mSortFilterProxyModel->setFilterRole(role);
+        resetBM();
+    }
+}
+
+bool HgCacheProxyModel::submit()
 {
     return mSortFilterProxyModel->submit();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::revert()
+void HgCacheProxyModel::revert()
 {
     mSortFilterProxyModel->revert();
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::release(int start, int end)
+void HgCacheProxyModel::release(int start, int end)
 {
     TX_ENTRY_ARGS( QString("%0-%1").arg(start).arg(end));   
     QList<int> list;
@@ -447,10 +431,10 @@ Q_DECL_EXPORT void HgCacheProxyModel::release(int start, int end)
     }
     if (mDataProviderModel)
         mDataProviderModel->release(list, true);
-    TX_EXIT    
+    TX_EXIT
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::request(int start, int end, HgRequestOrder order)
+void HgCacheProxyModel::request(int start, int end, HgRequestOrder order)
 {
     TX_ENTRY_ARGS( QString("%0-%1").arg(start).arg(end));   
     QList<int> list;
@@ -498,27 +482,18 @@ int HgCacheProxyModel::mapFromDataProviderIndex(int myIndex) const
     return mSortFilterProxyModel->mapFromSource( mDataProviderModel->index(myIndex, 0) ).row();
 }
 
-void HgCacheProxyModel::cleanupForBMResetIfNeeded()
+void HgCacheProxyModel::cleanupForBMReset()
 {
-    if (mResetNeeded || mSortFilterProxyModel->dynamicSortFilter()==true){
-        TX_LOG
-        mSupressBM = true;
-        mResetNeeded = true;
-        beginResetModel();
-        releaseAll();
-    }
+    releaseAll();
 }
 
-void HgCacheProxyModel::resetBMIfNeeded()
+void HgCacheProxyModel::resetBM()
 {
-    if ( mResetNeeded ){
-        if (mBufferManager)
-            mBufferManager->resetBuffer( mCurrentPos, count() );
-        mSupressBM = false;
-        mResetNeeded = false;
-        endResetModel();
+    if (mBufferManager){
+        mCurrentPos = 0;
+        mBufferManager->resetBuffer( mCurrentPos, count() );
     }
-    mResetNeeded = false;
+    mSupressBM = false;
 }
 
 void HgCacheProxyModel::releaseAll()
@@ -528,64 +503,218 @@ void HgCacheProxyModel::releaseAll()
         for ( int i=0; i<mDataProviderModel->rowCount(); i++){
             list.append(i);
         }
-        mDataProviderModel->release(list, true); //will quietly replace all icons with default ones,
+        mDataProviderModel->release(list, true);
     }
 }
 
 void HgCacheProxyModel::setBufferPosition(int pos) const
 {
-    if (!mSupressBM && mBufferManager){
-        TX_LOG_ARGS(QString("idx:%1 ").arg(pos) );
+    if (mBufferManager && !mSupressBM){
         if (mCurrentPos!=pos){
+//            TX_LOG_ARGS(QString("pos:%1 ").arg(pos) );
             mCurrentPos = pos;
             mBufferManager->setPosition(mCurrentPos);
         }
     }
 }
 
-void HgCacheProxyModel::sourceReset()
+void HgCacheProxyModel::sourceColumnsAboutToBeInserted( const QModelIndex & parent, int start, int end)
 {
-    mSupressBM = true;
-    mResetNeeded = true;
-    releaseAll();
-    if (mBufferManager)
-        mBufferManager->resetBuffer( 0, count() );
-    mSupressBM = false;
-    mResetNeeded = false;
-    endResetModel();
+    TX_ENTRY
+    beginInsertColumns(parent, start, end);
+    TX_EXIT
 }
 
-void HgCacheProxyModel::sourceAboutToBeReset()
+void HgCacheProxyModel::sourceColumnsAboutToBeMoved( const QModelIndex & sourceParent, int sourceStart, 
+    int sourceEnd, const QModelIndex & destinationParent, int destinationColumn )
 {
-    mSupressBM = true;
-    mResetNeeded = true;
-    beginResetModel();
+    TX_ENTRY
+    beginMoveColumns(sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
+    TX_EXIT
 }
 
-void HgCacheProxyModel::sourceRowsInserted(const QModelIndex &source_parent, int start, int end)
+void HgCacheProxyModel::sourceColumnsAboutToBeRemoved( const QModelIndex & parent, int start, int end)
 {
-    Q_UNUSED(source_parent);
+    TX_ENTRY
+    beginRemoveColumns(parent, start, end);
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceColumnsInserted( const QModelIndex & parent, int start, int end )
+{
+    TX_ENTRY
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
     Q_UNUSED(end);
-    if (mBufferManager)
+    endInsertColumns();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceColumnsMoved( const QModelIndex & sourceParent, int sourceStart, 
+        int sourceEnd, const QModelIndex & destinationParent, int destinationColumn )
+{
+    TX_ENTRY
+    Q_UNUSED(sourceParent);
+    Q_UNUSED(sourceStart);
+    Q_UNUSED(sourceEnd);
+    Q_UNUSED(destinationParent);
+    Q_UNUSED(destinationColumn);
+    endMoveColumns();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceColumnsRemoved( const QModelIndex & parent, int start, int end )
+{
+    TX_ENTRY
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    endRemoveColumns();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight )
+{
+    TX_ENTRY_ARGS(QString("from:%1 to:%2").arg( topLeft.row() ).arg( bottomRight.row() ) );
+    QModelIndex begin = index( topLeft.row(), topLeft.column() );
+    QModelIndex end = index( bottomRight.row(), bottomRight.column() );
+    
+    if (begin.isValid() && end.isValid() && !mSupressBM)
+        emit dataChanged(begin, end);
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceHeaderDataChanged( Qt::Orientation orientation, int first, int last )
+{
+    TX_ENTRY
+    emit headerDataChanged( orientation, first, last );
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceLayoutAboutToBeChanged()
+{
+    TX_ENTRY
+    emit layoutAboutToBeChanged();
+    mSupressBM = true;
+    releaseAll();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceLayoutChanged()
+{
+    TX_ENTRY
+    mSupressBM = true;
+    if (mBufferManager){
+        mCurrentPos = 0;
+        mBufferManager->resetBuffer( mCurrentPos, count() );
+    }
+    mSupressBM = false;
+    emit layoutChanged();
+    TX_EXIT    
+}
+
+void HgCacheProxyModel::sourceModelAboutToBeReset()
+{
+    TX_ENTRY
+    beginResetModel();
+    mSupressBM = true;
+    releaseAll();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceModelReset()
+{
+    TX_ENTRY
+    mSupressBM = true;
+    if (mBufferManager){
+        mCurrentPos = 0;
+        mBufferManager->resetBuffer( mCurrentPos, count() );
+    }
+    mSupressBM = false;
+    endResetModel();
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceRowsAboutToBeInserted( const QModelIndex & parent, int start, int end )
+{
+    TX_ENTRY
+    if (mBufferManager && !mSupressBM){
+        beginInsertRows(parent, start, end);
+//        mBufferManager->aboutToInsertItems(start, end);    
+    }
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceRowsAboutToBeMoved( const QModelIndex & sourceParent, int sourceStart, 
+        int sourceEnd, const QModelIndex & destinationParent, int destinationRow )
+{
+    TX_ENTRY
+    beginMoveRows(sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceRowsAboutToBeRemoved( const QModelIndex & parent, int start, int end )
+{
+    TX_ENTRY
+    if (mBufferManager && !mSupressBM){
+        beginRemoveRows(parent, start, end);
+//        mBufferManager->aboutToRemoveItems(start, end);    
+    }
+    TX_EXIT
+}
+
+void HgCacheProxyModel::sourceRowsInserted( const QModelIndex & parent, int start, int end )
+{
+    TX_ENTRY
+    Q_UNUSED(parent);
+    Q_UNUSED(end);
+    if (mBufferManager && !mSupressBM){
         mBufferManager->itemCountChanged(start, false, count());
+        endInsertRows();
+    }
+    TX_EXIT    
 }
 
-void HgCacheProxyModel::sourceRowsRemoved(const QModelIndex &source_parent, int start, int end)
+void HgCacheProxyModel::sourceRowsMoved( const QModelIndex & sourceParent, int sourceStart, 
+        int sourceEnd, const QModelIndex & destinationParent, int destinationRow )
 {
-    Q_UNUSED(source_parent);
-    Q_UNUSED(end);    
-    if (mBufferManager)
-        mBufferManager->itemCountChanged(start, true, count());   
+    TX_ENTRY
+    Q_UNUSED(sourceParent);
+    Q_UNUSED(sourceStart);
+    Q_UNUSED(sourceEnd);
+    Q_UNUSED(destinationParent);
+    Q_UNUSED(destinationRow);
+    endMoveRows();
+    TX_EXIT
 }
 
-void HgCacheProxyModel::dataUpdated(QModelIndex from, QModelIndex to)
+void HgCacheProxyModel::sourceRowsRemoved( const QModelIndex & parent, int start, int end )
 {
-    dataUpdated(from.row(), to.row());
+    TX_ENTRY
+    Q_UNUSED(parent);
+    Q_UNUSED(end);
+    if (mBufferManager && !mSupressBM){
+        mBufferManager->itemCountChanged(start, true, count());
+        endRemoveRows();
+    }
+    TX_EXIT
 }
 
-Q_DECL_EXPORT void HgCacheProxyModel::dataUpdated(int from, int to)
+void HgCacheProxyModel::dataUpdated(int from, int to)
 {
     TX_LOG_ARGS(QString("from:%1 to:%2").arg(from).arg(to));
-    emit dataChanged(index(mapFromDataProviderIndex(from),0), index ( mapFromDataProviderIndex(to),0) );
+    QModelIndex begin;
+    QModelIndex end;
+    begin = index(mapFromDataProviderIndex(from),0);
+    
+    if ( from == to ){
+        end = begin;
+    } else {
+        end = index(mapFromDataProviderIndex(to),0);
+    }
+    
+    if (begin.isValid() && end.isValid() && !mSupressBM)
+        emit dataChanged(begin, end );
 }
+
 //eof

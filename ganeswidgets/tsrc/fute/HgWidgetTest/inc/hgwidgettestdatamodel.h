@@ -21,6 +21,7 @@
 #include <QAbstractListModel>
 #include <QItemSelection>
 #include <QStringList>
+#include <QFileInfoList>
 #include <hbicon>
 #include <thumbnailmanager_qt.h>
 #include <QImage>
@@ -46,6 +47,7 @@ public:
     
     int rowCount(const QModelIndex &parent=QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const;
+    QVariant silentData(const QModelIndex &index, int role=Qt::DisplayRole);
     bool setData(const QModelIndex& index, const QVariant& value, int role=Qt::EditRole);
 
     void refreshModel();
@@ -73,7 +75,8 @@ public slots:
 
     void updateAlbumArt( int index );
     void albumCacheReady();
-
+    void timeOut();
+    
 private:
     
     void release(int start, int end);
@@ -91,6 +94,9 @@ private:
     bool                            mUseLowResImages;
     QList<QImage>                   mImages;
     BufferManager                   *mBufferManager;
+    QList<QPixmap>                  mPixmaps;
+    QPixmap                         mDefaultPixmap;
+    bool                            mSilentDataFetch;
 
     ThumbnailManager* mWrapper;
     QStringList mWaitingThumbnails;
@@ -98,6 +104,7 @@ private:
     int mThumbnailRequestIndex;
     int mThumbnailRequestID;
 
+    QFileInfoList mFileInfoList;
 };
 
 #endif // HgWidgetTestDataModel_H

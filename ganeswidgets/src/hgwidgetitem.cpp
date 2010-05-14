@@ -64,6 +64,21 @@ void HgWidgetItem::setImage(const QImage &image)
     
 }
 
+void HgWidgetItem::setPixmap(const QPixmap &pixmap)
+{
+    if (!mHgImage)
+    {
+        mHgImage = mRenderer->createNativeImage();
+    }
+    
+    mHgImage->setPixmap(pixmap);
+
+    if (!mVisibility)
+        mHgImage->setAlpha(0);
+    
+}
+
+
 void HgWidgetItem::setTitle( QString title )
 {
     mTitle = title;
@@ -107,8 +122,14 @@ bool HgWidgetItem::updateItemData()
             setVisibility(vis.toBool());
         }
         
+                    
         // Convert data to correct format if possible.
-        if(image.canConvert<QImage>()){
+        if (image.type() == QVariant::Pixmap)
+        {
+            setPixmap(image.value<QPixmap>());
+            mValidData = true;            
+        }
+        else if(image.canConvert<QImage>()){
             setImage(image.value<QImage>());
             mValidData = true;
         }

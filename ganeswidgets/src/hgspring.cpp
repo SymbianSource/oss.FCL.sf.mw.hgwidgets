@@ -84,7 +84,9 @@ void HgSpring::gotoPos(const QPointF& pos)
 void HgSpring::cancel()
 {
     if (mTimer->isActive())
-        mTimer->stop();
+        mTimer->stop(); 
+    
+    mVelocity = QPointF(0,0);
 }
 
 const QPointF& HgSpring::startPos() const
@@ -104,9 +106,8 @@ const QPointF& HgSpring::endPos() const
 
 const QPointF& HgSpring::velocity() const
 {
-return mVelocity;
+    return mVelocity;
 }
-
 
 void HgSpring::update()
 {

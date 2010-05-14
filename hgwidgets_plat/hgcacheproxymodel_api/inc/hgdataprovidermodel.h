@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 3 %
+*  Version     : %version: 5 %
 */
 #ifndef HGDATAPROVIDERMODEL_H_
 #define HGDATAPROVIDERMODEL_H_
@@ -119,13 +119,13 @@ private:
     QList< QPixmap* > mFreePixmaps;
     QMap< int, QPixmap* > mUsedPixmaps;    
     int mUnallocatedPixmaps;
-    QMutex mQPixmapsLock;
+//    QMutex mQPixmapsLock;
     HgDataProviderModelObserver *mObserver;
 };
 
 inline bool HgDataProviderModel::isIndexValid(int idx) const
 {
-    return ((0 <= idx) && 
+    return ((idx >= 0) && 
             (idx < mCache->size()) && 
             (mCache->at(idx))); 
 }

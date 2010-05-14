@@ -55,13 +55,14 @@ HgWidgetTestDataModel::HgWidgetTestDataModel(QObject *parent)
     : QAbstractListModel(parent),
       mCachingInProgress(false),
       mImageType(ImageTypeNone),
-      mDefaultIcon((":/images/default.svg")),
+//      mDefaultIcon((":/images/default.svg")),
       mUseLowResImages(false),
       mWrapper( new ThumbnailManager() ),
       mThumbnailRequestPending(false),
       mThumbnailRequestIndex(-1),
       mThumbnailRequestID(-1),
-      mBufferManager(0)
+      mBufferManager(0),
+      mSilentDataFetch(false)
 {
     FUNC_LOG;
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
@@ -91,6 +92,31 @@ void HgWidgetTestDataModel::setThumbnailSize(ThumbnailManager::ThumbnailSize siz
     mWrapper->setThumbnailSize(size);
 }
 
+void HgWidgetTestDataModel::timeOut()
+{
+    for (int i = 0; i < mFileInfoList.size(); ++i){
+        QFileInfo fileInfo = mFileInfoList.at(i);
+        if (fileInfo.isFile()){
+            QString s = fileInfo.filePath();
+            if (s.indexOf(QString(".jpg"),0,Qt::CaseInsensitive)>0){
+                mFiles.append(s);
+                mImages.append(QImage());
+                mVisibility.append(true);
+            }
+        }
+    }
+
+    if (mBufferManager) {
+        mBufferManager->resetBuffer(0,mFiles.count());
+    }            
+    
+    if (mFiles.count()>0) {
+        // photo's behaves this way so for testing purposes lets follow their practice.
+        beginInsertRows(QModelIndex(), 0, mFiles.count()-1);
+        endInsertRows();
+    }
+}
+
 void HgWidgetTestDataModel::init()
 {
     FUNC_LOG;
@@ -104,26 +130,17 @@ void HgWidgetTestDataModel::init()
     dir.setPath(QString("f:/data/images"));
 #endif
 
-    QFileInfoList list = dir.entryInfoList();
-    for (int i = 0; i < list.size(); ++i){
-        QFileInfo fileInfo = list.at(i);
-        if (fileInfo.isFile()){
-            QString s = fileInfo.filePath();
-            if (s.indexOf(QString(".jpg"),0,Qt::CaseInsensitive)>0){
-                mFiles.append(s);
-                mImages.append(QImage());
-                mVisibility.append(true);
-            }
-        }
-    }
-
+    mFileInfoList = dir.entryInfoList();
     QPixmap pixmap(":/images/default.svg");
+    mDefaultPixmap = pixmap;
     if (!pixmap.isNull()){
         mQIcon = QIcon(pixmap);
         if (!mQIcon.isNull()){
             mHbIcon = HbIcon(mQIcon);
         }
     }
+    
+    QTimer::singleShot(0, this, SLOT(timeOut()));
 }
 
 /*!
@@ -139,6 +156,15 @@ int HgWidgetTestDataModel::rowCount( const QModelIndex &parent ) const
 {
     Q_UNUSED(parent);
     return mFiles.count();
+}
+
+
+QVariant HgWidgetTestDataModel::silentData(const QModelIndex &index, int role)
+{
+    mSilentDataFetch = true;
+    QVariant variant = data(index,role);
+    mSilentDataFetch = false;
+    return variant;
 }
 
 /*!
@@ -159,7 +185,7 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
         return returnValue;
     }
 
-    if( mBufferManager )
+    if( mBufferManager && !mSilentDataFetch)
         mBufferManager->setPosition( row );
 
     switch ( role )
@@ -182,45 +208,76 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
             }
         case Qt::DecorationRole:
             {
-            // INFO("Requesting model item" << row << ", " << mFiles.at(row));
-            if (mFiles.at(row).isEmpty()) {
-                returnValue = mDefaultIcon;
-            }
-            else {
-                QImage icon = mImages.at(row);
-                if ( !icon.isNull() )
+                if (mFiles.at(row).isEmpty())
+                {
+                    
+                    switch (mImageType)
                     {
-                    if (mUseLowResImages) {
-                        QSize size = icon.size();
-                        icon = icon.scaled(QSize(size.width()/4, size.height()/4));
+                    case ImageTypeHbIcon:
+                        returnValue = mHbIcon;
+                        break;
+                    case ImageTypeQImage:
+                        returnValue = mDefaultIcon;
+                        break;
+                    case ImageTypeQIcon:
+                        returnValue = mQIcon;
+                        break;
+                    case ImageTypeQPixmap:
+                        returnValue = mDefaultPixmap;
+                        break;
                     }
-
-                    switch(mImageType)
-                        {
-                        case ImageTypeHbIcon:
-                            {
-                            returnValue = mHbIcon;
-                            break;
-                            }
-                        case ImageTypeQImage:
-                            {
-                            returnValue = icon;
-                            break;
-                            }
-                        case ImageTypeQIcon:
-                            {
-                            returnValue = mQIcon;
-                            break;
-                            }
-                        default:
-                            break;
-                        }
-
-                    }
+                
+                }
                 else
+                {
+                    switch (mImageType)
                     {
-                    returnValue = mDefaultIcon;
+                    case ImageTypeQImage:
+                    {
+                        QImage image = mImages.at(row);
+                        if (image.isNull())
+                        {
+                            returnValue = mDefaultIcon;
+                        }
+                        else
+                        {
+                            if (mUseLowResImages)
+                            {
+                                QSize size = image.size();
+                                image = image.scaled(QSize(size.width()/4, size.height()/4));
+                                returnValue = image;
+                            }
+                            else
+                            {
+                                returnValue = image;
+                            }
+                        }
                     }
+                    break;
+                    case ImageTypeQPixmap:
+                    {
+                        QPixmap pixmap = mPixmaps.at(row);
+                        if (pixmap.isNull())
+                        {
+                            returnValue = mDefaultPixmap;
+                        }
+                        else
+                        {
+                            returnValue = pixmap;
+                        }
+                    }
+                    break;
+                    case ImageTypeHbIcon:
+                    {
+                        returnValue = mHbIcon;
+                    }
+                    break;
+                    case ImageTypeQIcon:
+                    {
+                        returnValue = mQIcon;
+                    }
+                    break;
+                    }                    
                 }
             break;
             }
@@ -362,8 +419,13 @@ void HgWidgetTestDataModel::add(const QModelIndex &target, int count)
 void HgWidgetTestDataModel::reset()
 {
     emit beginResetModel();
-    mImages.removeAt(0);
     mFiles.removeAt(0);
+    if (mImageType == ImageTypeQPixmap)
+    {
+        mPixmaps.removeAt(0);
+    }
+    else
+        mImages.removeAt(0);
     emit endResetModel();
 }
 
@@ -447,8 +509,19 @@ void HgWidgetTestDataModel::setBuffer(int buffer, int treshhold)
     delete mBufferManager;
     mBufferManager = 0;
     mBufferManager = new BufferManager(this, buffer, treshhold, 0, mFiles.count());
-    for (int i = 0; i<mImages.count();i++) {
-        mImages.replace(i, QImage());
+    if (mImageType == ImageTypeQPixmap)
+    {
+        for (int i = 0; i<mPixmaps.count();i++) {
+            mPixmaps.replace(i, QPixmap());
+        }        
+
+    }
+    else
+    {
+        for (int i = 0; i<mImages.count();i++) {
+            mImages.replace(i, QImage());
+        }
+
     }
 }
 
@@ -470,7 +543,14 @@ void HgWidgetTestDataModel::release(int start, int end)
             mWrapper->cancelRequest(mThumbnailRequestID);
             requestNew = true;
         }
-        mImages.replace(i,QImage());
+        if (mImageType == ImageTypeQPixmap)
+        {
+            mPixmaps.replace(i, QPixmap());
+        }
+        else
+        {
+            mImages.replace(i,QImage());
+        }
     }
 
     if (requestNew){
@@ -509,7 +589,13 @@ void HgWidgetTestDataModel::thumbnailReady( QPixmap pixmap, void* data, int /*id
 {
     if (!error && !pixmap.isNull() ){
 //        int idx = reinterpret_cast<int>(data);
-        mImages.replace(mThumbnailRequestIndex,pixmap.toImage().convertToFormat(QImage::Format_RGB16));
+        if (mImageType == ImageTypeQPixmap)
+        {
+            mPixmaps.replace(mThumbnailRequestIndex, pixmap);
+        }
+        else {
+            mImages.replace(mThumbnailRequestIndex,pixmap.toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied));//.convertToFormat(QImage::Format_RGB16));            
+        }
         QModelIndex modelIndex = QAbstractItemModel::createIndex(mThumbnailRequestIndex, 0);
         emit dataChanged(modelIndex, modelIndex);
     }

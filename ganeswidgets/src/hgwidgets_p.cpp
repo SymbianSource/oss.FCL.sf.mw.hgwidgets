@@ -26,7 +26,7 @@
 #include "hgscrollbuffermanager.h"
 #include "hgwidgetitem.h"
 #include "trace.h"
-#include "hgindexfeedback.h"
+//#include "hgindexfeedback.h"
 
 static const int INITIAL_SCROLLBAR_HIDE_TIMEOUT(4000);
 static const int DEFAULT_BUFFER_SIZE(30);
@@ -86,8 +86,8 @@ void HgWidgetPrivate::init(HgContainer *container)
     q->connect(mContainer, SIGNAL(scrollingEnded()), q, SIGNAL(scrollingEnded()));
     q->connect(mScrollBarHideTimer, SIGNAL(timeout()), q, SLOT(_q_hideScrollBars()));
     
-    mIndexFeedback = new HgIndexFeedback(q);
-    mIndexFeedback->setWidget(q);
+//    mIndexFeedback = new HgIndexFeedback(q);
+//    mIndexFeedback->setWidget(q);
     
 }
 
@@ -123,12 +123,12 @@ void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
             delete oldSelectionModel;
         }
         if (mContainer->selectionModel()) {
-            if (mIndexFeedback) {
-                delete mIndexFeedback;
-                mIndexFeedback = 0;
-            }
-            mIndexFeedback = new HgIndexFeedback(q);
-            mIndexFeedback->setWidget(q);
+//            if (mIndexFeedback) {
+//                delete mIndexFeedback;
+//                mIndexFeedback = 0;
+//            }
+//            mIndexFeedback = new HgIndexFeedback(q);
+//            mIndexFeedback->setWidget(q);
         }            
     }
 }
@@ -464,7 +464,14 @@ void HgWidgetPrivate::_q_insertRows(const QModelIndex &parent, int start, int en
     Q_Q(HgWidget);
 
     if (mContainer) {
-        int oldItemCount = mContainer->itemCount();
+        const int oldItemCount = mContainer->itemCount();
+        if (oldItemCount == 0) {
+            // rows have been inserted to empty model. This is a special case
+            // that reset function should handle.
+            _q_modelReset();
+            return;
+        }
+        
         mBufferManager->addItems(start, end);
         mContainer->addItems(start, end);
         // re-set model indexes for the items including and after the added indexes
@@ -674,7 +681,7 @@ void HgWidgetPrivate::orientationChanged(Qt::Orientation orientation)
 {
     Q_Q(HgWidget);
     if (mContainer->orientation() != orientation) {
-        mContainer->setOrientation(orientation);
+        mContainer->setOrientation(orientation, q->isVisible());
         if (!mStaticScrollDirection) {
             createScrollBar(orientation);
         }
@@ -723,12 +730,13 @@ QList<QModelIndex> HgWidgetPrivate::getVisibleItemIndices() const
 
 void HgWidgetPrivate::setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy)
 {
-    mIndexFeedback->setIndexFeedbackPolicy(policy);
+//    mIndexFeedback->setIndexFeedbackPolicy(policy);
 }
 
 HgWidget::IndexFeedbackPolicy HgWidgetPrivate::indexFeedbackPolicy() const
 {
-    return mIndexFeedback->indexFeedbackPolicy();
+//    return mIndexFeedback->indexFeedbackPolicy();
+    return HgWidget::IndexFeedbackNone;
 }
 
 void HgWidgetPrivate::setDefaultImage(QImage defaultImage)

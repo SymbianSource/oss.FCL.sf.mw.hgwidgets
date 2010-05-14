@@ -39,6 +39,9 @@ void HgMediawallPrivate::init(Qt::Orientation orientation)
     // Mediawall supports only horizontal scrolling.
     container->init(orientation);
     HgWidgetPrivate::init(container);
+    
+    q->connect( container, SIGNAL(animationAboutToEnd(QModelIndex)),
+                q, SIGNAL(animationAboutToEnd(QModelIndex)) );
 }
 
 void HgMediawallPrivate::setTitlePosition(HgMediawall::LabelPosition position)

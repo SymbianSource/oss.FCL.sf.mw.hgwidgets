@@ -15,32 +15,30 @@
 *
 */
 
-#ifndef HGVGQUADRENDERER_H
-#define HGVGQUADRENDERER_H
+#ifndef HGQTQUADRENDERER_H
+#define HGQTQUADRENDERER_H
 
 #include "hgtransformedquadrenderer.h"
 #include <qlist>
-#include <VG/openvg.h>
 #include <qimage>
-#include <qtransform>
 
 class QPoint;
 class QPainter;
 class QRectF;
 class QMatrix4x4;
-class HgVgQuad;
-class HgVgImage;
+class HgQtImage;
 class QSize;
 class HgTransformedQuad;
+
 /**
- * OpenVG implementation of the HgQuadRenderer.
+ * Qt implementation of the HgTransformedQuadRenderer.
  */
-class HgVgQuadRenderer: public HgTransformedQuadRenderer
+class HgQtQuadRenderer: public HgTransformedQuadRenderer
 {
 public:
-    HgVgQuadRenderer(int maxQuads);
-    virtual ~HgVgQuadRenderer();    
-        
+    HgQtQuadRenderer(int maxQuads);
+    virtual ~HgQtQuadRenderer();    
+
     // From HgQuadRenderer
     virtual void drawQuads(QPainter* painter, const QRectF& rect, 
         const QMatrix4x4& viewMatrix, const QMatrix4x4& projectionMatrix,
@@ -50,20 +48,20 @@ public:
     virtual void setDefaultImage(QImage defaultImage);
 
     // new functions
-    HgVgImage* defaultImage();
+    HgQtImage* defaultImage();
+    
+    bool isReflection() const;
     
 protected:
 
     // From HgTransformedQuadRenderer
     virtual HgTransformedQuad* createNativeQuad();
-
-private:
     
-    QTransform qtToVgTransform(QPainter* painter, const QTransform& sceneTransform, 
-        const QRectF& rect, Qt::Orientation orientation) const;
-
+    void drawFloor(QPainter* painter, const QRectF& rect);
+    
 private:    
-    HgVgImage* mDefaultVgImage;    
+    HgQtImage* mDefaultQtImage;    
+    bool mIsReflection;
 };
 
 #endif

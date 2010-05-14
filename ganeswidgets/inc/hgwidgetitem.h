@@ -37,6 +37,7 @@ public:
     virtual ~HgWidgetItem();
 
     void setImage(const QImage &image);
+    void setPixmap(const QPixmap& pixmap);
 
     void setTitle(QString title);
     QString title() const;

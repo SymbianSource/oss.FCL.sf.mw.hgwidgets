@@ -46,6 +46,7 @@ public:
     VGImage mirrorImage() const;
 
     void setImage(const QImage& image);
+    void setPixmap(const QPixmap& pixmap);
     void releaseImage();
     
     QImage getQImage() const;

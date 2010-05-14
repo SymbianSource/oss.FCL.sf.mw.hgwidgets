@@ -37,7 +37,7 @@ HgCoverflowContainer::HgCoverflowContainer(
     mDescriptionPosition(HgMediawall::PositionNone),
     mPrevPos(-1),
     mAspectRatio(1),
-    mDrawableRect(rect())
+    mAnimationAboutToEndReacted(false)
 {
     mTitleLabel = new HbLabel(this);
     mTitleLabel->setZValue(zValue()+1);
@@ -48,7 +48,7 @@ HgCoverflowContainer::HgCoverflowContainer(
     mDescriptionLabel->setZValue(zValue()+1);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setVisible(false);
-    
+
     mUserItemSize = QSize(250,250);
     mUserItemSpacing = QSize(1,1);
 }
@@ -60,7 +60,9 @@ HgCoverflowContainer::~HgCoverflowContainer()
 // events
 void HgCoverflowContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    painter->setRenderHint(QPainter::Antialiasing, true);
     HgContainer::paint(painter, option, widget);
+    painter->setRenderHint(QPainter::Antialiasing, false);
 }
 
 void HgCoverflowContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
@@ -69,13 +71,13 @@ void HgCoverflowContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
 
     HbWidget::resizeEvent(event);
 
-    updatePositions();    
+    updatePositions();
 }
 
 // from HgContainer
 HgMediaWallRenderer* HgCoverflowContainer::createRenderer(Qt::Orientation scrollDirection)
 {
-    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, true);
+    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, scrollDirection, true);
     renderer->setImageSize(mUserItemSize);
     renderer->enableCoverflowMode(true);
     renderer->setRowCount(1, renderer->getImageSize(), false);
@@ -120,17 +122,40 @@ void HgCoverflowContainer::onScrollPositionChanged(qreal pos)
 {
     HgContainer::onScrollPositionChanged(pos);
 
+    if(!mAnimationAboutToEndReacted) {
+        qreal endPos = mSpring.endPos().x();
+        qreal abs = qAbs(endPos - mSpring.pos().x());
+        
+        if( abs <= 0.5f ) {
+            HgWidgetItem* item = itemByIndex((int)endPos);
+            if (item) {
+                emit animationAboutToEnd( item->modelIndex() );
+                mAnimationAboutToEndReacted = true;
+            }
+        }
+    }
+    
     qreal ipos = floorf(pos);
     qreal frac = pos - ipos;
     qreal p = frac > 0.5 ? ipos + 1.0f : ipos;
 
     if (mPrevPos != (int)p) {
-        mPrevPos = (int)p;        
+        mPrevPos = (int)p;
         HgWidgetItem* item = itemByIndex((int)p);
         if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
             mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
         }
     }
+}
+
+void HgCoverflowContainer::onScrollingStarted()
+{
+    mAnimationAboutToEndReacted = false;    //reset
+}
+
+void HgCoverflowContainer::onScrollingEnded()
+{
+    mAnimationAboutToEndReacted = false;    //reset
 }
 
 void HgCoverflowContainer::handleCurrentChanged(const QModelIndex &current)
@@ -243,7 +268,7 @@ void HgCoverflowContainer::calculatePositions()
     FUNC_LOG;
     HANDLE_ERROR_NULL(mTitleLabel);
     HANDLE_ERROR_NULL(mDescriptionLabel);
-    
+
     int height = size().height();
     int width = size().width();
     int titleHeight = QFontMetrics(mTitleLabel->effectiveFontSpec().font()).height();
@@ -256,61 +281,67 @@ void HgCoverflowContainer::calculatePositions()
         usableHeight -= (descriptionHeight+KLabelMargin);
     }
 
-    usableHeight *= 0.8; // Leave some space for the reflection
     if (usableHeight <= 0) return;
 
-    qreal usableWidth = width/2;
+    qreal usableWidth = width/1.4;
     if (usableWidth <= 0) return;
 
-    mDrawableRect = rect();
-    QSizeF imageSize;
+    QRectF imageRect = rect();
     if (usableWidth/usableHeight > mAspectRatio) {
-        imageSize.setHeight(usableHeight);
-        imageSize.setWidth(mAspectRatio*usableHeight);
+        imageRect.setHeight(usableHeight);
+        imageRect.setWidth(mAspectRatio*usableHeight);
+        imageRect.moveLeft((width-imageRect.width())/2);
     }
     else {
-        imageSize.setWidth(usableWidth);
-        imageSize.setHeight(usableWidth/mAspectRatio);
-        mDrawableRect.setTop((usableHeight-imageSize.height())/2);
+        imageRect.setWidth(usableWidth);
+        imageRect.setHeight(usableWidth/mAspectRatio);
+        imageRect.moveTop((usableHeight-imageRect.height())/2);
+        imageRect.moveLeft((width-imageRect.width())/2);
     }
 
-    QRectF titleGeometry(0, mDrawableRect.top()+KLabelMargin, width, titleHeight);
-    QRectF descriptionGeometry(0, mDrawableRect.top()+KLabelMargin, width, descriptionHeight);
+    QRectF titleGeometry(0, imageRect.top()+KLabelMargin, width, titleHeight);
+    QRectF descriptionGeometry(0, imageRect.top()+KLabelMargin, width, descriptionHeight);
 
     if (mTitlePosition == HgMediawall::PositionAboveImage &&
         mDescriptionPosition == HgMediawall::PositionAboveImage) {
         // titleGeometry default is ok
         descriptionGeometry.moveTop(titleGeometry.bottom()+KLabelMargin);
-        mDrawableRect.setTop(descriptionGeometry.bottom()+KLabelMargin);
+        imageRect.moveTop(descriptionGeometry.bottom()+KLabelMargin);
     }
     else if (mTitlePosition == HgMediawall::PositionBelowImage &&
              mDescriptionPosition == HgMediawall::PositionBelowImage) {
-        titleGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+        titleGeometry.moveTop(imageRect.bottom()+KLabelMargin);
         descriptionGeometry.moveTop(titleGeometry.bottom()+KLabelMargin);
     }
     else {
         if (mTitlePosition == HgMediawall::PositionAboveImage) {
             // titleGeometry default is ok
-            mDrawableRect.setTop(titleGeometry.bottom()+KLabelMargin);
+            imageRect.moveTop(titleGeometry.bottom()+KLabelMargin);
         }
         else if (mDescriptionPosition == HgMediawall::PositionAboveImage) {
             // descriptionGeometry default is ok
-            mDrawableRect.setTop(descriptionGeometry.bottom()+KLabelMargin);
+            imageRect.moveTop(descriptionGeometry.bottom()+KLabelMargin);
         }
 
         if (mTitlePosition == HgMediawall::PositionBelowImage) {
-            titleGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+            titleGeometry.moveTop(imageRect.bottom()+KLabelMargin);
         }
         else if (mDescriptionPosition == HgMediawall::PositionBelowImage) {
-            descriptionGeometry.moveTop(mDrawableRect.top()+imageSize.height()+KLabelMargin);
+            descriptionGeometry.moveTop(imageRect.bottom()+KLabelMargin);
         }
     }
 
-    INFO("Setting image size to:" << imageSize << "(total size:" << QSize(width, height)
-        << "usable size:" << QSizeF(usableWidth, usableHeight) << ", aspect ratio is:" << mAspectRatio << ")" << "Drawable rect:" << mDrawableRect);
-    mRenderer->setImageSize(imageSize);
-    mAutoSize = imageSize;
-    mDrawableRect.setHeight(imageSize.height()/0.8);
+    INFO("Setting image rect to:" << imageRect << "(total size:" << QSize(width, height)
+        << "usable size:" << QSizeF(usableWidth, usableHeight) << ", aspect ratio is:" << mAspectRatio << ")");
+
+    mRenderer->setImageSize(imageRect.size());
+    qreal diff = rect().center().y()-imageRect.center().y();
+
+    INFO("Setting front item position to:" << QPointF(0, -diff) << "(rect:" << rect()
+        << "imageRect:" << imageRect << ")");
+    mRenderer->setFrontItemPosition(QPointF(0, -diff));
+
+    mAutoSize = imageRect.size();
 
     if (mTitlePosition != HgMediawall::PositionNone) {
         INFO("Title geometry:" << titleGeometry);
@@ -333,9 +364,9 @@ void HgCoverflowContainer::calculatePositions()
     if (mSelectionModel && mSelectionModel->currentIndex().isValid()) {
         updateLabels(mSelectionModel->currentIndex().row());
     }
-    
+
     mRenderer->setSpacing(QSizeF(1,1));
-        
+
 }
 
 void HgCoverflowContainer::positionLabels()
@@ -343,7 +374,6 @@ void HgCoverflowContainer::positionLabels()
     FUNC_LOG;
     HANDLE_ERROR_NULL(mTitleLabel);
     HANDLE_ERROR_NULL(mDescriptionLabel);
-    HANDLE_ERROR_NULL(mSelectionModel);
 
     int centerIconTop = (size().height() - mRenderer->getImageSize().height()) / 2;
 
@@ -433,14 +463,6 @@ void HgCoverflowContainer::scrollToPosition(const QPointF& pos, bool animate)
     HgContainer::scrollToPosition(p,animate);
 }
 
-QRectF HgCoverflowContainer::drawableRect() const
-{
-    if (mItemSizePolicy == HgWidget::ItemSizeAutomatic)
-        return mDrawableRect;
-    
-    return rect();
-}
-
 void HgCoverflowContainer::setDefaultImage(QImage defaultImage)
 {
     HgContainer::setDefaultImage(defaultImage);
@@ -457,24 +479,24 @@ QSizeF HgCoverflowContainer::getAutoItemSize() const
 }
 
 QSizeF HgCoverflowContainer::getAutoItemSpacing() const
-{    
+{
     return QSizeF(1,1);
 }
 
 void HgCoverflowContainer::updateItemSizeAndSpacing()
 {
     HgContainer::updateItemSizeAndSpacing();
-    
+
     updatePositions();
 }
 
 
 void HgCoverflowContainer::updatePositions()
 {
-    if (mItemSizePolicy == HgWidget::ItemSizeAutomatic)
+    if (mItemSizePolicy == HgWidget::ItemSizeAutomatic) {
         calculatePositions();
-    else
-    {
+    }
+    else {
         positionLabels();
     }
 }
@@ -483,7 +505,7 @@ void HgCoverflowContainer::setFrontItemPositionDelta(const QPointF& position)
 {
     if (!mRenderer)
         return;
-    
+
     mRenderer->setFrontItemPosition(position);
 }
 

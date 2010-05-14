@@ -28,6 +28,8 @@
 #include "hgwidgetitem.h"
 #include "trace.h"
 
+//#include <hbstyleoptioncheckbox.h>
+//#include <hbcheckbox>
 #include <hbgridviewitem>
 #include <hbgridview>
 #include <hbiconitem>
@@ -50,16 +52,19 @@ HgContainer::HgContainer(QGraphicsItem* parent) :
     mAnimateUsingScrollBar(false),
     mSelectionMode(HgWidget::NoSelection),
     mSelectionModel(0),
-    mMarkImage(0),
+    mMarkImageOn(0),
+    mMarkImageOff(0),
     mSpringVelAtDragStart(0),
     mDragged(false),
     mFramesDragged(0),
     mHitItemView(NULL),
     mLongPressVisualizer(NULL),
     mLongPressTimer(NULL),
-    mHitItemIndex(NULL),
-    mItemSizePolicy(HgWidget::ItemSizeUserDefined),
-    mOrientation(Qt::Vertical)
+    mHitItemIndex(-1),
+    mItemSizePolicy(HgWidget::ItemSizeAutomatic),
+    mOrientation(Qt::Vertical),
+    mDelayedScrollToIndex(),
+    mIgnoreTap(false)
 {
     FUNC_LOG;
 
@@ -74,7 +79,8 @@ HgContainer::~HgContainer()
 
     qDeleteAll(mItems);
     mItems.clear();
-    delete mMarkImage;
+    delete mMarkImageOn;
+    delete mMarkImageOff;
     delete mRenderer;
 }
 
@@ -192,8 +198,7 @@ void HgContainer::dimensions(qreal &screenSize, qreal &worldSize)
 {
     const QRectF containerRect(rect());
 
-    // TODO, fix logic
-    if (containerRect.height() > containerRect.width()) {
+    if (scrollDirection()== Qt::Vertical) {
         // assume we are in portrait mode, ofcource this might not be the case
         screenSize = containerRect.height()/(mRenderer->getImageSize().height() + mRenderer->getSpacing().height());
         worldSize = worldWidth();
@@ -214,9 +219,13 @@ Qt::Orientation HgContainer::orientation() const
 void HgContainer::setOrientation(Qt::Orientation orientation, bool animate)
 {
     FUNC_LOG;
-
+    
     mOrientation = orientation;
-    mRenderer->setOrientation(orientation, false);
+    mRenderer->setOrientation(orientation);
+    mRenderer->setScrollDirection(orientation, animate);
+    if (!mSpring.isActive() && mSpring.pos().x() > worldWidth())
+        boundSpring();
+
 }
 
 void HgContainer::scrollToPosition(qreal value, bool animate)
@@ -243,8 +252,67 @@ void HgContainer::scrollTo(const QModelIndex &index)
 {
     FUNC_LOG;
 
-    if (index.isValid() && mRenderer->getRowCount() > 0) {
-        scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
+    if (index.isValid() && mRenderer->getRowCount() > 0 ) {
+    
+        QRectF containerRect(rect());
+        if (containerRect.isNull()) {
+            // Container hasn't been resized yet. We need to know the container
+            // size before we can calculate if index we are scrolling to is valid.
+            // Store scrollTo index and scrolling is performed when container is resized.
+            mDelayedScrollToIndex = index;
+        }
+        
+        // Container has some size. We can try to calculate if scrollto index is valid.
+        // ScrollTo index will be the top item in grid and left item on coverflow.
+        
+        if (!mRenderer->coverflowModeEnabled()) {
+            // Grid case
+            int itemsOnScreen = 0;
+            if (scrollDirection()== Qt::Vertical) {
+                const int rowHeight = mRenderer->getImageSize().height() + mRenderer->getSpacing().height();
+                itemsOnScreen = containerRect.height()/rowHeight;
+                if ((int)containerRect.height()%rowHeight) {
+                    itemsOnScreen++;
+                }
+                itemsOnScreen *= rowCount();
+                if (itemsOnScreen + index.row() > mItems.count()) {
+                    int newItem = mItems.count()-itemsOnScreen;
+                    
+                    if (mItems.count()%rowCount()) 
+                        newItem += rowCount() - (mItems.count()%rowCount());
+                    if (newItem < 0) 
+                        newItem = 0;
+                    
+                    scrollToPosition(QPointF(newItem/mRenderer->getRowCount(),0), false);
+                } else {
+                    scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
+                }
+            } else {
+                // Scrolldirection is horizontal
+                const int rowWidth = mRenderer->getImageSize().width() + mRenderer->getSpacing().width();
+                itemsOnScreen = containerRect.width()/rowWidth;
+                if ((int)containerRect.height()%rowWidth) {
+                    itemsOnScreen++;
+                }
+                itemsOnScreen *= rowCount();
+                if (itemsOnScreen + index.row() > mItems.count()) {
+                    int newItem = mItems.count()-itemsOnScreen;
+
+                    if (mItems.count()%rowCount()) 
+                        newItem += rowCount() - (mItems.count()%rowCount());
+                    if (newItem < 0) newItem = 0;
+                    
+                    scrollToPosition(QPointF(newItem/mRenderer->getRowCount(),0), false);
+                } else {
+                    scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
+                }
+            }
+            updateBySpringPosition();            
+        } else {
+            // Coverflow case. TODO, this will need some finetuning.
+            scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
+            updateBySpringPosition();            
+        }                    
     }
 }
 
@@ -327,8 +395,12 @@ const HgImage *HgContainer::image(int index) const
 int HgContainer::flags(int index) const
 {
     if (index >= 0 && index < itemCount()) {
-        if (mSelectionModel && mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
-            return 1; // TODO: Assign flag to mark indicator
+        if (mSelectionMode != HgWidget::NoSelection) {
+            // TODO, fix these returns values when we can use the checkbox indicators.
+            if (mSelectionModel && mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
+                return 1; // TODO: Assign flag to mark indicator
+            } else
+                return 0;        
         }
     }
     return 0;
@@ -337,7 +409,10 @@ int HgContainer::flags(int index) const
 const HgImage *HgContainer::indicator(int flags) const
 {
     if (flags & 1) {
-        return mMarkImage;
+        return mMarkImageOn;
+    }
+    else if (flags & 2) {
+        return mMarkImageOff;
     }
 
     return 0;
@@ -363,36 +438,20 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
+    
+    // update spring position at paint if needed, 
+    // this is hack for scrollbar, since dragging it 
+    // causes also paint events in here
     if (mSpring.updatePositionIfNeeded())
     {
-        // spring works always in one dimension, that is, x coord.
         qreal pos = mSpring.pos().x();
         onScrollPositionChanged(pos);
         emit scrollPositionChanged(pos, true);        
     }
-
-    QRectF vp = painter->viewport();
-    QRectF rts = mapRectToScene(drawableRect());
-    QRectF r;
-
-    // transform rectangle to vg space &
-    // rotate rendering according to orientation
-    if (mOrientation == Qt::Horizontal) {
-        r = QRectF(vp.width()-(rts.height()+rts.top()), rts.left(), rts.height(), rts.width());
-
-        mRenderer->setRect(r);
-
-        mRenderer->setCameraRotationZ(-90);
-    }
-    else {
-        r = QRectF(rts.left(), vp.height()-(rts.height()+rts.top()), rts.width(), rts.height());
-        mRenderer->setCameraRotationZ(0);
-
-        mRenderer->setRect(r);
-        
-        if (!mSpring.isActive() && mSpring.pos().x() > worldWidth())
-            boundSpring();
-    }
+    
+    QPainter::RenderHints hints = painter->renderHints();
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+    
 
     // interpolate spring velocity towards zero, this is done
     // so that spring velocity for rendering doesn't drop directly to
@@ -408,8 +467,9 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     mRenderer->setCameraDistance(getCameraDistance(springVel));
     mRenderer->setCameraRotationY(getCameraRotationY(springVel));
     mRenderer->draw(mSpring.startPos(), mSpring.pos(), mSpring.endPos(),
-                    springVel, painter);
+                    springVel, painter, sceneTransform(), rect());
 
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, false);
 }
 
 void HgContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
@@ -417,12 +477,26 @@ void HgContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
     FUNC_LOG;
 
     HbWidget::resizeEvent(event);
+
+    if (mDelayedScrollToIndex.isValid()) {
+        scrollTo(mDelayedScrollToIndex);
+        // set scrollto index to invalid value.
+        mDelayedScrollToIndex = QModelIndex();
+    }
 }
 
 // this needs to be implemented for gesture framework to work
 void HgContainer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event);
+    if (mSpring.isActive() && !mRenderer->coverflowModeEnabled()) {
+        // We could do some small animation when scrolling is stopped.
+        mSpring.cancel();
+        update();
+        mIgnoreTap = true;
+    } else {
+        mIgnoreTap = false;
+    }
 }
 
 void HgContainer::gestureEvent(QGestureEvent *event)
@@ -474,15 +548,41 @@ void HgContainer::init(Qt::Orientation scrollDirection)
     if (markImage.isNull()) {
         ERROR("Failed to load :/images/mark.svg");
     }
-    mMarkImage = mQuadRenderer->createNativeImage();
-    HANDLE_ERROR_NULL(mMarkImage);
-    if (mMarkImage) {
-        mMarkImage->setImage(markImage);
+    mMarkImageOn = mQuadRenderer->createNativeImage();
+    HANDLE_ERROR_NULL(mMarkImageOn);
+    if (mMarkImageOn) {
+        mMarkImageOn->setImage(markImage);
     }
     
+/*    mMarkImageOn = mQuadRenderer->createNativeImage();
+    HANDLE_ERROR_NULL(mMarkImageOn);
+    mMarkImageOff = mQuadRenderer->createNativeImage();
+    HANDLE_ERROR_NULL(mMarkImageOff);
+    
+    // Fetch icons for marking mode (on and off states).
+    QGraphicsItem* checkBox = style()->createPrimitive(HbStyle::P_CheckBox_icon, this); 
+    HbIconItem* iconItem = static_cast<HbIconItem*>(checkBox);    
+    HbStyleOptionCheckBox checkBoxOption;
+    checkBoxOption.state = QStyle::State_On;
+    style()->updatePrimitive(iconItem, HbStyle::P_CheckBox_icon, &checkBoxOption);
+    
+    if (mMarkImageOn) {
+        mMarkImageOn->setPixmap(iconItem->icon().pixmap());
+    }
+
+    checkBoxOption.state = QStyle::State_Off;
+    style()->updatePrimitive(iconItem, HbStyle::P_CheckBox_icon, &checkBoxOption);
+    if (mMarkImageOff) {
+        mMarkImageOff->setPixmap(iconItem->icon().pixmap());
+    }
+
+    delete checkBox;
+*/    
     connect(&mSpring, SIGNAL(updated()), SLOT(updateBySpringPosition()));
-    connect(&mSpring, SIGNAL(ended()), SIGNAL(scrollingEnded()));
     connect(&mSpring, SIGNAL(started()), SIGNAL(scrollingStarted()));
+    connect(&mSpring, SIGNAL(started()), SLOT(onScrollingStarted()));
+    connect(&mSpring, SIGNAL(ended()), SIGNAL(scrollingEnded()));
+    connect(&mSpring, SIGNAL(ended()), SLOT(onScrollingEnded()));
     connect(mRenderer, SIGNAL(renderingNeeded()), SLOT(redraw()));
 
 }
@@ -533,14 +633,14 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
     qreal delta(0);
     qreal itemSide(0);
 
-    if (mOrientation == mRenderer->getOrientation()) {
+    if (mOrientation == mRenderer->getScrollDirection()) {
         delta = gesture->delta().y();
     }
     else {
         delta = gesture->delta().x();
     }
 
-    if (mRenderer->getOrientation() == Qt::Vertical)
+    if (mRenderer->getScrollDirection() == Qt::Vertical)
         itemSide = mRenderer->getImageSize().height()+mRenderer->getSpacing().height();
     else
         itemSide = mRenderer->getImageSize().width()+mRenderer->getSpacing().width();
@@ -654,20 +754,20 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
     // If there is content, mSelectionModel must always exist - either default or client-provided
     if (!mSelectionModel) return false;
 
-    mHitItem = getItemAt(pos, mHitItemIndex);
+    int index = -1;
+    mHitItem = getItemAt(pos, index);
     if (mHitItem)
     {
-        int index = mHitItemIndex;
-
         HgWidgetItem* item = itemByIndex(index);
         if (item && action != DoubleTap) {
             if (action == LongTap) {
                 INFO("Long tap:" << item->modelIndex().row());
+                
                 mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-
+                
                 if (!mRenderer->coverflowModeEnabled())
-                    selectItem();
-
+                    selectItem(index);
+                
                 emit longPressed(item->modelIndex(), pos);
             }
             else if (mSelectionMode == HgWidget::MultiSelection) {
@@ -705,8 +805,7 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
             else {
                 INFO("Tap:" << item->modelIndex().row());
 
-                if (mRenderer->coverflowModeEnabled())
-                {
+                if (mRenderer->coverflowModeEnabled()) {  //coverflow and t-bone modes  
                     if (qAbs(qreal(index) - mSpring.pos().x()) < 0.01f)
                     {
                         mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
@@ -717,11 +816,12 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
                         mSpring.animateToPos(QPointF(index, 0));
                     }
                 }
-                else
-                {
-                    mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                    selectItem();
-                    emit activated(item->modelIndex());
+                else {   //grid mode
+                    if (!mIgnoreTap) {
+                        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+                        selectItem(index);
+                        emit activated(item->modelIndex());                        
+                    }
                 }
             }
         }
@@ -738,15 +838,7 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
 
 bool HgContainer::getItemPoints(int index, QPolygonF& points)
 {
-    QPolygonF poly;
-    if (!mRenderer->getItemPoints(index, poly))
-        return false;
-
-    bool invertible;
-    QTransform t = qtToVgTransform().inverted(&invertible);
-
-    points = t.map(poly);
-    return true;
+    return mRenderer->getItemPoints(index, points);
 }
 
 QList<QModelIndex> HgContainer::getVisibleItemIndices() const
@@ -766,11 +858,6 @@ void HgContainer::itemDataChanged(const int &firstIndex, const int &lastIndex)
 {
     FUNC_LOG;
 
-    // if screen is frequently updated no need to update now.
-    if (mSpring.isActive() || mDragged ) return;
-    
-    // TODO FIX THIS FUNCTION!!!!!!!!!!!!!!!!!!!!!!
-
     int firstItemOnScreen = 0, lastItemOnScreen = 0;
     firstItemOnScreen = mSpring.pos().x();
     firstItemOnScreen *= rowCount();
@@ -784,11 +871,13 @@ void HgContainer::itemDataChanged(const int &firstIndex, const int &lastIndex)
     }
 }
 
-void HgContainer::selectItem()
+void HgContainer::selectItem(int index)
 {
     // TODO: replace this with own selection implementation
-    if (mHitItemIndex < 0 && mHitItemIndex >= mItems.count())
+/*    if (index < 0 && index >= mItems.count())
         return;
+    
+    mHitItemIndex = index;
     
     if (mHitItemView)
     {
@@ -818,6 +907,7 @@ void HgContainer::selectItem()
 
     mHitItemView->resize(mRenderer->getImageSize().width(),
         mRenderer->getImageSize().height());
+        */
 }
 
 void HgContainer::updateSelectedItem()
@@ -829,8 +919,16 @@ void HgContainer::updateSelectedItem()
     if (!getItemPoints(mHitItemIndex, points))
     {
         // the item was not rendered, we must hide
-        // our qt item
+        // our qt item        
         mHitItemView->setVisible(false);
+        return;
+    }
+    
+    QRectF bounds = points.boundingRect();
+    if (!(rect().contains(bounds) || rect().intersects(bounds)))
+    {
+        mHitItemView->setVisible(false);
+        return;
     }
 
     QPolygonF img;
@@ -842,7 +940,9 @@ void HgContainer::updateSelectedItem()
     QTransform t;
     QTransform::quadToQuad(img, points, t);
 
-    mHitItemView->setTransform(t);
+    //t.translate(50,50);
+    bool bOk;
+    mHitItemView->setTransform(t * this->transform().inverted(&bOk));
     mHitItemView->setVisible(true);
 }
 
@@ -883,8 +983,7 @@ bool HgContainer::hasItemAt(const QPointF& pos)
 
 HgWidgetItem* HgContainer::getItemAt(const QPointF& pos, int& index)
 {
-    QPointF p = mapQtToVg(pos);
-    HgQuad* quad = mRenderer->getQuadAt(p);
+    HgQuad* quad = mRenderer->getQuadAt(pos);
     if (quad)
     {
         bool ok;
@@ -926,30 +1025,6 @@ void HgContainer::stopLongPressWatcher()
     }
 }
 
-QTransform HgContainer::qtToVgTransform() const
-{
-    QTransform t;
-    if (mOrientation == Qt::Vertical)
-    {
-        t.translate(0, drawableRect().bottom());
-        t.scale(1, -1);
-    }
-    else // horizontal
-    {
-        t.translate(drawableRect().bottom(), 0);
-        t.scale(-1, 1);
-        t.translate(0, drawableRect().right());
-        t.rotate(-90, Qt::ZAxis);
-    }
-    return t;
-}
-
-QPointF HgContainer::mapQtToVg(const QPointF& p) const
-{
-    QTransform t = qtToVgTransform();
-    return t.map(p);
-}
-
 qreal HgContainer::getCameraDistance(qreal springVelocity)
 {
     Q_UNUSED(springVelocity)
@@ -981,15 +1056,20 @@ void HgContainer::onScrollPositionChanged(qreal pos)
     Q_UNUSED(pos)
 }
 
+void HgContainer::onScrollingStarted()
+{
+    // By default do nothing
+}
+
+void HgContainer::onScrollingEnded()
+{
+    // By default do nothing
+}
+
 void HgContainer::handleCurrentChanged(const QModelIndex &current)
 {
     Q_UNUSED(current)
     // By default do nothing
-}
-
-QRectF HgContainer::drawableRect() const
-{
-    return rect();
 }
 
 void HgContainer::setDefaultImage(QImage defaultImage)
@@ -1059,7 +1139,7 @@ QSizeF HgContainer::getAutoItemSpacing() const
 
 Qt::Orientation HgContainer::scrollDirection() const
 {
-    return mRenderer->getOrientation();
+    return mRenderer->getScrollDirection();
 }
 
 qreal HgContainer::scrollPosition() const

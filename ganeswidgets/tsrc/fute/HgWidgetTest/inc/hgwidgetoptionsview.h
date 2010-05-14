@@ -48,6 +48,7 @@ signals:
     void widgetHeightChanged(int);
     void widgetWidthChanged(int);
     void reflectionsEnabledChanged(bool);
+    void itemSizePolicyChanged(HgWidget::ItemSizePolicy);
 private slots:
     void updateData(QModelIndex startIn, QModelIndex endIn);
 

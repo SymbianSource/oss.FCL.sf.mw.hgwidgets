@@ -136,7 +136,7 @@ protected:
     bool mHandleLongPress;
     bool mForeground;
     int mBufferSize;
-    HgIndexFeedback *mIndexFeedback;
+//    HgIndexFeedback *mIndexFeedback;
     bool mStaticScrollDirection;
 };
 

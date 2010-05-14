@@ -46,7 +46,6 @@ public:
     virtual void handleCurrentChanged(const QModelIndex & current);
     virtual void itemDataChanged(const int &firstIndex, const int &lastIndex);
     virtual void scrollToPosition(const QPointF& pos, bool animate);
-    virtual QRectF drawableRect() const;
 
     virtual QSizeF getAutoItemSize() const;
     virtual QSizeF getAutoItemSpacing() const;
@@ -66,7 +65,11 @@ public:
 
     void enableReflections(bool enabled);
     bool reflectionsEnabled() const;
-        
+
+signals:
+
+    void animationAboutToEnd(const QModelIndex& targetIndex);
+
 private: // From HgContainer
     void setDefaultImage(QImage defaultImage);
 
@@ -78,16 +81,18 @@ private:
     
     void calculatePositions();    
     void positionLabels();
+    void onScrollingStarted();
+    void onScrollingEnded();
 
 private:
-    HbLabel *mTitleLabel;
-    HbLabel *mDescriptionLabel;
-    HgMediawall::LabelPosition mTitlePosition;
-    HgMediawall::LabelPosition mDescriptionPosition;
-    int mPrevPos;
-    qreal mAspectRatio;
-    QRectF mDrawableRect;
-    QSizeF mAutoSize;
+    HbLabel                     *mTitleLabel;
+    HbLabel                     *mDescriptionLabel;
+    HgMediawall::LabelPosition  mTitlePosition;
+    HgMediawall::LabelPosition  mDescriptionPosition;
+    int                         mPrevPos;
+    qreal                       mAspectRatio;
+    QSizeF                      mAutoSize;
+    bool                        mAnimationAboutToEndReacted;
 };
 
 #endif

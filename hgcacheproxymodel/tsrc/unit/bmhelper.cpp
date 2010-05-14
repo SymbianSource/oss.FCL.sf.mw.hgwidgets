@@ -36,7 +36,11 @@ void BMHelper::release(int start, int end)
         end = mBuffer.size() - 1;
     
     for ( int i = start; i <= end; i++){
-        mBuffer.replace(i, false);
+        if (mBuffer.value(i) == true){
+            mBuffer.replace(i, false);
+        } else {
+//            qWarning()<<QString("release released item %1").arg(i);
+        }
     }
 }
 
@@ -47,9 +51,13 @@ void BMHelper::request(int start, int end, HgRequestOrder order)
         start = 0;
     if (end>mBuffer.size() - 1)
         end = mBuffer.size() - 1;
-
+    
     for ( int i = start; i <= end; i++){
-        mBuffer.replace(i, true);
+        if (mBuffer.value(i) == false){
+            mBuffer.replace(i, true);
+        } else {
+//            qWarning()<<QString("request requested item %1").arg(i);
+        }
     }
 }
 

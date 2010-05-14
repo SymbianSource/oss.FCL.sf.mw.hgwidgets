@@ -26,7 +26,6 @@
 #include "hgcontainer.h"
 #include "hgwidgetitem.h"
 #include "hgscrollbuffermanager.h"
-#include "hgcoverflowcontainer.h"
 #include "hggridcontainer.h"
 #include "trace.h"
 

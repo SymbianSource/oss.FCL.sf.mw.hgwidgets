@@ -32,15 +32,13 @@ SOURCES += test_hgcacheproxydatamodel.cpp \
 			bmhelper.cpp \
 			../../src/hgbuffermanager.cpp \
 			dataproviderhelper.cpp \
-			cacheproxyhelper.cpp \
-#			simpledataprovider.cpp\
+			cacheproxyhelper.cpp
 
 HEADERS += test_hgcacheproxydatamodel.h \
 			bmhelper.h \
 			../../inc/hgbuffermanager.h \
 			dataproviderhelper.h \
-			cacheproxyhelper.h \
-#			simpledataprovider.h\
+			cacheproxyhelper.h
 
 CONFIG += qtestlib console
 

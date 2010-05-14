@@ -37,6 +37,7 @@ static const QString TITLE_FONT = "Title font";
 static const QString DESCRIPTION_POSITION = "Description position";
 static const QString DESCRIPTION_FONT = "Description font";
 static const QString REFLECTIONS_ENABLED = "Reflections enabled";
+static const QString ITEM_SIZE_POLICY = "Item size policy";
 
 enum DataFormItems {
     ItemWidgetType = 0,
@@ -51,6 +52,7 @@ enum DataFormItems {
     ItemDescriptionPosition,
     ItemDescriptionFont,
     ItemReflectionEnabled,
+    ItemItemSizePolicy
 };
 
 HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
@@ -79,7 +81,7 @@ HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
 
     item = mModel->appendDataFormItem(
         HbDataFormModelItem::ComboBoxItem, MODEL_IMAGE_TYPE);
-    item->setContentWidgetData(QString("items"), QStringList("QImage") << "HbIcon" << "QIcon");
+    item->setContentWidgetData(QString("items"), QStringList("QImage") << "HbIcon" << "QIcon" << "QPixmap");
 
     item = mModel->appendDataFormItem(
         HbDataFormModelItem::TextItem, WIDGET_HEIGHT);
@@ -116,6 +118,11 @@ HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
         HbDataFormModelItem::ToggleValueItem, REFLECTIONS_ENABLED);
     item->setContentWidgetData(QString("text"), QString("no"));
     item->setContentWidgetData(QString("additionalText"), QString("yes"));
+
+    item = mModel->appendDataFormItem(
+        HbDataFormModelItem::ToggleValueItem, ITEM_SIZE_POLICY);
+    item->setContentWidgetData(QString("text"), QString("User defined"));
+    item->setContentWidgetData(QString("additionalText"), QString("Automatic"));
 
     connect(mModel, SIGNAL(dataChanged(QModelIndex, QModelIndex)), SLOT(updateData(QModelIndex, QModelIndex)));
     mForm->setModel(mModel);
@@ -204,6 +211,9 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
                 break;
             case 2:
                 type = ImageTypeQIcon;
+                break;
+            case 3:
+                type = ImageTypeQPixmap;
                 break;
             default: break;
         }
@@ -318,6 +328,12 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
         settings.setValue(SETT_REFLECTIONS_ENABLED, value);
         emit reflectionsEnabledChanged(value);
     }
+    else if (item->data(HbDataFormModelItem::LabelRole).toString() == ITEM_SIZE_POLICY) {
+        QVariant data = item->contentWidgetData(QString("text"));
+        HgWidget::ItemSizePolicy value = (data.toString() == "Automatic" ? HgWidget::ItemSizeAutomatic : HgWidget::ItemSizeUserDefined);
+        settings.setValue(SETT_ITEM_SIZE_POLICY, value);
+        emit itemSizePolicyChanged(value);
+    }
 }
 
 void HgWidgetOptionsView::setCoverflowEnabled(bool value)
@@ -333,7 +349,9 @@ void HgWidgetOptionsView::setCoverflowEnabled(bool value)
     item = mForm->itemByIndex(mModel->index(ItemDescriptionFont, 0));
     if (item) item->setEnabled(value);
     item = mForm->itemByIndex(mModel->index(ItemReflectionEnabled, 0));
-    if (item) item->setEnabled(value);    
+    if (item) item->setEnabled(value);
+    item = mForm->itemByIndex(mModel->index(ItemItemSizePolicy, 0));
+    if (item) item->setEnabled(value);
 }
 
 void HgWidgetOptionsView::storeWidgetSize()
@@ -403,7 +421,7 @@ void HgWidgetOptionsView::setupData()
     value = settings.value(SETT_SCROLLBAR_INTERACTIVITY);
     if (item && value.isValid()) {
         item->setContentWidgetData(QString("text"), value.toBool() ? "yes" : "no");
-        item->setContentWidgetData(QString("alternateText"), value.toBool() ? "no" : "yes");
+        item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
     }
 
     item = mModel->itemFromIndex(mModel->index(ItemModelImageType, 0));
@@ -412,13 +430,16 @@ void HgWidgetOptionsView::setupData()
         int index(0);
         switch (value.toInt()) {
             case ImageTypeQImage:
-                value = 0;
+                index = 0;
                 break;
             case ImageTypeHbIcon:
-                value = 1;
+                index = 1;
                 break;
             case ImageTypeQIcon:
-                value = 2;
+                index = 2;
+                break;
+            case ImageTypeQPixmap:
+                index = 3;
                 break;
             default: break;
         }
@@ -443,7 +464,7 @@ void HgWidgetOptionsView::setupData()
     value = settings.value(SETT_LOW_RES_IMAGES);
     if (item && value.isValid()) {
         item->setContentWidgetData(QString("text"), value.toBool() ? "yes" : "no");
-        item->setContentWidgetData(QString("alternateText"), value.toBool() ? "no" : "yes");
+        item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
     }
 
     item = mModel->itemFromIndex(mModel->index(ItemTitlePosition, 0));
@@ -541,9 +562,21 @@ void HgWidgetOptionsView::setupData()
     value = settings.value(SETT_REFLECTIONS_ENABLED);
     if (item && value.isValid()) {
         item->setContentWidgetData(QString("text"), value.toBool() ? "yes" : "no");
-        item->setContentWidgetData(QString("alternateText"), value.toBool() ? "no" : "yes");
+        item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
     }
 
+    item = mModel->itemFromIndex(mModel->index(ItemItemSizePolicy, 0));
+    value = settings.value(SETT_ITEM_SIZE_POLICY);
+    if (item && value.isValid()) {
+        if (value.toInt() == HgWidget::ItemSizeAutomatic) {
+            item->setContentWidgetData(QString("text"), "Automatic");
+            item->setContentWidgetData(QString("additionalText"), "User defined");
+        }
+        else {
+            item->setContentWidgetData(QString("text"), "User defined");
+            item->setContentWidgetData(QString("additionalText"), "Automatic");
+        }
+    }
 }
 
 void HgWidgetOptionsView::resizeEvent(QGraphicsSceneResizeEvent *event)

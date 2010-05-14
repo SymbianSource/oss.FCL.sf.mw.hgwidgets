@@ -62,7 +62,7 @@ void HgGridContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 HgMediaWallRenderer* HgGridContainer::createRenderer(Qt::Orientation scrollDirection)
 {
 
-    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, false);
+    HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, scrollDirection, false);
     renderer->enableCoverflowMode(false);
     renderer->setImageSize(mUserItemSize);
     renderer->setRowCount(3, renderer->getImageSize(), false);    
@@ -75,7 +75,7 @@ HgMediaWallRenderer* HgGridContainer::createRenderer(Qt::Orientation scrollDirec
 
 qreal HgGridContainer::getCameraDistance(qreal springVelocity)
 {
-    if (mRenderer->getOrientation() == Qt::Vertical)
+    if (mRenderer->getScrollDirection() == Qt::Vertical)
         return 0;
     
     return qAbs(springVelocity * 0.01f);
@@ -83,7 +83,7 @@ qreal HgGridContainer::getCameraDistance(qreal springVelocity)
 
 qreal HgGridContainer::getCameraRotationY(qreal springVelocity)
 {
-    if (mRenderer->getOrientation() == Qt::Vertical)
+    if (mRenderer->getScrollDirection() == Qt::Vertical)
         return 0;
 
     return qBound(-KCameraMaxYAngle, springVelocity * KSpringVelocityToCameraYAngleFactor, KCameraMaxYAngle);
@@ -94,7 +94,7 @@ void HgGridContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem,
     Q_UNUSED(pos)
     Q_UNUSED(hitItemIndex)
         
-    selectItem();                
+    selectItem(hitItemIndex);                
     emit activated(hitItem->modelIndex());                        
 }
 
@@ -102,7 +102,7 @@ void HgGridContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitI
 {
     Q_UNUSED(hitItemIndex)
     
-    selectItem();
+    selectItem(hitItemIndex);
     emit longPressed(hitItem->modelIndex(), pos);    
 }
 
@@ -116,7 +116,6 @@ void HgGridContainer::onScrollPositionChanged(qreal pos)
     
     HgWidgetItem* item = itemByIndex(index);
     if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
-        qDebug() << "CURRENT CHANGE" << QString::number(item->modelIndex().row());
         mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
     }    
 }

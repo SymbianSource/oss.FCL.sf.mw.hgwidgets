@@ -39,7 +39,8 @@ HgScrollBufferManager::HgScrollBufferManager(
     mRequestStart(0),
     mRequestCount(0),
     mReleaseStart(0),
-    mReleaseCount(0)
+    mReleaseCount(0),
+    mFirstTime(true)
     {
     init();
     }
@@ -205,8 +206,12 @@ bool HgScrollBufferManager::positionInsideBuffer( int position )
 
 void HgScrollBufferManager::asyncUpdate()
 {
-    if( !mTimer.isActive())
+    if (!mTimer.isActive() && mFirstTime) {
+        mFirstTime = false;
         mTimer.start(0);
+    } else {
+        timeout();
+    }
 }
 
 void HgScrollBufferManager::currentBuffer(int& bufferStart, int& bufferEnd)

@@ -19,6 +19,7 @@
 
 #include <qmatrix4x4>
 #include <qobject>
+#include <qmap>
 
 class HgQuadRenderer;
 class HgMediaWallDataProvider;
@@ -31,6 +32,7 @@ class HgQuad;
 class HgImageFader;
 class HgImage;
 class QPolygonF;
+class HgAnimatedQuadFactory;
 
 /**
  * MediaWall rendering engine class.
@@ -41,23 +43,18 @@ class HgMediaWallRenderer : public QObject
     Q_PROPERTY(qreal animationAlpha READ animationAlpha WRITE setAnimationAlpha)
     Q_PROPERTY(qreal stateAnimationAlpha READ stateAnimationAlpha WRITE setStateAnimationAlpha)
 public:
-
-    enum OpeningAnimationType
-    {
-        OpeningAnimationFlip,
-        OpeningAnimationZoomIn,
-        OpeningAnimationZoomOver
-    };
             
     explicit HgMediaWallRenderer(HgMediaWallDataProvider* provider, 
-        Qt::Orientation orientation, bool coverflowMode);
+        Qt::Orientation orientation, Qt::Orientation scrollDirection, bool coverflowMode);
     
     virtual ~HgMediaWallRenderer();
 
     void setCameraDistance(qreal distance);    
     qreal getCameraDistance() const;
+    
     void setCameraRotationY(qreal angle);    
     qreal getCameraRotationY() const;    
+    
     void setCameraRotationZ(qreal angle);    
     qreal getCameraRotationZ() const;
         
@@ -66,16 +63,14 @@ public:
         const QPointF& position, 
         const QPointF& targetPosition,
         qreal springVelocity,
-        QPainter* painter);
+        QPainter* painter, 
+        const QTransform& sceneTransform, 
+        const QRectF& rect);
+                
+    void setScrollDirection(Qt::Orientation scrollDirection, bool animate=false);
+    Qt::Orientation getScrollDirection() const;
     
-    void setFlipAnimationAngle(qreal angleInDegrees);
-    
-    void setOpeningAnimationType(OpeningAnimationType type);
-    
-    void setOpeningAnimationDuration(int msecs);
-    
-    void setOrientation(Qt::Orientation orientation, bool animate=false);        
-    Qt::Orientation getOrientation() const;
+    void setOrientation(Qt::Orientation orientation);
         
     void enableCoverflowMode(bool enabled);    
     bool coverflowModeEnabled() const;
@@ -84,9 +79,7 @@ public:
     int getRowCount() const;
     
     HgQuad* getQuadAt(const QPointF& position) const;
-        
-    void setRect(const QRectF& windowRect);    
-    const QRectF& getRect() const;    
+            
     void setSpacing(const QSizeF& spacing);    
     const QSizeF& getSpacing() const;    
     void setImageSize(const QSizeF& imageSize);    
@@ -94,10 +87,6 @@ public:
 
     void setFrontCoverElevationFactor(qreal elevation);    
     qreal getFrontCoverElevationFactor() const;
-
-    void openItem(int index, bool animate);
-    void closeItem(bool animate);
-    bool isItemOpen() const;    
     
     void enableReflections(bool enabled);    
     bool reflectionsEnabled() const;
@@ -108,10 +97,7 @@ public:
     void endRemoveRows();
 
     int getSelectedItem() const;
-    
-    void initialize(QPainter* painter);
-    bool initialized() const;
-    
+        
     HgQuadRenderer* getRenderer();    
 
     bool getItemPoints(int index, QPolygonF& points) const;
@@ -120,24 +106,15 @@ public:
     
     void setFrontItemPosition(const QPointF& position);
     QPointF frontItemPosition() const;
-    
+        
 signals:
     void renderingNeeded();
-    void itemOpened(int index);
-    void itemClosed(int index);
-    void itemMarked(int index);
-    void toggleItem();
     void toggleState();
-    void itemsRemoved(int start, int end);
-private slots:
-    void onIdleState();
-    void onOpenedState();
-    void emitUpdate();
 protected:            
     
     struct State
     {
-        QList<HgQuad*> mQuads;
+        QMap<int, HgQuad*> mQuads;
     };
    
     void setAnimationAlpha(qreal alpha);
@@ -158,15 +135,33 @@ protected:
         qreal springVelocity,
         QPainter* painter);
         
-    void drawQuads(QPainter* painter);
+    void startScrollDirectionChangeAnimation (
+        const QPointF& startPosition,
+        const QPointF& position, 
+        const QPointF& targetPosition,
+        qreal springVelocity,
+        QPainter* painter, 
+        const QTransform& sceneTransform, 
+        const QRectF& rect);
+
+    void startRowCountChangeAnimation (
+        const QPointF& startPosition,
+        const QPointF& position, 
+        const QPointF& targetPosition,
+        qreal springVelocity,
+        QPainter* painter, 
+        const QTransform& sceneTransform, 
+        const QRectF& rect);
+
+    void createAnimatedQuads(const HgAnimatedQuadFactory& factory);
+    
+    void drawQuads(QPainter* painter, const QTransform& sceneTransform);
     void resetQuads();
     void updateCameraMatrices();
     void updateSpacingAndImageSize();
     qreal getRowPosY(int row);
     qreal getColumnPosX(int column);
-    QPointF mapFromWindow(const QPointF& point) const;
-    void applyOpeningAnimation(HgQuad* quad);
-    void startStateAnimation(QPainter* painter);
+    
     
     
     void setupCoverflow(const QPointF& startPosition,
@@ -187,47 +182,31 @@ protected:
         qreal springVelocity,
         QPainter* painter);
 
-    void setupGridRow(qreal posY, int itemIndex, int& quadIndex);
-    void setupGridColumn(qreal posX, int itemIndex, int& quadIndex);    
+    void setupGridRow(qreal posY, int& itemIndex, int& quadIndex);
+    void setupGridColumn(qreal posX, int& itemIndex, int& quadIndex);    
     void setupDefaultQuad(const QVector3D& pos, int itemIndex, bool reflectionsEnabled, int& quadIndex);
     void setupIndicator(HgQuad* parent, 
         HgQuad* indicator, const HgImage* indicatorImage, int itemIndex);    
-    bool initializeRenderer(QPainter* painter);
-    
-        
+            
 protected:
-    
-    enum ItemState
-    {
-        ItemClosed,
-        ItemOpening,
-        ItemOpened,
-        ItemClosing
-    };
-    
+        
     HgMediaWallDataProvider* mDataProvider;
     HgQuadRenderer* mRenderer;
     HgQuadRenderer* mIndicatorRenderer;
     bool mRendererInitialized;
 
+    Qt::Orientation mScrollDirection;
+    Qt::Orientation mNextScrollDirection;
     Qt::Orientation mOrientation;
-    Qt::Orientation mNextOrientation;
 
     qreal mStateAnimationAlpha;
     bool mStateAnimationOnGoing;
 
     qreal mAnimationAlpha;
 
-    OpeningAnimationType mOpeningAnimationType;
-    int mOpeningAnimationDuration;
-    int mOpenedItem;
-    int mSelectedItem;
-    qreal mFlipAngle;
-    QTimer* mAnimationTimer;
     QMatrix4x4 mViewMatrix;
     QMatrix4x4 mProjMatrix;
     QStateMachine* mStateMachine;
-    qreal mZoomAmount;
     bool mCoverflowMode;
     int mRowCount;
     int mNextRowCount;
@@ -251,25 +230,14 @@ protected:
     
     State mOldState;
     State mNextState;
-
-    
-    bool mReflectionsEnabled;
-    HgImageFader* mImageFader;
-    
+        
     QSizeF mNextImageSize;
             
-    bool mItemCountChanged;
-    int mRemoveStart;
-    int mRemoveEnd;
-    int mInsertStart;
-    int mInsertEnd;
     int mColumnCount;
-    
-    ItemState mOpenedItemState;
-    
+        
     QPointF mFrontItemPosition;
     bool mFrontItemPositionSet;
-    
+        
 private:
     Q_DISABLE_COPY(HgMediaWallRenderer)
 };

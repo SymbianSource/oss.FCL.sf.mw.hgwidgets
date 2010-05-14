@@ -89,6 +89,11 @@ void HgVgImage::setImage(const QImage& image)
 
 }
 
+void HgVgImage::setPixmap(const QPixmap& pixmap)
+{
+    
+}
+
 QImage HgVgImage::getQImage() const
 {
     return mQImage;
