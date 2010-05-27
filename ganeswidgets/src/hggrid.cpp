@@ -42,4 +42,16 @@ HgGrid::~HgGrid()
 {
 }
 
+bool HgGrid::effect3dEnabled() const
+{
+    Q_D( const HgGrid );
+    return d->effect3dEnabled();
+}
+
+void HgGrid::setEffect3dEnabled(bool effect3dEnabled)
+{
+    Q_D( HgGrid );
+    d->setEffect3dEnabled(effect3dEnabled);
+}
+
 // EOF

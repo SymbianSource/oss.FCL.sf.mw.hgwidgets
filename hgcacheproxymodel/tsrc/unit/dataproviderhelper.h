@@ -48,6 +48,7 @@ public:
     void testRemoveItems(int pos, int size = 1);
     void testRemoveItem(int pos);
     void testInsertItem(int pos, QPair< QVariant, int > item, bool silent);
+    void testUpdateIcon(int pos, QVariant icon, bool silent = false);
     
     QList< QPair< int, int > > getObserverDataUpdated();
     

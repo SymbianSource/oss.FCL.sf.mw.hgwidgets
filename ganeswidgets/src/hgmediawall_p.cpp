@@ -15,8 +15,11 @@
 *
 */
 
+#include <hbtextitem.h>
 #include "hgmediawall_p.h"
+#include "hgwidgetitem.h"
 #include "hgcoverflowcontainer.h"
+#include "hgcenteritemarea.h"
 #include "trace.h"
 
 HgMediawallPrivate::HgMediawallPrivate() : HgWidgetPrivate()
@@ -35,69 +38,66 @@ void HgMediawallPrivate::init(Qt::Orientation orientation)
     FUNC_LOG;
 
     Q_Q(HgMediawall);
+
+    mTitleItem = new HbTextItem("", q);
+    q->style()->setItemName(mTitleItem, "title");
+
+    mDescriptionItem = new HbTextItem("", q);
+    q->style()->setItemName(mDescriptionItem, "description");
+
+    mCenterItemArea = new HgCenterItemArea(q);
+    q->style()->setItemName(mCenterItemArea, "centeritem");
+
     HgCoverflowContainer* container = new HgCoverflowContainer(q);
+    q->style()->setItemName(container, "content");
+    container->setCenterItemArea(mCenterItemArea);
     // Mediawall supports only horizontal scrolling.
     container->init(orientation);
+
     HgWidgetPrivate::init(container);
-    
+
     q->connect( container, SIGNAL(animationAboutToEnd(QModelIndex)),
                 q, SIGNAL(animationAboutToEnd(QModelIndex)) );
-}
-
-void HgMediawallPrivate::setTitlePosition(HgMediawall::LabelPosition position)
-{
-    FUNC_LOG;
-
-    container()->setTitlePosition(position);
-}
-
-HgMediawall::LabelPosition HgMediawallPrivate::titlePosition() const
-{
-    FUNC_LOG;
-
-    return container()->titlePosition();
-}
-
-void HgMediawallPrivate::setDescriptionPosition(HgMediawall::LabelPosition position)
-{
-    FUNC_LOG;
-
-    container()->setDescriptionPosition(position);
-}
-
-HgMediawall::LabelPosition HgMediawallPrivate::descriptionPosition() const
-{
-    FUNC_LOG;
-
-    return container()->descriptionPosition();
 }
 
 void HgMediawallPrivate::setTitleFontSpec(const HbFontSpec &fontSpec)
 {
     FUNC_LOG;
 
-    container()->setTitleFontSpec(fontSpec);
+    Q_Q(HgMediawall);
+    if (mTitleItem) {
+        mTitleItem->setFontSpec(fontSpec);
+    }
 }
 
 HbFontSpec HgMediawallPrivate::titleFontSpec() const
 {
     FUNC_LOG;
 
-    return container()->titleFontSpec();
+    if (mTitleItem) {
+        return mTitleItem->fontSpec();
+    }
+    return HbFontSpec();
 }
 
 void HgMediawallPrivate::setDescriptionFontSpec(const HbFontSpec &fontSpec)
 {
     FUNC_LOG;
 
-    container()->setDescriptionFontSpec(fontSpec);
+    Q_Q(HgMediawall);
+    if (mDescriptionItem) {
+        mDescriptionItem->setFontSpec(fontSpec);
+    }
 }
 
 HbFontSpec HgMediawallPrivate::descriptionFontSpec() const
 {
     FUNC_LOG;
 
-    return container()->descriptionFontSpec();
+    if (mDescriptionItem) {
+        return mDescriptionItem->fontSpec();
+    }
+    return HbFontSpec();
 }
 
 HgCoverflowContainer *HgMediawallPrivate::container()
@@ -110,6 +110,21 @@ const HgCoverflowContainer *HgMediawallPrivate::container() const
 {
     HANDLE_ERROR_NULL(mContainer);
     return qobject_cast<const HgCoverflowContainer *>(mContainer);
+}
+
+void HgMediawallPrivate::updateCurrentItem(const QModelIndex &currentItem)
+{
+    FUNC_LOG;
+
+    if (!mContainer || !currentItem.isValid()) return;
+
+    HgWidgetItem* item = mContainer->itemByIndex(currentItem);
+    INFO("Updating texts for index" << currentItem << ", " << item);
+
+    if (item) {
+        mTitleItem->setText(item->title());
+        mDescriptionItem->setText(item->description());
+    }
 }
 
 // EOF

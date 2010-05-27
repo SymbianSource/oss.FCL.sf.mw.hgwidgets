@@ -34,6 +34,9 @@ public:
     
     virtual ~HgGridContainer();
 
+    void setEffect3dEnabled(bool effect3dEnabled);
+    bool effect3dEnabled() const;
+    
 protected:
 
     // events
@@ -46,7 +49,10 @@ protected:
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemindex);
     virtual void onScrollPositionChanged(qreal pos);
-   
+
+private:    
+    
+    bool mEffect3dEnabled;
 };
 
 #endif

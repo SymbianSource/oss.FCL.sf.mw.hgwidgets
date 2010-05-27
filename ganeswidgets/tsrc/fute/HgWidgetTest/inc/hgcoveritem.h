@@ -52,7 +52,7 @@ signals:
     
 private:
     
-    virtual void leftGesture(int value);    
+//    virtual void leftGesture(int value);    
     
 };
 

@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 3 %
 */
 #ifndef HGBUFFERMANAGER_H_
 #define HGBUFFERMANAGER_H_
@@ -34,8 +34,12 @@ public:
 
 	void setPosition( int aIndex );
 	void resetBuffer( int aPosition, int aTotalCount);
-	void itemCountChanged( int aIndex, bool aRemoved, int aNewTotalCount );
 	void resizeCache(int newSize, int newTreshold);
+	
+    void aboutToRemoveItem(int pos);
+    void removedItem(int pos);
+    void aboutToInsertItem(int pos);
+    void insertedItem(int pos);
 	
 private:
 	void calculate();

@@ -31,23 +31,15 @@
 Q_DECLARE_METATYPE(QItemSelection)
 Q_DECLARE_METATYPE(QModelIndex)
 
-static const QPointF grid_portrait_pos0(70, 30);
-static const QPointF grid_portrait_pos1(180, 30);
-static const QPointF grid_portrait_pos2(280, 30);
-static const QPointF grid_portrait_pos3(70, 120);
-static const QPointF grid_portrait_pos4(180, 120);
-static const QPointF grid_portrait_pos5(280, 120);
-static const QPointF grid_portrait_pos6(70, 200);
-static const QPointF grid_portrait_pos7(180, 200);
-static const QPointF grid_portrait_pos8(280, 200);
-
-// These work with 360x640 resolution
-static const QPointF expected_label_pos_above_alone(180, 144);
-static const QPointF expected_label_pos_above_top(180, 132);
-static const QPointF expected_label_pos_above_bottom(180, 163);
-static const QPointF expected_label_pos_below_alone(180, 324);
-static const QPointF expected_label_pos_below_top(180, 312);
-static const QPointF expected_label_pos_below_bottom(180, 342);
+static const QPointF grid_portrait_pos0(60, 60);
+static const QPointF grid_portrait_pos1(180, 60);
+static const QPointF grid_portrait_pos2(300, 60);
+static const QPointF grid_portrait_pos3(60, 180);
+static const QPointF grid_portrait_pos4(180, 180);
+static const QPointF grid_portrait_pos5(300, 180);
+static const QPointF grid_portrait_pos6(60, 300);
+static const QPointF grid_portrait_pos7(180, 300);
+static const QPointF grid_portrait_pos8(300, 300);
 
 static const int default_delay(1500);
 
@@ -88,7 +80,6 @@ private slots:
     void test_addItemsCoverFlow();
     void test_removeItemsCoverFlow();
     void test_moveItemsCoverFlow();
-    void test_labelPositionsCoverFlow();
     void test_labelFontSpecsCoverFlow();
     void test_resetModelCoverFlow();
     void test_resetModelGrid();
@@ -96,8 +87,6 @@ private slots:
 private:
 
     void pan( Qt::Orientation, TBool begin );
-    bool checkLabelAt(HbMainWindow *window, const QPointF &pos, const QString &expectedText);
-    HbLabel *findLabelAt(QGraphicsItem *parent, const QPointF &pos);
 
 private:
 
@@ -847,6 +836,8 @@ void TestGanesWidgets::test_currentItemGrid()
     mWindow->viewport()->grabGesture(Qt::PanGesture);
     mWindow->viewport()->grabGesture(Qt::TapGesture); // Add TapAndHoldGesture once it's working
     mWidget = new HgGrid( Qt::Vertical);
+    mWidget->setItemSizePolicy(HgWidget::ItemSizeUserDefined);
+    mWidget->setItemSize(QSizeF(120, 120));
 
     TestModel model;
     model.generateItems(50);
@@ -1936,92 +1927,6 @@ void TestGanesWidgets::test_moveItemsCoverFlow()
     mWindow = 0;
 }
 
-void TestGanesWidgets::test_labelPositionsCoverFlow()
-{
-    mWindow = new HbMainWindow;
-    mMediawall = new HgMediawall();
-
-    TestModel model;
-    model.generateItems(50);
-    mWindow->addView(mMediawall);
-    mMediawall->setModel(&model);
-    mWindow->show();
-
-    mMediawall->setTitlePosition(HgMediawall::PositionNone);
-    mMediawall->setDescriptionPosition(HgMediawall::PositionNone);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
-
-    // This updates the title and description label. But how to test they are in correct positions?
-    mMediawall->setCurrentIndex(model.index(1, 0));
-    QTest::qWait(1000);
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
-    mMediawall->setCurrentIndex(model.index(2, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Secondary 2"));
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionNone);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
-    mMediawall->setCurrentIndex(model.index(3, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Secondary 3"));
-
-    mMediawall->setTitlePosition(HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
-    mMediawall->setCurrentIndex(model.index(4, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Primary 4"));
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Secondary 4"));
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
-    mMediawall->setCurrentIndex(model.index(5, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_top, "Primary 5"));
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_bottom, "Secondary 5"));
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionNone);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
-    mMediawall->setCurrentIndex(model.index(6, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Primary 6"));
-
-    mMediawall->setTitlePosition(HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionNone);
-    mMediawall->setCurrentIndex(model.index(7, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Primary 7"));
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionAboveImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionAboveImage);
-    mMediawall->setCurrentIndex(model.index(8, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_above_alone, "Secondary 8"));
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_alone, "Primary 8"));
-
-    mMediawall->setDescriptionPosition(HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->titlePosition() == HgMediawall::PositionBelowImage);
-    QVERIFY(mMediawall->descriptionPosition() == HgMediawall::PositionBelowImage);
-    mMediawall->setCurrentIndex(model.index(9, 0));
-    QTest::qWait(1000);
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_top, "Primary 9"));
-    QVERIFY(checkLabelAt(mWindow, expected_label_pos_below_bottom, "Secondary 9"));
-
-    QTest::qWait(2000);
-
-    delete mWindow;
-    mWindow = 0;
-}
-
 void TestGanesWidgets::test_labelFontSpecsCoverFlow()
 {
     mWindow = new HbMainWindow;
@@ -2107,42 +2012,6 @@ void TestGanesWidgets::test_resetModelGrid()
     delete mWindow;
     mWindow = 0;
 
-}
-
-bool TestGanesWidgets::checkLabelAt(HbMainWindow *window, const QPointF &pos, const QString &expectedText)
-{
-    HbLabel *label = findLabelAt(window->currentView(), pos);
-    if (label) {
-        if (label->plainText() == expectedText) {
-            return true;
-        }
-        else {
-            qDebug() << "Label text did not match: expected" << expectedText << "got" << label->plainText();
-            return false;
-        }
-    }
-    qDebug() << "Label not found at pos" << pos;
-    return false;
-}
-
-HbLabel *TestGanesWidgets::findLabelAt(QGraphicsItem *parent, const QPointF &pos)
-{
-    QList<QGraphicsItem *> subItems = parent->childItems();
-    int count = subItems.count();
-    for (int i = 0; i < count; i++) {
-        QGraphicsItem *item = subItems.at(i);
-        QRectF itemRect(item->pos(), item->boundingRect().size());
-        if (itemRect.contains(pos)) {
-            HbLabel *label = qgraphicsitem_cast<HbLabel *>(subItems.at(i));
-            if (label) {
-                return label;
-            }
-            else {
-                return findLabelAt(subItems.at(i), pos);
-            }
-        }
-    }
-    return NULL;
 }
 
 #ifdef _UNITTEST_GANESWIDGETS_LOG_TO_C_

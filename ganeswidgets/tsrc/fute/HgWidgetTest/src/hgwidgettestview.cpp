@@ -35,15 +35,14 @@
 #include "hgwidgettestdatamodel.h"
 #include "hgflipwidget.h"
 #include "hgitemsizedialog.h"
-#include "hgcoverflowwidget.h"
 #include "trace.h"
 #include "hgcoveritem.h"
 #include <hgwidgets/hggrid.h>
 #include <hgwidgets/hgmediawall.h>
-
+#include <hbstyleloader.h>
 
 static const int GRIDBUFFERSIZE(400);
-static const int COVERFLOWBUFFERSIZE(150);
+static const int COVERFLOWBUFFERSIZE(100);
 
 HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
     HbView(parent),
@@ -89,6 +88,7 @@ void HgWidgetTestView::createMenu()
     menu()->addAction("Simulate orientation switch", this, SLOT(orientationChanged()));
     menu()->addAction("Edit item size", this, SLOT(startItemSizeChange()));
     menu()->addAction("Edit item pos", this, SLOT(startItemPosChange()));
+    menu()->addAction("use custom layout", this, SLOT(useCustomLayout()));
         
     HbMenu *modelChangeSubMenu = menu()->addMenu("Change model");
     modelChangeSubMenu->addAction("Remove items", this, SLOT(openDeleteItemsDialog()));
@@ -140,9 +140,13 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
                 setItemVisible(Hb::AllItems, orientation() != Qt::Horizontal);
                 break;
             case HgWidgetTBone:
+                {
             	setItemVisible(Hb::AllItems, true);
 //                mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
                 mListWidget = new HbListWidget;
+                mListWidget->setMinimumHeight(360);
+                mListWidget->setMaximumHeight(360);
+                mListWidget->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Ignored));
                 mLayout->addItem(mListWidget);
                 /*mListWidget->addItem( "List item 1");
                 mListWidget->addItem( "List item 2");
@@ -153,13 +157,13 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
                     connect(mediawall, SIGNAL(animationAboutToEnd(QModelIndex)),
                             SLOT(animationAboutToEnd(QModelIndex)));
                 }
+                }
                 break;
             default:
                 break;
         }
 
         HANDLE_ERROR_NULL(mWidget);
-        mWidget->setModel(mModel);
         connect(mWidget, SIGNAL(activated(QModelIndex)), SLOT(openDialog(QModelIndex)));
         connect(mWidget, SIGNAL(longPressed(QModelIndex, QPointF)), SLOT(openView(QModelIndex)));
         QList<HbMainWindow *> mainWindows = hbInstance->allMainWindows();
@@ -179,20 +183,16 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
 void HgWidgetTestView::animationAboutToEnd(const QModelIndex& targetIndex)
 {
     FUNC_LOG;
-
-    QVariant texts = mModel->data(targetIndex, Qt::DisplayRole);
+    
+    QVariant texts = mModel->silentData(targetIndex, Qt::DisplayRole);
     if (texts.canConvert<QStringList>()) {
         QStringList strList = texts.toStringList();
         if (strList.count() > 0) {
-            if( mListWidget->count() >= 5 ) {
-                //delete the last itme in the list and insert the new row to the beginning of the list
-                HbListWidgetItem* delItem = mListWidget->takeItem(4);
-                if (delItem) {
-                    delete delItem;
-                    delItem = 0;                    
-                }
+            if( mListWidget->count() == 1 ) {
+                mListWidget->setText(0,strList.at(0));
+            } else {
+                mListWidget->insertItem(0, strList.at(0));
             }
-            mListWidget->insertItem(0, strList.at(0));
         }
     }
 }
@@ -238,16 +238,6 @@ void HgWidgetTestView::changeLowResImageUse(bool value)
     }
 }
 
-void HgWidgetTestView::changeTitlePosition(HgMediawall::LabelPosition position)
-{
-    FUNC_LOG;
-
-    HgMediawall *mediawall = qobject_cast<HgMediawall *>(mWidget);
-    if (mediawall && mediawall->titlePosition() != position) {
-        mediawall->setTitlePosition(position);
-    }
-}
-
 void HgWidgetTestView::changeTitleFont(const HbFontSpec &fontSpec)
 {
     FUNC_LOG;
@@ -255,16 +245,6 @@ void HgWidgetTestView::changeTitleFont(const HbFontSpec &fontSpec)
     HgMediawall *mediawall = qobject_cast<HgMediawall *>(mWidget);
     if (mediawall && mediawall->titleFontSpec() != fontSpec) {
         mediawall->setTitleFontSpec(fontSpec);
-    }
-}
-
-void HgWidgetTestView::changeDescriptionPosition(HgMediawall::LabelPosition position)
-{
-    FUNC_LOG;
-
-    HgMediawall *mediawall = qobject_cast<HgMediawall *>(mWidget);
-    if (mediawall && mediawall->descriptionPosition() != position) {
-        mediawall->setDescriptionPosition(position);
     }
 }
 
@@ -288,7 +268,8 @@ void HgWidgetTestView::changeWidgetHeight(int value)
         mLayout->getContentsMargins(&left, &top, &right, &bottom);
 
         if (mWidgetType == HgWidgetTBone) {
-            mListWidget->setPreferredSize(mListWidget->preferredSize().width(), height-value);
+            mListWidget->setMinimumHeight(height-value);
+            mListWidget->setMaximumHeight(height-value);
             mLayout->setContentsMargins(left, 0, right, 0);
         }
         else {
@@ -321,6 +302,13 @@ void HgWidgetTestView::changeReflectionsEnabled(bool enabled)
         wall->enableReflections(enabled);
 }
 
+void HgWidgetTestView::changeEffect3dEnabled(bool enabled)
+{
+    HgGrid* grid = qobject_cast<HgGrid*>(mWidget);
+    if (grid)
+        grid->setEffect3dEnabled(enabled);
+}
+
 void HgWidgetTestView::changeItemSizePolicy(HgMediawall::ItemSizePolicy policy)
 {
     FUNC_LOG;
@@ -346,6 +334,7 @@ void HgWidgetTestView::animationFinished()
     mAnimationGroup->clear();
     delete mDialog;
     mDialog = 0;
+    mModel->setData(mFlippedIndex, true, Qt::UserRole+1);    
 }
 
 void HgWidgetTestView::openDialog(const QModelIndex& index)
@@ -404,16 +393,19 @@ void HgWidgetTestView::openDialog(const QModelIndex& index)
         return;
     }
 
-    HbDialog dlg;
-    dlg.setTimeout(HbPopup::NoTimeout);
-    dlg.setDismissPolicy(HbPopup::TapInside);
-    dlg.setPrimaryAction(new HbAction("Close"));
+    HbDialog* dlg = new HbDialog();
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setTimeout(HbPopup::NoTimeout);
+    dlg->setDismissPolicy(HbPopup::TapAnywhere);
+    dlg->setModal(false);
+    dlg->setBackgroundFaded(false);
+    dlg->addAction(new HbAction("Close",dlg));
     if (texts.canConvert<QStringList>())
     {
         QStringList strList = texts.toStringList();
         if (strList.count() > 0)
         {
-            dlg.setHeadingWidget(new HbLabel(strList.at(0)));
+            dlg->setHeadingWidget(new HbLabel(strList.at(0)));
         }
     }
     if (image.canConvert<QImage>())
@@ -422,9 +414,9 @@ void HgWidgetTestView::openDialog(const QModelIndex& index)
         QImage realImage(image.value<QImage>());
         QPixmap pixmap = QPixmap::fromImage( realImage  );
         content->setIcon(HbIcon(pixmap));
-        dlg.setContentWidget(content);
+        dlg->setContentWidget(content);
     }
-    dlg.exec();
+    dlg->show();
 }
 
 void HgWidgetTestView::startAnimation(const QModelIndex& index)
@@ -489,6 +481,8 @@ void HgWidgetTestView::startAnimation(const QModelIndex& index)
     endRect.moveTo(endRect.topRight());
     animation->setEndValue(endRect);
 
+    mModel->setData(mFlippedIndex, false, Qt::UserRole+1);    
+    
     mAnimationGroup->addAnimation(animation);
     mAnimationGroup->start();    
 }
@@ -517,6 +511,8 @@ void HgWidgetTestView::openView(const QModelIndex& index)
                 HbMainWindow *primaryWindow = mainWindows[0];
                 primaryWindow->addView(view);
                 primaryWindow->setCurrentView(view);
+				// For photos simulation
+                primaryWindow->setOrientation(Qt::Horizontal, false);
             }
         }
     }
@@ -532,13 +528,15 @@ void HgWidgetTestView::closeCurrentView()
         HbView *currentView = primaryWindow->currentView();
         primaryWindow->setCurrentView(this);
         primaryWindow->removeView(currentView);
+		// For photos simulation
+        primaryWindow->unsetOrientation(false);
     }
 }
 
 void HgWidgetTestView::openDeleteItemsDialog()
 {
     FUNC_LOG;
-    HANDLE_ERROR_NULL(mWidget);
+/*    HANDLE_ERROR_NULL(mWidget);
 
     HgWidget *widget = copyWidget();
     HANDLE_ERROR_NULL(widget);
@@ -559,6 +557,7 @@ void HgWidgetTestView::openDeleteItemsDialog()
     }
 
     mWidget->show();
+    */
 }
 
 void HgWidgetTestView::openMoveItemsDialog()
@@ -566,7 +565,7 @@ void HgWidgetTestView::openMoveItemsDialog()
     FUNC_LOG;
     HANDLE_ERROR_NULL(mWidget);
 
-    HgWidget *widget = copyWidget();
+ /*   HgWidget *widget = copyWidget();
     HANDLE_ERROR_NULL(widget);
     HgSelectionDialog *dlg =
         new HgSelectionDialog("Select items to move", "Move to...", widget); // Takes ownership of widget
@@ -599,12 +598,13 @@ void HgWidgetTestView::openMoveItemsDialog()
         }
     }
     mWidget->show();
+    */
 }
 
 void HgWidgetTestView::openAddItemsDialog()
 {
     FUNC_LOG;
-    HANDLE_ERROR_NULL(mWidget);
+/*    HANDLE_ERROR_NULL(mWidget);
 
     HgWidget *widget = copyWidget();
     HANDLE_ERROR_NULL(widget);
@@ -624,6 +624,7 @@ void HgWidgetTestView::openAddItemsDialog()
     }
 
     mWidget->show();
+*/
 }
 
 void HgWidgetTestView::showOptions()
@@ -657,6 +658,8 @@ void HgWidgetTestView::showOptions()
                 SLOT(changeDescriptionFont(HbFontSpec)));
             connect(view, SIGNAL(reflectionsEnabledChanged(bool)), 
                 SLOT(changeReflectionsEnabled(bool)));
+            connect(view, SIGNAL(effect3dEnabledChanged(bool)), 
+                SLOT(changeEffect3dEnabled(bool)));
             connect(view, SIGNAL(itemSizePolicyChanged(HgWidget::ItemSizePolicy)),
                 SLOT(changeItemSizePolicy(HgWidget::ItemSizePolicy)));
 
@@ -722,19 +725,9 @@ void HgWidgetTestView::setupWidgetOptions()
         changeModelImageType(ImageTypeQImage);
 	}
 
-    value = settings.value(SETT_TITLE_POSITION);
-    if (value.isValid()) {
-        changeTitlePosition(static_cast<HgMediawall::LabelPosition>(value.toInt()));
-    }
-
     value = settings.value(SETT_TITLE_FONT);
     if (value.isValid()) {
         changeTitleFont(HbFontSpec(static_cast<HbFontSpec::Role>(value.toInt())));
-    }
-
-    value = settings.value(SETT_DESCRIPTION_POSITION);
-    if (value.isValid()) {
-        changeDescriptionPosition(static_cast<HgMediawall::LabelPosition>(value.toInt()));
     }
 
     value = settings.value(SETT_DESCRIPTION_FONT);
@@ -787,8 +780,7 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
     }
 
     HgWidget* widget = 0;
-    HgMediawall* temp = 0;
-    
+
     switch (type) {
         case HgWidgetGrid:
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
@@ -797,20 +789,18 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
             break;
         case HgWidgetCoverflow:
             {
-            mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
+            mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
-            widget = new HgMediawall();
-            temp = (HgMediawall*)widget;
-            temp->setDescriptionPosition(HgMediawall::PositionAboveImage);
-            break;
+            HgMediawall *mediaWall = new HgMediawall;
+            // mediaWall->setItemSize(QSizeF(4, 3)); // Sets aspect ratio
+            // mediaWall->enableReflections(true);
+            widget = mediaWall;
             }
+            break;
         case HgWidgetTBone:
-            mModel->setThumbnailSize(ThumbnailManager::ThumbnailLarge);
+            mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
-            widget = new HgMediawall();
-            temp = (HgMediawall*)widget;
-            temp->setDescriptionPosition(HgMediawall::PositionAboveImage);
-            temp->enableReflections(false);
+            widget = new HgMediawall;
             break;
         default:
             break;
@@ -821,11 +811,10 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
     widget->setModel(mModel);
     widget->setSelectionModel(mSelectionModel);
     widget->setLongPressEnabled(true);
-	widget->scrollTo(widget->currentIndex());
 
     QImage defaultImage(":/images/default.svg");
     widget->setDefaultImage(defaultImage);
-    
+
     return widget;
 }
 
@@ -840,8 +829,6 @@ HgWidget *HgWidgetTestView::copyWidget() const
     HgMediawall *original = qobject_cast<HgMediawall *>(mWidget);
     HgMediawall *copy = qobject_cast<HgMediawall *>(widget);
     if (original && copy) {
-        copy->setTitlePosition(original->titlePosition());
-        copy->setDescriptionPosition(original->descriptionPosition());
         copy->setTitleFontSpec(original->titleFontSpec());
         copy->setDescriptionFontSpec(original->descriptionFontSpec());
     }
@@ -929,7 +916,7 @@ void HgWidgetTestView::orientationChanged(Qt::Orientation orientation)
     mAnimationGroup->clear();
 
     
-    if (orientation == Qt::Horizontal && mWidgetType == HgWidgetCoverflow ) {
+    if (orientation == Qt::Horizontal && (mWidgetType == HgWidgetCoverflow || mWidgetType == HgWidgetGrid )) {
         setItemVisible(Hb::AllItems, false);
     }
     else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetTBone) {
@@ -940,10 +927,9 @@ void HgWidgetTestView::orientationChanged(Qt::Orientation orientation)
         initWidget(HgWidgetTBone);
         setItemVisible(Hb::AllItems, true);
     }
-    
-    HgCoverflowWidget* wall = qobject_cast<HgCoverflowWidget*>(mWidget);
-    if (wall)
-        wall->updateTextPositions();
+    else if (orientation == Qt::Vertical && mWidgetType == HgWidgetGrid) {
+        setItemVisible(Hb::AllItems, true);
+    }    
 }
 void HgWidgetTestView::resizeEvent(QGraphicsSceneResizeEvent *event)
 {
@@ -988,6 +974,18 @@ void HgWidgetTestView::startItemSizeChange()
     QObject::connect(mItemSizeDialog, SIGNAL(closed()), this, SLOT(itemSizeDialogClosed()));
 }
 
+void HgWidgetTestView::useCustomLayout()
+{
+    HgMediawall* wall = qobject_cast<HgMediawall*>(mWidget);
+    if (wall) {
+        mWidgetType = HgWidgetNone;
+        initWidget(HgWidgetCoverflow);
+        HbStyleLoader::registerFilePath(":/test/hgmediawall.css");
+        HbStyleLoader::registerFilePath(":/test/hgmediawall_color.css");
+        HbStyleLoader::registerFilePath(":/test/hgmediawall.widgetml");
+    }        
+}
+
 void HgWidgetTestView::startItemPosChange()
 {
     if (mItemPosDialog)
@@ -1019,15 +1017,6 @@ void HgWidgetTestView::updateItemSizeAndSpacing()
     
     mWidget->setItemSize(mItemSizeDialog->itemSize());
     mWidget->setItemSpacing(mItemSizeDialog->itemSpacing());
-    
-    HgCoverflowWidget* wall = qobject_cast<HgCoverflowWidget*>(mWidget);
-    if (wall)
-    {
-        wall->updateTextPositions();
-    }
-
-    mWidget->update();
-    
 }
 
 void HgWidgetTestView::updateItemPos()
@@ -1041,8 +1030,6 @@ void HgWidgetTestView::updateItemPos()
 
     QSizeF s = mItemPosDialog->itemSize();
     wall->setFrontItemPositionDelta(QPointF(s.width(), s.height()));
-//    wall->updateTextPositions();
-    mWidget->update();
 }
 
 void HgWidgetTestView::itemSizeDialogClosed()

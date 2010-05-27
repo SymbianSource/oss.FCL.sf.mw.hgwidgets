@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 4 %
 */
 #ifndef MYDATAPROVIDER2_H
 #define MYDATAPROVIDER2_H
@@ -41,6 +41,7 @@ public:
     MyDataProvider(QObject *parent = 0);
     ~MyDataProvider();
     void changeIconSize(ThumbnailManager::ThumbnailSize aThumbnailsize);
+    void changeMode(int mode); // 0 for Images, 1 for Audio
 	
 //from MMdESessionObserver and MMdEQueryObserver
     virtual void HandleSessionOpened(CMdESession& aSession, TInt aError);
@@ -62,7 +63,11 @@ public slots:
 private:
     void getNextThumbnail();
     void readMDSData();
-	
+
+public:
+    void testRemoveItem(int pos);
+    void testInsertItem(int pos, QList< QPair< QVariant, int > >* data);
+    
 private:
     HbIcon* mDefaultIcon;
     CActiveSchedulerWait* mScheduler;
@@ -73,6 +78,7 @@ private:
     int mThumbnailRequestID;
 	ThumbnailManager::ThumbnailSize mThumbnailsize;
 	bool mMDSLoadInProgress;
+	int mMode;
 };
 
 #endif // MYDATAPROVIDER2_H

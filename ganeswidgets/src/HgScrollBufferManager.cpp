@@ -152,6 +152,8 @@ void HgScrollBufferManager::scrollPositionChanged( int newPosition )
 
 void HgScrollBufferManager::timeout()
 {
+    mFirstTime = false;
+    
     if(mResetOrdered)
         {
         mResetOrdered = EFalse;
@@ -207,9 +209,8 @@ bool HgScrollBufferManager::positionInsideBuffer( int position )
 void HgScrollBufferManager::asyncUpdate()
 {
     if (!mTimer.isActive() && mFirstTime) {
-        mFirstTime = false;
         mTimer.start(0);
-    } else {
+    } else if (!mTimer.isActive()){
         timeout();
     }
 }

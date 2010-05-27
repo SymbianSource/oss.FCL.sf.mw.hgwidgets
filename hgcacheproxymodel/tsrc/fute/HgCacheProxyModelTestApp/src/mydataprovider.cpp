@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 5 %
 */
 #include <QList>
 #include "hglogger.h"
@@ -37,7 +37,8 @@ mThumbnailRequestPending(false),
 mThumbnailRequestIndex(-1),
 mThumbnailRequestID(-1),
 mThumbnailsize(ThumbnailManager::ThumbnailMedium),
-mMDSLoadInProgress(false)
+mMDSLoadInProgress(false),
+mMode(0)
 {
 //    TX_ENTRY
     Q_UNUSED(parent);
@@ -66,6 +67,14 @@ void MyDataProvider::changeIconSize(ThumbnailManager::ThumbnailSize aThumbnailsi
 	mThumbnailsize = aThumbnailsize;
 	mWrapper->setThumbnailSize( mThumbnailsize );
 //    TX_EXIT
+}
+
+void MyDataProvider::changeMode(int mode)
+{
+    if(mMode!=mode){
+        mMode = mode;
+        resetModel();
+    }
 }
 
 void MyDataProvider::doRequestData(QList<int> list, bool silent)
@@ -221,9 +230,15 @@ void MyDataProvider::doResetModel()
         
         CMdENamespaceDef& namespaceDef = session->GetDefaultNamespaceDefL();
                 
-        CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Image"));
-    
-        CMdEObjectQuery* imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        CMdEObjectQuery* imageQuery;
+        if ( mMode == 0){
+            CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Image"));
+            imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        } else {
+            CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Audio"));
+            imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        }   
+        
         CleanupStack::PushL( imageQuery );
         imageQuery->SetResultMode( EQueryResultModeId );
         imageQuery->FindL( );
@@ -234,5 +249,18 @@ void MyDataProvider::doResetModel()
     
     
     TX_EXIT    
+}
+void MyDataProvider::testRemoveItem(int pos)
+{
+    TX_ENTRY
+    removeItem(pos);
+    TX_EXIT  
+}
+
+void MyDataProvider::testInsertItem(int pos, QList< QPair< QVariant, int > >* data)
+{
+    TX_ENTRY
+    insertItem(pos, data, false);
+    TX_EXIT  
 }
 

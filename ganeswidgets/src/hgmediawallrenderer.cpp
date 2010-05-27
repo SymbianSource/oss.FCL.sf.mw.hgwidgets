@@ -247,7 +247,7 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider,
     mFrontItemPosition(0,0)
 {
     createStateMachine();
-    mRenderer = new HgQtQuadRenderer(64);
+    mRenderer = new HgQtQuadRenderer(128);
     mRenderer->enableReflections(true);
     mRendererInitialized = true;
     if (mCoverflowMode) {
@@ -443,12 +443,18 @@ void HgMediaWallRenderer::setScrollDirection(Qt::Orientation scrollDirection, bo
         mStateMachine->setAnimated(animate);
         mNextScrollDirection = scrollDirection;
 
-        if (!animate)
+        if (!animate) {
             mScrollDirection = scrollDirection;
+        }
         else
         {
             //emit renderingNeeded();            
         }
+    } else if (!animate) {
+        // reset next scrolldirection just to be sure. In some cases
+        // when orientation changes couple of times and container visibility changes
+        // we might otherwise end up in wrong state.
+        mNextScrollDirection = scrollDirection;
     }
 }
 
@@ -975,8 +981,9 @@ void HgMediaWallRenderer::setupDefaultQuad(const QVector3D& pos, int itemIndex, 
 {
     HgQuad* quad = mRenderer->quad(quadIndex++);
     quad->setPosition(pos);
-    quad->setImage(mDataProvider->image(itemIndex));
-    quad->setVisible(true);
+    const HgImage* image = mDataProvider->image(itemIndex);
+    quad->setImage(image);
+    quad->setVisible(true/*image && image->alpha() != 0*/);
     quad->setScale(QVector2D(mImageSize3D.width(),mImageSize3D.height()));
     quad->setPivot(QVector2D(0,0));
     quad->setUserData(QVariant(itemIndex));

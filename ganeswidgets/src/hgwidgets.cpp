@@ -172,14 +172,6 @@ void HgWidget::setLongPressEnabled (bool value)
     if (d->mHandleLongPress != value)
     {
         d->mHandleLongPress = value;
-        if (value)
-        {
-            grabGesture(Qt::TapAndHoldGesture);
-        }
-        else
-        {
-            ungrabGesture(Qt::TapAndHoldGesture);
-        }
     }
 
     // TODO, should we do something like this?????
@@ -247,12 +239,12 @@ bool HgWidget::eventFilter(QObject *obj,QEvent *event)
         {
         case QEvent::ApplicationActivate:
             {
-            d->gainedForeground();
+//            d->gainedForeground();
             break;
             }
         case QEvent::ApplicationDeactivate:
             {
-            d->lostForeground();
+//            d->lostForeground();
             break;
             }
         case QEvent::GraphicsSceneResize:

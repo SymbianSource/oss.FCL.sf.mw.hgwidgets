@@ -32,10 +32,10 @@ HgListWidget::HgListWidget(QGraphicsItem *parent) : HbListWidget(parent)
     setHorizontalScrollBarPolicy(HbScrollArea::ScrollBarAlwaysOff);
 }
 
-void HgListWidget::leftGesture(int value)
+/*void HgListWidget::leftGesture(int value)
 {
     if (value > 30) {
         emit close();
     }
 }
-
+*/

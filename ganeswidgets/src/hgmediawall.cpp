@@ -20,61 +20,39 @@
 #include "hgwidgets_p.h"
 #include "hgcoverflowcontainer.h"
 #include <hbmainwindow>
+#include <hbstyleloader.h>
 
 HgMediawall::HgMediawall(QGraphicsItem *parent ) :
     HgWidget( *new HgMediawallPrivate, parent )
 {
     Q_D(HgMediawall);
     d->q_ptr = this;
+
+    HbStyleLoader::registerFilePath(":/hgmediawall.css");
+    HbStyleLoader::registerFilePath(":/hgmediawall_color.css");
+    HbStyleLoader::registerFilePath(":/hgmediawall.widgetml");
+
     d->init(mainWindow()->orientation());
 }
 
-HgMediawall::HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent) : 
+HgMediawall::HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent) :
     HgWidget( dd, parent )
 {
     Q_D(HgMediawall);
-    d->q_ptr = this;    
+    d->q_ptr = this;
+
+    HbStyleLoader::registerFilePath(":/hgmediawall.css");
+    HbStyleLoader::registerFilePath(":/hgmediawall_color.css");
+    HbStyleLoader::registerFilePath(":/hgmediawall.widgetml");
+
     d->init(mainWindow()->orientation());
 }
 
 HgMediawall::~HgMediawall()
 {
-}
-
-/*!
-    Sets the placement of the title.
-*/
-void HgMediawall::setTitlePosition(LabelPosition position)
-{
-    Q_D(HgMediawall);
-    d->setTitlePosition(position);
-}
-
-/*!
-    Returns the placement of the title.
-*/
-HgMediawall::LabelPosition HgMediawall::titlePosition() const
-{
-    Q_D(const HgMediawall);
-    return d->titlePosition();
-}
-
-/*!
-    Sets the placement of the description.
-*/
-void HgMediawall::setDescriptionPosition(LabelPosition position)
-{
-    Q_D(HgMediawall);
-    d->setDescriptionPosition(position);
-}
-
-/*!
-    Returns the placement of the description.
-*/
-HgMediawall::LabelPosition HgMediawall::descriptionPosition() const
-{
-    Q_D(const HgMediawall);
-    return d->descriptionPosition();
+    HbStyleLoader::unregisterFilePath(":/hgmediawall.css");
+    HbStyleLoader::unregisterFilePath(":/hgmediawall_color.css");
+    HbStyleLoader::unregisterFilePath(":/hgmediawall.widgetml");
 }
 
 /*!

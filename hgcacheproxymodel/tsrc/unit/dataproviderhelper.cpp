@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 3 %
+*  Version     : %version: 5 %
 */
 #include "dataproviderhelper.h"
 #include <QtDebug>
@@ -250,6 +250,11 @@ void DataProviderHelper::testReleasePixmap(int idx)
 QVariant DataProviderHelper::testCreateIcon(int index, QPixmap aPixmap)
 {
     return createIcon(index, aPixmap);
+}
+
+void DataProviderHelper::testUpdateIcon(int pos, QVariant icon, bool silent)
+{
+    updateIcon(pos, icon, silent);
 }
 
 void DataProviderHelper::testEmitDataChanged(QModelIndex from,QModelIndex to)

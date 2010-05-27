@@ -70,28 +70,27 @@ EXPORTS
 	?metaObject@HgGrid@@UBEPBUQMetaObject@@XZ @ 69 NONAME ; struct QMetaObject const * HgGrid::metaObject(void) const
 	??_EHgMediawall@@UAE@I@Z @ 70 NONAME ; HgMediawall::~HgMediawall(unsigned int)
 	?d_func@HgMediawall@@AAEPAVHgMediawallPrivate@@XZ @ 71 NONAME ; class HgMediawallPrivate * HgMediawall::d_func(void)
-	?descriptionPosition@HgMediawall@@QBE?AW4LabelPosition@1@XZ @ 72 NONAME ; enum HgMediawall::LabelPosition HgMediawall::descriptionPosition(void) const
-	?setDescriptionFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 73 NONAME ; void HgMediawall::setDescriptionFontSpec(class HbFontSpec const &)
-	?titleFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 74 NONAME ; class HbFontSpec HgMediawall::titleFontSpec(void) const
-	?setDescriptionPosition@HgMediawall@@QAEXW4LabelPosition@1@@Z @ 75 NONAME ; void HgMediawall::setDescriptionPosition(enum HgMediawall::LabelPosition)
-	?titlePosition@HgMediawall@@QBE?AW4LabelPosition@1@XZ @ 76 NONAME ; enum HgMediawall::LabelPosition HgMediawall::titlePosition(void) const
-	?setTitleFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 77 NONAME ; void HgMediawall::setTitleFontSpec(class HbFontSpec const &)
-	?setTitlePosition@HgMediawall@@QAEXW4LabelPosition@1@@Z @ 78 NONAME ; void HgMediawall::setTitlePosition(enum HgMediawall::LabelPosition)
-	?descriptionFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 79 NONAME ; class HbFontSpec HgMediawall::descriptionFontSpec(void) const
-	?setIndexFeedbackPolicy@HgWidget@@QAEXW4IndexFeedbackPolicy@1@@Z @ 80 NONAME ; void HgWidget::setIndexFeedbackPolicy(enum HgWidget::IndexFeedbackPolicy)
-	?indexFeedbackPolicy@HgWidget@@QBE?AW4IndexFeedbackPolicy@1@XZ @ 81 NONAME ; enum HgWidget::IndexFeedbackPolicy HgWidget::indexFeedbackPolicy(void) const
-	?setDefaultImage@HgWidget@@QAEXVQImage@@@Z @ 82 NONAME ; void HgWidget::setDefaultImage(class QImage)
-	??0HgWidget@@QAE@PAVQGraphicsItem@@@Z @ 83 NONAME ; HgWidget::HgWidget(class QGraphicsItem *)
-	??0HgMediawall@@IAE@AAVHgMediawallPrivate@@PAVQGraphicsItem@@@Z @ 84 NONAME ; HgMediawall::HgMediawall(class HgMediawallPrivate &, class QGraphicsItem *)
-	??0HgGrid@@IAE@W4Orientation@Qt@@AAVHgGridPrivate@@PAVQGraphicsItem@@@Z @ 85 NONAME ; HgGrid::HgGrid(enum Qt::Orientation, class HgGridPrivate &, class QGraphicsItem *)
-	?setItemSizePolicy@HgWidget@@QAEXW4ItemSizePolicy@1@@Z @ 86 NONAME ; void HgWidget::setItemSizePolicy(enum HgWidget::ItemSizePolicy)
-	?itemSizePolicy@HgWidget@@QBE?AW4ItemSizePolicy@1@XZ @ 87 NONAME ; enum HgWidget::ItemSizePolicy HgWidget::itemSizePolicy(void) const
-	?setItemSize@HgWidget@@QAEXABVQSizeF@@@Z @ 88 NONAME ; void HgWidget::setItemSize(class QSizeF const &)
-	?setItemSpacing@HgWidget@@QAEXABVQSizeF@@@Z @ 89 NONAME ; void HgWidget::setItemSpacing(class QSizeF const &)
-	?itemSize@HgWidget@@QBE?AVQSizeF@@XZ @ 90 NONAME ; class QSizeF HgWidget::itemSize(void) const
-	?itemSpacing@HgWidget@@QBE?AVQSizeF@@XZ @ 91 NONAME ; class QSizeF HgWidget::itemSpacing(void) const
-	?enableReflections@HgMediawall@@QAEX_N@Z @ 92 NONAME ; void HgMediawall::enableReflections(bool)
-	?frontItemPositionDelta@HgMediawall@@QBE?AVQPointF@@XZ @ 93 NONAME ; class QPointF HgMediawall::frontItemPositionDelta(void) const
-	?reflectionsEnabled@HgMediawall@@QBE_NXZ @ 94 NONAME ; bool HgMediawall::reflectionsEnabled(void) const
-	?setFrontItemPositionDelta@HgMediawall@@QAEXABVQPointF@@@Z @ 95 NONAME ; void HgMediawall::setFrontItemPositionDelta(class QPointF const &)
+	?setDescriptionFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 72 NONAME ; void HgMediawall::setDescriptionFontSpec(class HbFontSpec const &)
+	?titleFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 73 NONAME ; class HbFontSpec HgMediawall::titleFontSpec(void) const
+	?setTitleFontSpec@HgMediawall@@QAEXABVHbFontSpec@@@Z @ 74 NONAME ; void HgMediawall::setTitleFontSpec(class HbFontSpec const &)
+	?descriptionFontSpec@HgMediawall@@QBE?AVHbFontSpec@@XZ @ 75 NONAME ; class HbFontSpec HgMediawall::descriptionFontSpec(void) const
+	?setIndexFeedbackPolicy@HgWidget@@QAEXW4IndexFeedbackPolicy@1@@Z @ 76 NONAME ; void HgWidget::setIndexFeedbackPolicy(enum HgWidget::IndexFeedbackPolicy)
+	?indexFeedbackPolicy@HgWidget@@QBE?AW4IndexFeedbackPolicy@1@XZ @ 77 NONAME ; enum HgWidget::IndexFeedbackPolicy HgWidget::indexFeedbackPolicy(void) const
+	?setDefaultImage@HgWidget@@QAEXVQImage@@@Z @ 78 NONAME ; void HgWidget::setDefaultImage(class QImage)
+	??0HgWidget@@QAE@PAVQGraphicsItem@@@Z @ 79 NONAME ; HgWidget::HgWidget(class QGraphicsItem *)
+	??0HgMediawall@@IAE@AAVHgMediawallPrivate@@PAVQGraphicsItem@@@Z @ 80 NONAME ; HgMediawall::HgMediawall(class HgMediawallPrivate &, class QGraphicsItem *)
+	??0HgGrid@@IAE@W4Orientation@Qt@@AAVHgGridPrivate@@PAVQGraphicsItem@@@Z @ 81 NONAME ; HgGrid::HgGrid(enum Qt::Orientation, class HgGridPrivate &, class QGraphicsItem *)
+	?setItemSizePolicy@HgWidget@@QAEXW4ItemSizePolicy@1@@Z @ 82 NONAME ; void HgWidget::setItemSizePolicy(enum HgWidget::ItemSizePolicy)
+	?itemSizePolicy@HgWidget@@QBE?AW4ItemSizePolicy@1@XZ @ 83 NONAME ; enum HgWidget::ItemSizePolicy HgWidget::itemSizePolicy(void) const
+	?setItemSize@HgWidget@@QAEXABVQSizeF@@@Z @ 84 NONAME ; void HgWidget::setItemSize(class QSizeF const &)
+	?setItemSpacing@HgWidget@@QAEXABVQSizeF@@@Z @ 85 NONAME ; void HgWidget::setItemSpacing(class QSizeF const &)
+	?itemSize@HgWidget@@QBE?AVQSizeF@@XZ @ 86 NONAME ; class QSizeF HgWidget::itemSize(void) const
+	?itemSpacing@HgWidget@@QBE?AVQSizeF@@XZ @ 87 NONAME ; class QSizeF HgWidget::itemSpacing(void) const
+	?enableReflections@HgMediawall@@QAEX_N@Z @ 88 NONAME ; void HgMediawall::enableReflections(bool)
+	?frontItemPositionDelta@HgMediawall@@QBE?AVQPointF@@XZ @ 89 NONAME ; class QPointF HgMediawall::frontItemPositionDelta(void) const
+	?reflectionsEnabled@HgMediawall@@QBE_NXZ @ 90 NONAME ; bool HgMediawall::reflectionsEnabled(void) const
+	?setFrontItemPositionDelta@HgMediawall@@QAEXABVQPointF@@@Z @ 91 NONAME ; void HgMediawall::setFrontItemPositionDelta(class QPointF const &)
+	?animationAboutToEnd@HgMediawall@@IAEXABVQModelIndex@@@Z @ 92 NONAME ; void HgMediawall::animationAboutToEnd(class QModelIndex const &)
+	?setEffect3dEnabled@HgGrid@@QAEX_N@Z @ 93 NONAME ; void HgGrid::setEffect3dEnabled(bool)
+	?effect3dEnabled@HgGrid@@QBE_NXZ @ 94 NONAME ; bool HgGrid::effect3dEnabled(void) const
 

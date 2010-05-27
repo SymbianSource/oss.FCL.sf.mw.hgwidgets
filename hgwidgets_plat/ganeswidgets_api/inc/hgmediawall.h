@@ -25,8 +25,6 @@ class HgMediawallPrivate;
 class HG_WIDGETS_EXPORT HgMediawall : public HgWidget
 {
     Q_OBJECT
-    Q_PROPERTY(LabelPosition titlePosition READ titlePosition WRITE setTitlePosition)
-    Q_PROPERTY(LabelPosition descriptionPosition READ descriptionPosition WRITE setDescriptionPosition)
     Q_PROPERTY(HbFontSpec titleFontSpec READ titleFontSpec WRITE setTitleFontSpec)
     Q_PROPERTY(HbFontSpec descriptionFontSpec READ descriptionFontSpec WRITE setDescriptionFontSpec)
     Q_PROPERTY(QPointF frontItemPositionDelta READ frontItemPositionDelta WRITE setFrontItemPositionDelta)
@@ -38,16 +36,6 @@ public:
     explicit HgMediawall(QGraphicsItem *parent = 0 );
     virtual ~HgMediawall();
 
-    enum LabelPosition {
-        PositionNone = 0,
-        PositionAboveImage,
-        PositionBelowImage
-    };
-
-    void setTitlePosition(LabelPosition position);
-    LabelPosition titlePosition() const;
-    void setDescriptionPosition(LabelPosition position);
-    LabelPosition descriptionPosition() const;
     void setTitleFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec titleFontSpec() const;
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);

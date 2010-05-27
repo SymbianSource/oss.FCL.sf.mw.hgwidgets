@@ -41,13 +41,12 @@ signals:
     void scrollBarInteractivityChanged(bool);
     void imageTypeChanged(HgTestImageType);
     void lowResImageUseChanged(bool);
-    void titlePositionChanged(HgMediawall::LabelPosition);
     void titleFontChanged(const HbFontSpec &);
-    void descriptionPositionChanged(HgMediawall::LabelPosition);
     void descriptionFontChanged(const HbFontSpec &);
     void widgetHeightChanged(int);
     void widgetWidthChanged(int);
     void reflectionsEnabledChanged(bool);
+    void effect3dEnabledChanged(bool);
     void itemSizePolicyChanged(HgWidget::ItemSizePolicy);
 private slots:
     void updateData(QModelIndex startIn, QModelIndex endIn);

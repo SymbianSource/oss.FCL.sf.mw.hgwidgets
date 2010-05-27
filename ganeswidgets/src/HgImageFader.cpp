@@ -11,16 +11,9 @@
 *
 * Contributors:
 *
-* Description: 
+* Description:
 *
 */
-/*
- * HgImageFader.cpp
- *
- *  Created on: Feb 10, 2010
- *      Author: anpentti
- */
-
 #include "HgImageFader.h"
 #include "hgimage.h"
 

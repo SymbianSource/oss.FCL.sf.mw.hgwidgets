@@ -42,6 +42,7 @@ public:
     void gotoPos(const QPointF& pos);
     void cancel();
     bool isActive() const;
+    void resetVelocity();
 
     const QPointF& startPos() const;
     const QPointF& pos() const;

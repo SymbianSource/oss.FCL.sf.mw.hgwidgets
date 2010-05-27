@@ -36,9 +36,10 @@ HgSelectionDialog::HgSelectionDialog(
     setDismissPolicy(HbDialog::NoDismiss);
     setTimeout(HbDialog::NoTimeout);
     setHeadingWidget(new HbLabel(title, this));
-    setPrimaryAction(new HbAction(primaryText, this));
-    primaryAction()->setDisabled(true);
-    setSecondaryAction(new HbAction("Cancel", this));
+    HbAction *action = new HbAction(primaryText, this);
+    addAction(action);
+    action->setDisabled(true);
+    addAction(new HbAction("Cancel", this));
 
     connect(content->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection, QItemSelection)),

@@ -57,26 +57,26 @@ public:
 
     bool getItemOutline(const QModelIndex& index, QPolygonF& points);
     void aboutToChangeOrientation();
-    void orientationChanged(Qt::Orientation orientation);
-    
+    virtual void orientationChanged(Qt::Orientation orientation);
+
     QList<QModelIndex> getVisibleItemIndices() const;
     Qt::Orientation scrollDirection() const;
 
     void setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy);
     HgWidget::IndexFeedbackPolicy indexFeedbackPolicy() const;
     void setDefaultImage(QImage defaultImage);
-    
+
     void setItemSizePolicy(HgWidget::ItemSizePolicy policy);
     HgWidget::ItemSizePolicy itemSizePolicy() const;
 
     void setItemSize(const QSizeF& size);
     QSizeF itemSize() const;
-    
+
     void setItemSpacing(const QSizeF& size);
     QSizeF itemSpacing() const;
-    
+
     HgWidget *q_ptr;
-    
+
 private:
 
     void clearCurrentModel();
@@ -85,7 +85,7 @@ private:
     void adjustGeometry();
 
     void createScrollBar(Qt::Orientation orientation);
-    
+
     void setScrollBarPolicy(HgWidget::ScrollBarPolicy policy);
     void replaceScrollBar(HbScrollBar *scrollBar);
 
@@ -98,7 +98,8 @@ private:
 
     void lostForeground();
     void gainedForeground();
-    
+    virtual void updateCurrentItem(const QModelIndex &currentItem);
+
     // private slot functions
     void _q_scrollPositionChanged(qreal index, bool scrollBarAnimation);
     void _q_releaseItems( int releaseStart, int releaseEnd );
@@ -112,20 +113,18 @@ private:
                      int destinationRow);
     void _q_modelReset();
     void _q_groovePressed(qreal value, Qt::Orientation orientation);
+    void _q_updateCurrentItem(const QModelIndex &current, const QModelIndex &previous);
 
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 
     void initBufferManager(int itemCount);
-    
-protected:
 
-    QGraphicsLinearLayout *mLayout;
+protected:
 
     HgContainer *mContainer;
     HgScrollBufferManager *mBufferManager;
 
     QAbstractItemModel *mModel;
-    QItemSelectionModel *mSelectionModel;
     QItemSelectionModel *mDefaultSelectionModel;
 
     HbScrollBar *mScrollBar;

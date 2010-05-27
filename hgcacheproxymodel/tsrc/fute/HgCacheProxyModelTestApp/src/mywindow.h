@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 4 %
 */
 #ifndef CONTENTWIDGET_H
 #define CONTENTWIDGET_H
@@ -55,12 +55,16 @@ public:
     ~MyWindow();
 
 private slots:
-    void processAction ( HbAction* action );
-    void setIndex(int index);
-    void timeout();
+    void processAction( HbAction* action );
+    void sortTestTimeout();
+    void filterTestTimeout();
     
 private:
     HbMenu *createMainMenu();
+    
+    void addChangeViewMenu(HbMenu* parent);
+    void addCacheProxyModelMenu(HbMenu* parent);
+    void addDataProviderMenu(HbMenu* parent);
     
 private:
     HbAbstractItemView* mView;      
@@ -68,9 +72,11 @@ private:
 	
 	MyDataProvider *mMyDataProvider;
     HbView* mMainView;	
-    int mTestVal;
-    QTimer *mTimer;
-
+    QTimer *mSortTestTimer;
+    int mSortTestVal;
+    
+    QTimer *mFilterTestTimer;
+    int mFilterTestVal;
 };
 
 #endif // CONTENTWIDGET_H

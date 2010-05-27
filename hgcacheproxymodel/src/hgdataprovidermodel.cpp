@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 6 %
+*  Version     : %version: 9 %
 */
 #include <e32debug.h>
 #include <QVariant>
@@ -149,6 +149,10 @@ QMap<int, QVariant> HgDataProviderModel::itemData(const QModelIndex &index) cons
 
 void HgDataProviderModel::clearCache()
 {
+    for ( int i=0; i<count(); i++){
+        releasePixmap(i);
+    }
+    
     qDeleteAll( mCache->begin(), mCache->end() );
     mCache->clear();
 }
@@ -162,7 +166,7 @@ bool HgDataProviderModel::update(int pos, QList< QPair< QVariant, int > >* list,
 {
     bool change(false);
     if (list && list->count() && pos >=0 && pos<count() && mCache->at(pos)) {
-        while(list->count()){
+        while(list->count()>0){
             QPair< QVariant, int > pair = list->takeFirst();
             change = update(pos, pair.first, pair.second, true)|change;
         }
@@ -239,10 +243,8 @@ void HgDataProviderModel::insertItem(int pos, QPair< QVariant, int > item, bool 
 
 void HgDataProviderModel::doInsertItem(int pos, QList< QPair< QVariant, int > >* list, bool silent)
 {
-    if (pos >mCache->count()){
-        pos = mCache->count();
-    } else if (pos <0){
-        pos = 0;
+    if (pos >mCache->count() || pos <0){
+        return;
     }
     
     if ( !silent){
@@ -267,9 +269,9 @@ void HgDataProviderModel::removeItem(int pos)
 
 void HgDataProviderModel::removeItems(int pos, int size)
 {
-    if (pos >mCache->count())
+    if (pos >=mCache->count()){
         return;
-    else if (pos <0){
+    } else if (pos <0){
         size = size + pos; //pos <0
         pos = 0;
     }

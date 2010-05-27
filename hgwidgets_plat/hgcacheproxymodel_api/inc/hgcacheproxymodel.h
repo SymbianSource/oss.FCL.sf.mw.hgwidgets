@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 6 %
 */
 
 #ifndef HGCACHEPROXYMODEL_H_
@@ -126,8 +126,6 @@ private:
     QModelIndex mapToSource(int row, int col) const;
     int mapToDataProviderIndex(int myIndex) const;
     int mapFromDataProviderIndex(int myIndex) const;
-    void cleanupForBMReset();
-    void resetBM();
     void releaseAll();
     void setBufferPosition(int pos) const;
     

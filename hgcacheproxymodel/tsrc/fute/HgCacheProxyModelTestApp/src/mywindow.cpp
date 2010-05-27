@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 5 %
 */
 #include "mywindow.h"
 #include <hbmenu.h>
@@ -29,21 +29,58 @@
 #include <QCoreApplication>
 #include <hbgridview.h>
 #include <hbinstance.h>
+#include <HbInputDialog>
 #include <QFileSystemWatcher>
 #include <hgwidgets/hgcacheproxymodel.h>
 
 #include "mydataprovider.h"
 #include "hglogger.h"
 
+const int KGridViewCommand = 1;
+const int KListViewCommand = 2;
 
-const QStringList KViewNames = (QStringList() << "GridView" << "ListView" );
+const int KSort1Command = 1101;
+const int KSort2Command = 1102;
+const int KSort3Command = 1103;
+const int KSortCaseSensitiveCommand = 1104;
+const int KSortCaseInsensitiveCommand = 1105;
+const int KDisableFilterCommand = 1200;
+const int KFilter1Command = 1201;
+const int KFilter2Command = 1202;
+const int KTogleDynamicCommand = 1000;
+const int KTogleSortTestCommand = 1001;
+const int KTogleFilterTestCommand = 1002;
+
+const int KInsert0Command = 2100;
+const int KInsert50Command = 2101;
+const int KInsert101Command = 2102;
+const int KInsert257Command = 2103;
+const int KInsert1000Command = 2104;
+const int KInsertEndCommand = 2105;
+const int KInsertEnd10Command = 2106;
+const int KInsertCustomCommand = 2107;
+const int KRemove0Command = 2200;
+const int KRemove50Command = 2201;
+const int KRemove101Command = 2202;
+const int KRemove257Command = 2203;
+const int KRemove1000Command = 2204;
+const int KRemoveLastCommand = 2205;
+const int KRemoveEnd10Command = 2206;
+const int KRemoveCustomCommand = 2207;
+const int KShowImagesCommand = 2300;
+const int KShowAudioCommand = 2301;
+
+const int KResetCommand = 10000;
 
 MyWindow::MyWindow()
     : HbMainWindow(), 
     mView(0),
     mModel(0),
     mMyDataProvider(0),
-    mTimer(new QTimer(this))
+    mSortTestTimer(new QTimer(this)),
+    mSortTestVal(-1),
+    mFilterTestTimer(new QTimer(this)),
+    mFilterTestVal(-1)
 {
     mMainView = new HbView();
     addView( mMainView );
@@ -54,10 +91,11 @@ MyWindow::MyWindow()
     mModel = new HgCacheProxyModel(this);
     mModel->setDataProvider(mMyDataProvider, 120, 20);
 
-    connect(mTimer, SIGNAL(timeout()), this, SLOT(timeout()));
+    connect(mSortTestTimer, SIGNAL(timeout()), this, SLOT(sortTestTimeout()));
+    connect(mSortTestTimer, SIGNAL(timeout()), this, SLOT(filterTestTimeout()));
     
     HbAction action;
-	action.setData ( QVariant(1) );	//select Grid
+	action.setData ( QVariant(KGridViewCommand) );	//select Grid
 	processAction(&action);
 }
 
@@ -71,147 +109,353 @@ HbMenu *MyWindow::createMainMenu()
     HbMenu* mainMenu = new HbMenu( );
     connect(mainMenu, SIGNAL(triggered(HbAction*)),this, SLOT(processAction(HbAction*)));
 
-    HbMenu *viewSubMenu = mainMenu->addMenu("Change view");
-    QString temporaryString;
-    int i(0);
-    foreach (temporaryString , KViewNames) {
-        HbAction* subAction = viewSubMenu->addAction(temporaryString);
-        subAction->setData (QVariant(++i));
-    }
+    addChangeViewMenu(mainMenu);
+    addCacheProxyModelMenu(mainMenu);
+    addDataProviderMenu(mainMenu);
     
-    HbMenu *sortSubMenu = mainMenu->addMenu("Sort");
-    HbAction* action = sortSubMenu->addAction("Sort1");
-    action->setData(QVariant(101));
-    action = sortSubMenu->addAction("Sort2");
-    action->setData(QVariant(102));    
-    action = sortSubMenu->addAction("Sort3");
-    action->setData(QVariant(103));
-    HbMenu *sort4SubMenu = sortSubMenu->addMenu("Sort4 (String)");
-    action = sort4SubMenu->addAction("CaseSensitive");
-    action->setData(QVariant(104));
-    action = sort4SubMenu->addAction("CaseInsensitive");
-    action->setData(QVariant(105));
-    
-    HbMenu *filterSubMenu = mainMenu->addMenu("Filter");
-    action = filterSubMenu->addAction("Disable filter");
-    action->setData(QVariant(201));
-    action = filterSubMenu->addAction("Filter ITEM* (Case Sensitive)");
-    action->setData(QVariant(202));
-    action = filterSubMenu->addAction("Filter ITEM1*(Case Insensitive)");
-    action->setData(QVariant(203));
-    
-    action = mainMenu->addAction("Reset");
-    action->setData(QVariant(1000));
-    action = mainMenu->addAction("Enable dynamic Sort/Filter");
-    action->setData(QVariant(1001));    
+    HbAction* action = mainMenu->addAction("Reset");
+    action->setData(QVariant(KResetCommand));
 
-    action = mainMenu->addAction("Test");
-    action->setData(QVariant(1002));
-
-    action = mainMenu->addAction("Stop Test");
-    action->setData(QVariant(1003));
-    
     return mainMenu;
 }
+
+void MyWindow::addChangeViewMenu(HbMenu* parent)
+{
+    HbMenu *viewSubMenu = parent->addMenu("Change view");
+    HbAction* action = viewSubMenu->addAction("GridView");
+    action->setData(QVariant(KGridViewCommand));
+    action = viewSubMenu->addAction("ListView");
+    action->setData(QVariant(KListViewCommand));
+}
+
+void MyWindow::addCacheProxyModelMenu(HbMenu* parent)
+{
+    
+    HbMenu *cpSubMenu = parent->addMenu("CacheProxyModel");
+    
+    HbMenu *sortSubMenu = cpSubMenu->addMenu("Sort");
+    HbAction* action = sortSubMenu->addAction("Sort1");
+    action->setData(QVariant(KSort1Command));
+    action = sortSubMenu->addAction("Sort2");
+    action->setData(QVariant(KSort2Command));    
+    action = sortSubMenu->addAction("Sort3");
+    action->setData(QVariant(KSort3Command));
+    HbMenu *sort4SubMenu = sortSubMenu->addMenu("Sort4 (String)");
+    action = sort4SubMenu->addAction("CaseSensitive");
+    action->setData(QVariant(KSortCaseSensitiveCommand));
+    action = sort4SubMenu->addAction("CaseInsensitive");
+    action->setData(QVariant(KSortCaseInsensitiveCommand));
+    
+    HbMenu *filterSubMenu = cpSubMenu->addMenu("Filter");
+    action = filterSubMenu->addAction("Disable filter");
+    action->setData(QVariant(KDisableFilterCommand));
+    action = filterSubMenu->addAction("Filter ITEM* (Case Sensitive)");
+    action->setData(QVariant(KFilter1Command));
+    action = filterSubMenu->addAction("Filter ITEM1*(Case Insensitive)");
+    action->setData(QVariant(KFilter2Command));
+    
+    action = cpSubMenu->addAction("Enable dynamic Sort/Filter");
+    action->setData(QVariant(KTogleDynamicCommand));
+    
+    action = cpSubMenu->addAction("Start Sort Test");
+    action->setData(QVariant(KTogleSortTestCommand));
+
+    action = cpSubMenu->addAction("Start Filter Test");
+    action->setData(QVariant(KTogleFilterTestCommand));
+
+    
+}
+
+void MyWindow::addDataProviderMenu(HbMenu* parent)
+{
+    HbMenu *dpSubMenu = parent->addMenu("DataProvider");
+    
+    HbMenu *insertSubMenu = dpSubMenu->addMenu("Insert Item");
+    HbAction* action = insertSubMenu->addAction("at 0");
+    action->setData(QVariant(KInsert0Command));
+    action = insertSubMenu->addAction("at 50");
+    action->setData(QVariant(KInsert50Command));    
+    action = insertSubMenu->addAction("at 101");
+    action->setData(QVariant(KInsert101Command));
+    action = insertSubMenu->addAction("at 257");
+    action->setData(QVariant(KInsert257Command));
+    action = insertSubMenu->addAction("at 1000");
+    action->setData(QVariant(KInsert1000Command));
+    action = insertSubMenu->addAction("at end");
+    action->setData(QVariant(KInsertEndCommand));
+    action = insertSubMenu->addAction("at end-10");
+    action->setData(QVariant(KInsertEnd10Command));
+    action = insertSubMenu->addAction("at ...");
+    action->setData(QVariant(KInsertCustomCommand));
+    
+    HbMenu *removeSubMenu = dpSubMenu->addMenu("Remove Item");
+    action = removeSubMenu->addAction("at 0");
+    action->setData(QVariant(KRemove0Command));
+    action = removeSubMenu->addAction("at 50");
+    action->setData(QVariant(KRemove50Command));    
+    action = removeSubMenu->addAction("at 101");
+    action->setData(QVariant(KRemove101Command));
+    action = removeSubMenu->addAction("at 257");
+    action->setData(QVariant(KRemove257Command));
+    action = removeSubMenu->addAction("at 1000");
+    action->setData(QVariant(KRemove1000Command));
+    action = removeSubMenu->addAction("last");
+    action->setData(QVariant(KRemoveLastCommand));
+    action = removeSubMenu->addAction("at end-10");
+    action->setData(QVariant(KRemoveEnd10Command));
+    action = removeSubMenu->addAction("at ...");
+    action->setData(QVariant(KRemoveCustomCommand));
+
+    action = dpSubMenu->addAction("Show Images");
+    action->setData(QVariant(KShowImagesCommand));
+    action = dpSubMenu->addAction("Show Audio");
+    action->setData(QVariant(KShowAudioCommand));
+
+}
+
 
 
 void MyWindow::processAction( HbAction* action )
 {
     int command = action->data().toInt();
-    if ( command == 1) {
-        HbGridView* view = new HbGridView();
-		if ( orientation() == Qt::Horizontal ) {
-			view->setColumnCount( 5 );
-			view->setRowCount( 3 );
-		}else {
-			view->setColumnCount( 3 );
-			view->setRowCount( 5 );			
-		}
-//        view->setTextVisible(false);
-		view->setUniformItemSizes( true );
-		view->setItemRecycling( true );
-		//this could be done to change mode, for images it doesn't make sence, becouse images thumbnails are created by default only for medium and fullsize
-//		AbstractDataProvider *data = mModel->DataProvider();
-//		MyDataProvider *prov = static_cast<MyDataProvider*>(data); //of course we have already poiter to that - mMyDataProvider, but it is example how to get it from model
-//		prov->changeIconSize(ThumbnailManager::ThumbnailMedium);
-		view->setModel(mModel);
-		mMainView->setWidget( view );
-        mView = view;
-    } else if (command == 2) {
-        HbListView* view = new HbListView();
-		view->setUniformItemSizes( true );
-		view->setItemRecycling( true );
-		//this could be done to change mode, for images it doesn't make sence, becouse images thumbnails are created by default only for medium and fullsize
-//		AbstractDataProvider *data = mModel->DataProvider();
-//		MyDataProvider *prov = static_cast<MyDataProvider*>(data); //of course we have already poiter to that - mMyDataProvider, but it is example how to get it from model
-//		prov->changeIconSize(ThumbnailManager::ThumbnailSmall);
-		view->setModel(mModel);
-		mMainView->setWidget( view );
-        mView = view;
-	} else if (command == 101) { //sort by KSort1Role
-        mModel->setSortRole(Qt::UserRole+2);
-        mModel->sort(0);
-	} else if (command == 102) { //sort by KSort2Role
-        mModel->setSortRole(Qt::UserRole+3);
-        mModel->sort(0);
-    } else if (command == 103) { //sort by KSort3Role
-        mModel->setSortRole(Qt::UserRole+4);
-        mModel->sort(0);
-    } else if (command == 104) { //sort by DisplayRole CaseSensitive
-        mModel->setSortRole(Qt::DisplayRole);
-        mModel->setSortCaseSensitivity(Qt::CaseSensitive);  
-        mModel->sort(0);
-    } else if (command == 105) { //sort by DisplayRole CaseInsensitive
-        mModel->setSortRole(Qt::DisplayRole);
-        mModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-        mModel->sort(0);
-    } else if (command == 201) { //disable filter
-        QRegExp reg = QRegExp();
-        mModel->setFilterRegExp(reg);
-    } else if (command == 202) { //Filter ITEM* (Case Sensitive)
-        QRegExp reg = QRegExp("ITEM*", Qt::CaseSensitive, QRegExp::Wildcard);
-        mModel->setFilterCaseSensitivity(Qt::CaseSensitive);
-        mModel->setFilterRegExp(reg);        
-    } else if (command == 203) { //Filter ITEM1*(Case Insensitive)
-        QRegExp reg = QRegExp("ITEM1*", Qt::CaseInsensitive, QRegExp::Wildcard);
-        mModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-        mModel->setFilterRegExp(reg);
-    } else if (command == 1000) { //reset
-        mMyDataProvider->resetModel();
-    } else if (command == 1001) { //reset
-        bool current = !mModel->dynamicSortFilter();
-        mModel->setDynamicSortFilter(current);
-        if (current){
-            action->setText("Disable dynamic Sort/Filter");
-        }else{
-            action->setText("Enable dynamic Sort/Filter");            
+    
+    switch (command){
+        case KGridViewCommand : {
+            HbGridView* view = new HbGridView();
+            if ( orientation() == Qt::Horizontal ) {
+                view->setColumnCount( 5 );
+                view->setRowCount( 3 );
+            }else {
+                view->setColumnCount( 3 );
+                view->setRowCount( 5 );         
+            }
+    //        view->setTextVisible(false);
+            view->setUniformItemSizes( true );
+            view->setItemRecycling( true );
+            view->setModel(mModel);
+            mMainView->setWidget( view );
+            mView = view;
+            break;
         }
-    } else if (command == 1002) {
-        mTestVal = 500;
-        timeout();
-    } else if (command == 1003) {
-        mTestVal = -1;
+        case KListViewCommand : {
+            HbListView* view = new HbListView();
+            view->setUniformItemSizes( true );
+            view->setItemRecycling( true );
+            view->setModel(mModel);
+            mMainView->setWidget( view );
+            mView = view;            
+            break;
+        }
+        case KSort1Command : {
+            mModel->setSortRole(Qt::UserRole+2);
+            mModel->sort(0);
+            break;
+        }
+        case KSort2Command : {
+            mModel->setSortRole(Qt::UserRole+3);
+            mModel->sort(0);
+            break;
+        }
+        case KSort3Command : {
+            mModel->setSortRole(Qt::UserRole+4);
+            mModel->sort(0);
+            break;
+        }
+        case KSortCaseSensitiveCommand : {
+            mModel->setSortRole(Qt::DisplayRole);
+            mModel->setSortCaseSensitivity(Qt::CaseSensitive);  
+            mModel->sort(0);
+            break;
+        }
+        case KSortCaseInsensitiveCommand : {
+            mModel->setSortRole(Qt::DisplayRole);
+            mModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+            mModel->sort(0);
+            break;
+        }
+        case KDisableFilterCommand : {
+            QRegExp reg = QRegExp();
+            mModel->setFilterRegExp(reg);
+            break;
+        }
+        case KFilter1Command : {
+            QRegExp reg = QRegExp("ITEM*", Qt::CaseSensitive, QRegExp::Wildcard);
+            mModel->setFilterCaseSensitivity(Qt::CaseSensitive);
+            mModel->setFilterRegExp(reg);        
+            break;
+        }
+        case KFilter2Command : {
+            QRegExp reg = QRegExp("ITEM1*", Qt::CaseInsensitive, QRegExp::Wildcard);
+            mModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+            mModel->setFilterRegExp(reg);
+            break;
+        }
+        case KTogleDynamicCommand : {
+            bool current = !mModel->dynamicSortFilter();
+            mModel->setDynamicSortFilter(current);
+            if (current){
+                action->setText("Disable dynamic Sort/Filter");
+            }else{
+                action->setText("Enable dynamic Sort/Filter");            
+            }
+            break;
+        }
+        case KTogleSortTestCommand : {
+            if (mSortTestVal == -1){
+                mSortTestVal = 500;
+                action->setText("Stop Sort Test");            
+                sortTestTimeout();
+            }else{
+                mSortTestVal = -1;
+                action->setText("Start Sort Test");            
+            }
+            break;
+        }
+        case KTogleFilterTestCommand : {
+            if (mFilterTestVal == -1){
+                mFilterTestVal = 500;
+                action->setText("Stop Filter Test");            
+                sortTestTimeout();
+            }else{
+                mFilterTestVal = -1;
+                action->setText("Start Filter Test");            
+            }
+            break;
+        }
+        case KInsert0Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(0, data);
+            delete data;
+            break;
+        }
+        case KInsert50Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(50, data);
+            delete data;
+            break;
+        }
+        case KInsert101Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(101, data);
+            delete data;
+            break;
+        }
+        case KInsert257Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(257, data);
+            delete data;
+            break;
+        }
+        case KInsert1000Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(1000, data);
+            delete data;
+            break;
+        }
+        case KInsertEndCommand : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(mMyDataProvider->rowCount(QModelIndex()), data);
+            delete data;
+            break;
+        }
+        case KInsertEnd10Command : {
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(mMyDataProvider->rowCount(QModelIndex())-10, data);
+            delete data;
+            break;
+        }
+        case KInsertCustomCommand : {
+            int val = HbInputDialog::getInteger( QString("Insert at position:"));
+            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+            mMyDataProvider->testInsertItem(val, data);
+            break;
+        }
+        case KRemove0Command : {
+            mMyDataProvider->testRemoveItem(0);
+            break;
+        }
+        case KRemove50Command : {
+            mMyDataProvider->testRemoveItem(50);
+            break;
+        }
+        case KRemove101Command : {
+            mMyDataProvider->testRemoveItem(101);
+            break;
+        }
+        case KRemove257Command : {
+            mMyDataProvider->testRemoveItem(257);
+            break;
+        }
+        case KRemove1000Command : {
+        mMyDataProvider->testRemoveItem(1000);            
+            break;
+        }
+        case KRemoveLastCommand : {
+                mMyDataProvider->testRemoveItem(mMyDataProvider->rowCount(QModelIndex())-1);
+            break;
+        }
+        case KRemoveEnd10Command : {
+            mMyDataProvider->testRemoveItem(mMyDataProvider->rowCount(QModelIndex()) - 10);
+            break;
+        }
+        case KRemoveCustomCommand : {
+            int val = HbInputDialog::getInteger( QString("Remove from position:"));
+            mMyDataProvider->testRemoveItem(val);
+            break;
+        }
+        case KShowImagesCommand : {
+            mMyDataProvider->changeIconSize(ThumbnailManager::ThumbnailMedium);
+            mMyDataProvider->changeMode(0);
+            break;
+        }
+        case KShowAudioCommand : {
+            mMyDataProvider->changeIconSize(ThumbnailManager::ThumbnailSmall);
+            mMyDataProvider->changeMode(1);
+            break;
+        }
+        case KResetCommand : {
+            mMyDataProvider->resetModel();
+            break;
+        }
+        default: {
+            break;
+        }
     }
 }
 
-void MyWindow::setIndex(int /*index*/)
-{
-    update();
+void MyWindow::sortTestTimeout()
+{   
+    if (mSortTestVal>0){
+        HbAction action;
+        action.setData ( QVariant(KSort1Command + mSortTestVal%(KSortCaseInsensitiveCommand - KSort1Command + 1) ) );
+        processAction(&action);
+        mSortTestVal--;
+        if (mSortTestVal==0){
+            mSortTestVal = 500;
+        }
+        mSortTestTimer->start(2000);
+    }
 }
 
-void MyWindow::timeout()
-{   
-    HbAction action;
-    action.setData ( QVariant(101 + mTestVal%4) );
-    processAction(&action);
-
-    
-    if (mTestVal>=0){
-        mTestVal--;
-        if (mTestVal==0){
-            mTestVal = 500;
+void MyWindow::filterTestTimeout()
+{
+    if (mFilterTestVal>0){
+        HbAction action;
+        action.setData ( QVariant(KDisableFilterCommand + mFilterTestVal%(KFilter2Command - KDisableFilterCommand + 1 ) ) );
+        processAction(&action);
+        mFilterTestVal--;
+        if (mFilterTestVal==0){
+            mFilterTestVal = 500;
         }
-        mTimer->start(2000);
+        mFilterTestTimer->start(2000);
     }
 }
 

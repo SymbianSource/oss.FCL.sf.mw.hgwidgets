@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 7 %
+*  Version     : %version: 10 %
 */
 #include <QList>
 #include <QAbstractItemModel>
@@ -251,9 +251,9 @@ Qt::ItemFlags HgCacheProxyModel::flags(const QModelIndex &index) const
 void HgCacheProxyModel::sort(int column, Qt::SortOrder order)
 {
     mSupressBM = true;
-    cleanupForBMReset();
+    sourceModelAboutToBeReset();
     mSortFilterProxyModel->sort(column, order);
-    resetBM();
+    sourceModelReset();  
 }
 
 QModelIndex HgCacheProxyModel::buddy(const QModelIndex &index) const
@@ -282,9 +282,9 @@ void HgCacheProxyModel::setSortCaseSensitivity(Qt::CaseSensitivity cs)
 {
     if (sortCaseSensitivity() != cs){
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortCaseSensitivity(cs);
-        resetBM();    
+        sourceModelReset();  
     }
 }
 
@@ -297,9 +297,9 @@ void HgCacheProxyModel::setSortLocaleAware(bool on)
 {
     if (isSortLocaleAware() != on){
         mSupressBM = true;    
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortLocaleAware(on);
-        resetBM();    
+        sourceModelReset();  
     }
 }
 
@@ -322,9 +322,9 @@ void HgCacheProxyModel::setDynamicSortFilter(bool enable)
 {
     if (dynamicSortFilter() != enable){
         mSupressBM = true;   
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setDynamicSortFilter(enable);
-        resetBM();
+        sourceModelReset();  
     }
 }
 
@@ -337,9 +337,9 @@ void HgCacheProxyModel::setSortRole(int role)
 {
     if (sortRole() != role){
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortRole(role);
-        resetBM();    
+        sourceModelReset();    
     }
 }
 
@@ -352,9 +352,9 @@ void HgCacheProxyModel::setFilterRegExp(const QRegExp &regExp)
 {
     if (filterRegExp() != regExp){
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterRegExp(regExp);
-        resetBM();    
+        sourceModelReset();    
     }
 }
 
@@ -367,9 +367,9 @@ void HgCacheProxyModel::setFilterKeyColumn(int column)
 {
     if (filterKeyColumn() != column){   
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterKeyColumn(column);
-        resetBM();    
+        sourceModelReset();    
     }
 }
 
@@ -382,9 +382,9 @@ void HgCacheProxyModel::setFilterCaseSensitivity(Qt::CaseSensitivity cs)
 {
     if ( filterCaseSensitivity() != cs){   
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterCaseSensitivity(cs);
-        resetBM();    
+        sourceModelReset();    
     }
 }
 
@@ -397,9 +397,9 @@ void HgCacheProxyModel::setFilterRole(int role)
 {
     if ( filterRole() != role ){   
         mSupressBM = true;
-        cleanupForBMReset();
+        sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterRole(role);
-        resetBM();
+        sourceModelReset();    
     }
 }
 
@@ -452,7 +452,7 @@ void HgCacheProxyModel::request(int start, int end, HgRequestOrder order)
                 list.append(idx);
         }
     }
-    if (mDataProviderModel)
+    if (mDataProviderModel && list.count()>0)
         mDataProviderModel->request(list, mSupressBM);
     TX_EXIT    
 }
@@ -480,20 +480,6 @@ int HgCacheProxyModel::mapToDataProviderIndex(int myIndex) const
 int HgCacheProxyModel::mapFromDataProviderIndex(int myIndex) const
 {
     return mSortFilterProxyModel->mapFromSource( mDataProviderModel->index(myIndex, 0) ).row();
-}
-
-void HgCacheProxyModel::cleanupForBMReset()
-{
-    releaseAll();
-}
-
-void HgCacheProxyModel::resetBM()
-{
-    if (mBufferManager){
-        mCurrentPos = 0;
-        mBufferManager->resetBuffer( mCurrentPos, count() );
-    }
-    mSupressBM = false;
 }
 
 void HgCacheProxyModel::releaseAll()
@@ -579,8 +565,9 @@ void HgCacheProxyModel::sourceDataChanged( const QModelIndex & topLeft, const QM
     QModelIndex begin = index( topLeft.row(), topLeft.column() );
     QModelIndex end = index( bottomRight.row(), bottomRight.column() );
     
-    if (begin.isValid() && end.isValid() && !mSupressBM)
+    if (begin.isValid() && end.isValid() && !mSupressBM){
         emit dataChanged(begin, end);
+    }
     TX_EXIT
 }
 
@@ -640,7 +627,9 @@ void HgCacheProxyModel::sourceRowsAboutToBeInserted( const QModelIndex & parent,
     TX_ENTRY
     if (mBufferManager && !mSupressBM){
         beginInsertRows(parent, start, end);
-//        mBufferManager->aboutToInsertItems(start, end);    
+        for ( int i=start; i <=end; i++){
+            mBufferManager->aboutToInsertItem(i);
+        }        
     }
     TX_EXIT
 }
@@ -658,7 +647,9 @@ void HgCacheProxyModel::sourceRowsAboutToBeRemoved( const QModelIndex & parent, 
     TX_ENTRY
     if (mBufferManager && !mSupressBM){
         beginRemoveRows(parent, start, end);
-//        mBufferManager->aboutToRemoveItems(start, end);    
+        for ( int i=start; i <=end; i++){
+            mBufferManager->aboutToRemoveItem(i);
+        }
     }
     TX_EXIT
 }
@@ -669,7 +660,9 @@ void HgCacheProxyModel::sourceRowsInserted( const QModelIndex & parent, int star
     Q_UNUSED(parent);
     Q_UNUSED(end);
     if (mBufferManager && !mSupressBM){
-        mBufferManager->itemCountChanged(start, false, count());
+        for ( int i=start; i <=end; i++){
+            mBufferManager->insertedItem(i);
+        }
         endInsertRows();
     }
     TX_EXIT    
@@ -694,7 +687,9 @@ void HgCacheProxyModel::sourceRowsRemoved( const QModelIndex & parent, int start
     Q_UNUSED(parent);
     Q_UNUSED(end);
     if (mBufferManager && !mSupressBM){
-        mBufferManager->itemCountChanged(start, true, count());
+        for ( int i=start; i <=end; i++){
+            mBufferManager->removedItem(i);
+        }
         endRemoveRows();
     }
     TX_EXIT
@@ -713,8 +708,9 @@ void HgCacheProxyModel::dataUpdated(int from, int to)
         end = index(mapFromDataProviderIndex(to),0);
     }
     
-    if (begin.isValid() && end.isValid() && !mSupressBM)
+    if (begin.isValid() && end.isValid() && !mSupressBM){
         emit dataChanged(begin, end );
+    }
 }
 
 //eof

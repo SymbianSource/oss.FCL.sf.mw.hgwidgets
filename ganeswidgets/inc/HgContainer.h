@@ -42,7 +42,7 @@ class HgContainer: public HbWidget, public HgMediaWallDataProvider
 public:
     explicit HgContainer(QGraphicsItem* parent = 0);
     virtual ~HgContainer();
-    
+
     void setItemCount(int count);
     int itemCount() const;
     int rowCount() const;
@@ -51,7 +51,7 @@ public:
     HgWidgetItem* itemByIndex(const QModelIndex &index) const;
     HgWidgetItem* itemByIndex(const int &index) const;
 
-    void setSelectionModel(QItemSelectionModel *selectionModel);
+    void setSelectionModel(QItemSelectionModel *selectionModel, const QModelIndex &defaultItem);
     QItemSelectionModel *selectionModel() const;
     void setSelectionMode(HgWidget::SelectionMode mode, bool resetSelection);
     HgWidget::SelectionMode selectionMode() const;
@@ -80,19 +80,19 @@ public:
     void init(Qt::Orientation scrollDirection);
 
     void setDefaultImage(QImage defaultImage);
-    
+
     void setItemSizePolicy(HgWidget::ItemSizePolicy policy);
     HgWidget::ItemSizePolicy itemSizePolicy() const;
 
     void setItemSize(const QSizeF& size);
     QSizeF itemSize() const;
-    
+
     void setItemSpacing(const QSizeF& size);
     QSizeF itemSpacing() const;
-    
+
     Qt::Orientation scrollDirection() const;
     qreal scrollPosition() const;
-    
+
 signals:
 
     // emit this signal when scrolling. for example scrollbar can be connected to this signal.
@@ -103,7 +103,7 @@ signals:
     void scrollingStarted();
     void scrollingEnded();
 
-protected slots:    
+protected slots:
 
     virtual void onScrollingStarted();
     virtual void onScrollingEnded();
@@ -113,7 +113,6 @@ private slots:
     void updateBySpringPosition();
     void redraw();
     void updateLongPressVisualizer();
-    void updateByCurrentIndex(const QModelIndex &current);
 
 protected: // from HgMediaWallDataProvider
 
@@ -140,7 +139,6 @@ protected:
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
-    virtual void handleCurrentChanged(const QModelIndex &current);
 
 protected:
 
@@ -172,7 +170,7 @@ protected:
     void stopLongPressWatcher();
     bool updateSelectionModel(HgWidgetItem* item);
 
-    
+
     virtual void updateItemSizeAndSpacing();
     virtual QSizeF getAutoItemSize() const;
     virtual QSizeF getAutoItemSpacing() const;
@@ -200,7 +198,7 @@ protected: // data
     QItemSelectionModel *mSelectionModel;
     HgImage *mMarkImageOn;
     HgImage *mMarkImageOff;
-    
+
     qreal mSpringVelAtDragStart;
     bool mDragged;
     int mFramesDragged;
@@ -220,10 +218,10 @@ protected: // data
     HgWidget::ItemSizePolicy mItemSizePolicy;
     QSizeF mUserItemSize;
     QSizeF mUserItemSpacing;
-    
+
     Qt::Orientation mOrientation;
     QModelIndex mDelayedScrollToIndex;
-    bool mIgnoreTap;
+    bool mIgnoreGestureAction;
 };
 
 #endif

@@ -39,7 +39,9 @@
 static const qreal KCameraMaxYAngle(20);
 static const qreal KSpringVelocityToCameraYAngleFactor(2);
 
-HgGridContainer::HgGridContainer(QGraphicsItem *parent) : HgContainer(parent)
+HgGridContainer::HgGridContainer(QGraphicsItem *parent) :
+    HgContainer(parent),
+    mEffect3dEnabled(true)
 {
 
     mUserItemSize = QSize(120,120);
@@ -75,7 +77,7 @@ HgMediaWallRenderer* HgGridContainer::createRenderer(Qt::Orientation scrollDirec
 
 qreal HgGridContainer::getCameraDistance(qreal springVelocity)
 {
-    if (mRenderer->getScrollDirection() == Qt::Vertical)
+    if (mRenderer->getScrollDirection() == Qt::Vertical || !mEffect3dEnabled)
         return 0;
     
     return qAbs(springVelocity * 0.01f);
@@ -83,7 +85,7 @@ qreal HgGridContainer::getCameraDistance(qreal springVelocity)
 
 qreal HgGridContainer::getCameraRotationY(qreal springVelocity)
 {
-    if (mRenderer->getScrollDirection() == Qt::Vertical)
+    if (mRenderer->getScrollDirection() == Qt::Vertical || !mEffect3dEnabled)
         return 0;
 
     return qBound(-KCameraMaxYAngle, springVelocity * KSpringVelocityToCameraYAngleFactor, KCameraMaxYAngle);
@@ -118,4 +120,18 @@ void HgGridContainer::onScrollPositionChanged(qreal pos)
     if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
         mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
     }    
+}
+
+void HgGridContainer::setEffect3dEnabled(bool effect3dEnabled)
+{
+    if (mEffect3dEnabled != effect3dEnabled) {
+        // Setting has changed. redraw screen.
+        mEffect3dEnabled = effect3dEnabled;
+        update();
+    }
+}
+
+bool HgGridContainer::effect3dEnabled() const
+{
+    return mEffect3dEnabled;
 }

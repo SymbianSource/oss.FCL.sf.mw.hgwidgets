@@ -34,6 +34,7 @@
 #include <hbgridview>
 #include <hbiconitem>
 #include <qabstractitemmodel>
+#include <hbtapgesture>
 #include "hglongpressvisualizer.h"
 
 static const qreal KSpringKScrolling(50.0);
@@ -64,13 +65,12 @@ HgContainer::HgContainer(QGraphicsItem* parent) :
     mItemSizePolicy(HgWidget::ItemSizeAutomatic),
     mOrientation(Qt::Vertical),
     mDelayedScrollToIndex(),
-    mIgnoreTap(false)
+    mIgnoreGestureAction(false)
 {
     FUNC_LOG;
 
     grabGesture(Qt::PanGesture);
     grabGesture(Qt::TapGesture);
-    grabGesture(Qt::TapAndHoldGesture);
 }
 
 HgContainer::~HgContainer()
@@ -134,24 +134,32 @@ HgWidgetItem* HgContainer::itemByIndex(const int& index) const
     Ownership is not transferred.
     Widget is redrawn to make new selection visible.
 */
-void HgContainer::setSelectionModel(QItemSelectionModel *selectionModel)
+void HgContainer::setSelectionModel(QItemSelectionModel *selectionModel, const QModelIndex &defaultItem)
 {
     FUNC_LOG;
     HANDLE_ERROR_NULL(selectionModel); // Parameter is always a valid QItemSelectionModel
 
-    if (mSelectionModel != selectionModel) {
-        if (mSelectionModel) { // mSelectionModel is 0 when called first time
-            mSelectionModel->disconnect(SIGNAL(currentChanged(QModelIndex,QModelIndex)), this);
+    if (mSelectionModel == selectionModel) return;
 
-            if (mSelectionModel->currentIndex().isValid() &&
-                !(selectionModel->currentIndex().isValid())) {
-                selectionModel->setCurrentIndex(mSelectionModel->currentIndex(),
-                    QItemSelectionModel::Current);
-            }
+    bool defaultCurrentSet(false);
+
+    if (!selectionModel->currentIndex().isValid()) { // If there is valid current item, do not change it
+        if (!mSelectionModel && defaultItem.isValid()) { // mSelectionModel is 0 when called first time
+            selectionModel->setCurrentIndex(defaultItem, QItemSelectionModel::Current);
+            defaultCurrentSet = true;
         }
-        mSelectionModel = selectionModel;
-        connect(mSelectionModel, SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-                                 SLOT(updateByCurrentIndex(QModelIndex)));
+        else if (mSelectionModel && mSelectionModel->currentIndex().isValid()) {
+            selectionModel->setCurrentIndex(mSelectionModel->currentIndex(),
+            QItemSelectionModel::Current);
+        }
+    }
+
+    mSelectionModel = selectionModel;
+
+    if (mSelectionModel->currentIndex().isValid() && !defaultCurrentSet) {
+        scrollTo(mSelectionModel->currentIndex());
+    }
+    else {
         update();
     }
 }
@@ -219,7 +227,7 @@ Qt::Orientation HgContainer::orientation() const
 void HgContainer::setOrientation(Qt::Orientation orientation, bool animate)
 {
     FUNC_LOG;
-    
+
     mOrientation = orientation;
     mRenderer->setOrientation(orientation);
     mRenderer->setScrollDirection(orientation, animate);
@@ -251,20 +259,22 @@ void HgContainer::scrollToPosition(const QPointF& pos, bool animate)
 void HgContainer::scrollTo(const QModelIndex &index)
 {
     FUNC_LOG;
+    INFO("Scrolling to" << index);
 
     if (index.isValid() && mRenderer->getRowCount() > 0 ) {
-    
+
         QRectF containerRect(rect());
         if (containerRect.isNull()) {
             // Container hasn't been resized yet. We need to know the container
             // size before we can calculate if index we are scrolling to is valid.
             // Store scrollTo index and scrolling is performed when container is resized.
             mDelayedScrollToIndex = index;
+            return;
         }
-        
+
         // Container has some size. We can try to calculate if scrollto index is valid.
         // ScrollTo index will be the top item in grid and left item on coverflow.
-        
+
         if (!mRenderer->coverflowModeEnabled()) {
             // Grid case
             int itemsOnScreen = 0;
@@ -277,12 +287,12 @@ void HgContainer::scrollTo(const QModelIndex &index)
                 itemsOnScreen *= rowCount();
                 if (itemsOnScreen + index.row() > mItems.count()) {
                     int newItem = mItems.count()-itemsOnScreen;
-                    
-                    if (mItems.count()%rowCount()) 
+
+                    if (mItems.count()%rowCount())
                         newItem += rowCount() - (mItems.count()%rowCount());
-                    if (newItem < 0) 
+                    if (newItem < 0)
                         newItem = 0;
-                    
+
                     scrollToPosition(QPointF(newItem/mRenderer->getRowCount(),0), false);
                 } else {
                     scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
@@ -298,21 +308,21 @@ void HgContainer::scrollTo(const QModelIndex &index)
                 if (itemsOnScreen + index.row() > mItems.count()) {
                     int newItem = mItems.count()-itemsOnScreen;
 
-                    if (mItems.count()%rowCount()) 
+                    if (mItems.count()%rowCount())
                         newItem += rowCount() - (mItems.count()%rowCount());
                     if (newItem < 0) newItem = 0;
-                    
+
                     scrollToPosition(QPointF(newItem/mRenderer->getRowCount(),0), false);
                 } else {
                     scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
                 }
             }
-            updateBySpringPosition();            
+            updateBySpringPosition();
         } else {
             // Coverflow case. TODO, this will need some finetuning.
             scrollToPosition(QPointF(index.row()/mRenderer->getRowCount(), 0), false);
-            updateBySpringPosition();            
-        }                    
+            updateBySpringPosition();
+        }
     }
 }
 
@@ -400,7 +410,7 @@ int HgContainer::flags(int index) const
             if (mSelectionModel && mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
                 return 1; // TODO: Assign flag to mark indicator
             } else
-                return 0;        
+                return 0;
         }
     }
     return 0;
@@ -438,20 +448,20 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-    
-    // update spring position at paint if needed, 
-    // this is hack for scrollbar, since dragging it 
+
+    // update spring position at paint if needed,
+    // this is hack for scrollbar, since dragging it
     // causes also paint events in here
     if (mSpring.updatePositionIfNeeded())
     {
         qreal pos = mSpring.pos().x();
         onScrollPositionChanged(pos);
-        emit scrollPositionChanged(pos, true);        
+        emit scrollPositionChanged(pos, true);
     }
-    
+
     QPainter::RenderHints hints = painter->renderHints();
     painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-    
+
 
     // interpolate spring velocity towards zero, this is done
     // so that spring velocity for rendering doesn't drop directly to
@@ -489,14 +499,6 @@ void HgContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
 void HgContainer::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event);
-    if (mSpring.isActive() && !mRenderer->coverflowModeEnabled()) {
-        // We could do some small animation when scrolling is stopped.
-        mSpring.cancel();
-        update();
-        mIgnoreTap = true;
-    } else {
-        mIgnoreTap = false;
-    }
 }
 
 void HgContainer::gestureEvent(QGestureEvent *event)
@@ -505,34 +507,29 @@ void HgContainer::gestureEvent(QGestureEvent *event)
 
     bool eventHandled(false);
     // Event may contain more than one gesture type
-    if (QGesture *gesture = event->gesture(Qt::TapAndHoldGesture)) {
-        QTapAndHoldGesture *tapAndHold = static_cast<QTapAndHoldGesture *>(gesture);
-        if (handleLongTap(tapAndHold->state(),
-                mapFromScene(event->mapToGraphicsScene(tapAndHold->position())))) {
+    HbTapGesture *tap = 0;
+    if (QGesture *gesture = event->gesture(Qt::TapGesture)) {
+        tap = static_cast<HbTapGesture *>(event->gesture(Qt::TapGesture));
+        if (tap->tapStyleHint() == HbTapGesture::TapAndHold) {
+            eventHandled = handleLongTap(tap->state(),
+                    mapFromScene(event->mapToGraphicsScene(tap->hotSpot())));
+        
+        } else {
+            eventHandled = handleTap(tap->state(),
+                    mapFromScene(event->mapToGraphicsScene(tap->hotSpot())));
         }
     }
-    else if (QGesture *gesture = event->gesture(Qt::TapGesture)) {
-        // Tap and hold is not working yet in HW, tap gesture is delivered instead
-        QTapGesture *tap = static_cast<QTapGesture *>(gesture);
-        eventHandled = handleTap(tap->state(),
-            mapFromScene(event->mapToGraphicsScene(tap->position())));
-    }
-    else if (QGesture *pan = event->gesture(Qt::PanGesture)) {
+    if (QGesture *pan = event->gesture(Qt::PanGesture)) {
         eventHandled = handlePanning(static_cast<QPanGesture*>(pan));
+    } else if( mIgnoreGestureAction && tap && tap->state() == Qt::GestureCanceled ) {
+        // user has tapped or long pressed in grid while scrolling so we need to
+        // stop the 3d effect.
+        mSpring.resetVelocity();
+        update();
+        mIgnoreGestureAction = false;
     }
 
-    if (eventHandled) {
-        event->accept();
-        event->accept(Qt::TapAndHoldGesture);
-        event->accept(Qt::TapGesture);
-        event->accept(Qt::PanGesture);
-    }
-    else {
-        event->ignore();
-        event->ignore(Qt::TapAndHoldGesture);
-        event->ignore(Qt::TapGesture);
-        event->ignore(Qt::PanGesture);
-    }
+    eventHandled ? event->accept() : event->ignore();    
 }
 
 void HgContainer::init(Qt::Orientation scrollDirection)
@@ -553,19 +550,19 @@ void HgContainer::init(Qt::Orientation scrollDirection)
     if (mMarkImageOn) {
         mMarkImageOn->setImage(markImage);
     }
-    
+
 /*    mMarkImageOn = mQuadRenderer->createNativeImage();
     HANDLE_ERROR_NULL(mMarkImageOn);
     mMarkImageOff = mQuadRenderer->createNativeImage();
     HANDLE_ERROR_NULL(mMarkImageOff);
-    
+
     // Fetch icons for marking mode (on and off states).
-    QGraphicsItem* checkBox = style()->createPrimitive(HbStyle::P_CheckBox_icon, this); 
-    HbIconItem* iconItem = static_cast<HbIconItem*>(checkBox);    
+    QGraphicsItem* checkBox = style()->createPrimitive(HbStyle::P_CheckBox_icon, this);
+    HbIconItem* iconItem = static_cast<HbIconItem*>(checkBox);
     HbStyleOptionCheckBox checkBoxOption;
     checkBoxOption.state = QStyle::State_On;
     style()->updatePrimitive(iconItem, HbStyle::P_CheckBox_icon, &checkBoxOption);
-    
+
     if (mMarkImageOn) {
         mMarkImageOn->setPixmap(iconItem->icon().pixmap());
     }
@@ -577,7 +574,7 @@ void HgContainer::init(Qt::Orientation scrollDirection)
     }
 
     delete checkBox;
-*/    
+*/
     connect(&mSpring, SIGNAL(updated()), SLOT(updateBySpringPosition()));
     connect(&mSpring, SIGNAL(started()), SIGNAL(scrollingStarted()));
     connect(&mSpring, SIGNAL(started()), SLOT(onScrollingStarted()));
@@ -665,11 +662,14 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
             emit scrollingStarted();
 
             qreal newPosition = mDrag.update(delta, pos, itemSide);
-            if (qAbs(newPosition - mSpring.pos().x()) > 0.01f)
-            {
+            if (qAbs(newPosition - mSpring.pos().x()) > 0.01f) {
                 mSpring.gotoPos(QPointF(newPosition, 0));
-                emit scrollPositionChanged(newPosition,true);
-                update();
+                if (mRenderer->coverflowModeEnabled()) {
+                    emit scrollPositionChanged(newPosition,true);
+                    update();                
+                } else {
+                    updateBySpringPosition();
+                }
             }
         }
     }
@@ -688,6 +688,12 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
             boundSpring();
         }
     }
+    else if(!mDragged && gesture->state() == Qt::GestureFinished) {
+        if (!mRenderer->coverflowModeEnabled()) {
+            mSpring.resetVelocity();
+            update();
+        }
+    }
     else if (gesture->state() == Qt::GestureCanceled) {
         boundSpring();
     }
@@ -698,47 +704,64 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
 bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
 {
     FUNC_LOG;
+    
+    bool handleGesture = false;
 
-    if (state == Qt::GestureStarted) {
-        if (hasItemAt(pos)) {
-            mTapDuration.start();
-            startLongPressWatcher(pos);
-            return true;
-        }
-        return false;
-    }
-    else if (state == Qt::GestureCanceled)
-    {
-        stopLongPressWatcher();
-
-        if (hasItemAt(pos)) {
-            return true;
-        }
-        return false;
-    }
-    else if (state == Qt::GestureFinished) {
-        stopLongPressWatcher();
-        return handleItemAction(pos, mTapDuration.elapsed() > KLongTapDuration ? LongTap : NormalTap);
-    }
-
-    return false;
+    if (hasItemAt(pos)) {
+        switch (state) 
+            {
+            case Qt::GestureStarted:
+                {
+                if (mRenderer->coverflowModeEnabled() || !mSpring.isActive()) {
+                    mIgnoreGestureAction = false;
+                    startLongPressWatcher(pos);
+                } else if(mSpring.isActive()) {
+                    mSpring.cancel();
+                    mIgnoreGestureAction = true;
+                }
+                break;
+                }
+            case Qt::GestureFinished:
+                handleGesture = handleItemAction(pos, NormalTap);
+            case Qt::GestureUpdated:
+            case Qt::GestureCanceled:
+            default:
+                stopLongPressWatcher();
+                break;
+            }
+        
+        handleGesture = true;
+    } else {
+       mIgnoreGestureAction = true;
+    }    
+    return handleGesture;
 }
 
 bool HgContainer::handleLongTap(Qt::GestureState state, const QPointF &pos)
 {
     FUNC_LOG;
 
+    bool handleGesture = false;
+    
     if (hasItemAt(pos)) {
-        mAnimateUsingScrollBar = false;
-        initSpringForScrolling();
 
-        if (state == Qt::GestureFinished) {
-            handleItemAction(pos, LongTap);
-        }
-        return true;
+        switch (state) 
+            {
+            case Qt::GestureUpdated:
+                handleItemAction(pos,LongTap);
+            case Qt::GestureStarted:
+            case Qt::GestureCanceled:
+            case Qt::GestureFinished:
+            default:
+                stopLongPressWatcher();
+                break;                
+            }
+        handleGesture = true;
+    } else {
+        mIgnoreGestureAction = true;        
     }
 
-    return false;
+    return handleGesture;
 }
 
 /*!
@@ -763,12 +786,19 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
             if (action == LongTap) {
                 INFO("Long tap:" << item->modelIndex().row());
                 
-                mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                
-                if (!mRenderer->coverflowModeEnabled())
+                if (!mRenderer->coverflowModeEnabled()) {
                     selectItem(index);
-                
-                emit longPressed(item->modelIndex(), pos);
+                } else {
+                    mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+                }
+
+                if (!mIgnoreGestureAction) {
+                    emit longPressed(item->modelIndex(), pos);
+                } else {
+                    mSpring.resetVelocity();
+                    update();
+                    mIgnoreGestureAction = false;
+                }
             }
             else if (mSelectionMode == HgWidget::MultiSelection) {
                 mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
@@ -817,10 +847,15 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
                     }
                 }
                 else {   //grid mode
-                    if (!mIgnoreTap) {
-                        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+                    if (!mIgnoreGestureAction) {
+                        // Current should be topleft item.
+//                        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
                         selectItem(index);
                         emit activated(item->modelIndex());                        
+                    } else {
+                        mSpring.resetVelocity();
+                        update();
+                        mIgnoreGestureAction = false;
                     }
                 }
             }
@@ -966,11 +1001,6 @@ void HgContainer::updateLongPressVisualizer()
     }
 }
 
-void HgContainer::updateByCurrentIndex(const QModelIndex &current)
-{
-    handleCurrentChanged(current);
-}
-
 bool HgContainer::hasItemAt(const QPointF& pos)
 {
     int dummy;
@@ -1066,12 +1096,6 @@ void HgContainer::onScrollingEnded()
     // By default do nothing
 }
 
-void HgContainer::handleCurrentChanged(const QModelIndex &current)
-{
-    Q_UNUSED(current)
-    // By default do nothing
-}
-
 void HgContainer::setDefaultImage(QImage defaultImage)
 {
     HgQuadRenderer *renderer = mRenderer->getRenderer();
@@ -1147,3 +1171,4 @@ qreal HgContainer::scrollPosition() const
     return mSpring.pos().x();
 }
 
+// EOF
