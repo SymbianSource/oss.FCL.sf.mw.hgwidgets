@@ -19,7 +19,7 @@
 #ifndef HGSCROLLBUFFERMANAGER_H_
 #define HGSCROLLBUFFERMANAGER_H_
 
-#include <qobject>
+#include <QObject>
 #include <QTimer>
 
 class UpdatePair

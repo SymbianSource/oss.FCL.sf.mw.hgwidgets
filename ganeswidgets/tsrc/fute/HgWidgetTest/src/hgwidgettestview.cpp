@@ -76,6 +76,8 @@ HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
 HgWidgetTestView::~HgWidgetTestView()
 {
     delete mAnimationGroup;
+    HbStyleLoader::unregisterFilePath(":/test/hgmediawall.css");
+    HbStyleLoader::unregisterFilePath(":/test/hgmediawall.widgetml");
 }
 
 void HgWidgetTestView::createMenu()
@@ -171,6 +173,7 @@ void HgWidgetTestView::initWidget(HgTestWidgetType type)
             HbMainWindow *primaryWindow = mainWindows[0];
             connect(primaryWindow, SIGNAL(orientationChanged(Qt::Orientation)), mWidget, SLOT(orientationChanged(Qt::Orientation)));
             connect(primaryWindow, SIGNAL(orientationChanged(Qt::Orientation)), this, SLOT(orientationChanged(Qt::Orientation)));
+            primaryWindow->setAutomaticOrientationEffectEnabled(false);
         }
         setupWidgetOptions();
         setupWidgetSize();
@@ -509,10 +512,11 @@ void HgWidgetTestView::openView(const QModelIndex& index)
             if (mainWindows.count() > 0)
             {
                 HbMainWindow *primaryWindow = mainWindows[0];
+                connect(primaryWindow, SIGNAL(orientationChanged(Qt::Orientation)), view, SLOT(orientationChanged(Qt::Orientation)));
                 primaryWindow->addView(view);
                 primaryWindow->setCurrentView(view);
 				// For photos simulation
-                primaryWindow->setOrientation(Qt::Horizontal, false);
+//                primaryWindow->setOrientation(Qt::Horizontal, false);
             }
         }
     }
@@ -529,25 +533,32 @@ void HgWidgetTestView::closeCurrentView()
         primaryWindow->setCurrentView(this);
         primaryWindow->removeView(currentView);
 		// For photos simulation
-        primaryWindow->unsetOrientation(false);
+//        primaryWindow->unsetOrientation(false);
     }
 }
 
 void HgWidgetTestView::openDeleteItemsDialog()
 {
     FUNC_LOG;
-/*    HANDLE_ERROR_NULL(mWidget);
+    HANDLE_ERROR_NULL(mWidget);
 
-    HgWidget *widget = copyWidget();
-    HANDLE_ERROR_NULL(widget);
+//    HgWidget *widget = copyWidget();
+//    HANDLE_ERROR_NULL(widget);
 
+    mLayout->removeItem(mWidget);
+    
     HgSelectionDialog *dlg =
-        new HgSelectionDialog("Remove items", "Remove", widget); // Takes ownership of widget
+        new HgSelectionDialog("Remove items", "Remove", mWidget); // Takes ownership of widget
     HANDLE_ERROR_NULL(dlg);
 
-    mWidget->hide();
-    widget->setSelectionMode(HgWidget::MultiSelection);
-    bool removeItems = (dlg->exec() == dlg->primaryAction());
+    mWidget->setPreferredSize(mWidget->size());
+    connect(dlg, SIGNAL(finished(HbAction*)),
+            SLOT(dialogFinished(HbAction*)));
+    
+//    mWidget->hide();
+    mWidget->setSelectionMode(HgWidget::MultiSelection);
+    dlg->open();
+/*    bool removeItems = (dlg->exec() == dlg->primaryAction());
     QItemSelection selection = mSelectionModel->selection();
     widget->setSelectionMode(HgWidget::NoSelection); // Clears the selection
     delete dlg;
@@ -555,9 +566,18 @@ void HgWidgetTestView::openDeleteItemsDialog()
     if (removeItems) {
         mModel->remove(selection);
     }
+*/
+//    mWidget->show();
+}
 
-    mWidget->show();
-    */
+void HgWidgetTestView::dialogFinished(HbAction* action)
+{
+    mWidget->setSelectionMode(HgWidget::NoSelection); // Clears the selection
+    if (action->text() == "Remove" ) {
+        QItemSelection selection = mSelectionModel->selection();    
+        mModel->remove(selection);
+    }    
+    mLayout->addItem(mWidget);
 }
 
 void HgWidgetTestView::openMoveItemsDialog()
@@ -781,6 +801,9 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
 
     HgWidget* widget = 0;
 
+    HbStyleLoader::unregisterFilePath(":/test/hgmediawall.css");
+    HbStyleLoader::unregisterFilePath(":/test/hgmediawall.widgetml");
+
     switch (type) {
         case HgWidgetGrid:
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
@@ -792,8 +815,9 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
             HgMediawall *mediaWall = new HgMediawall;
-            // mediaWall->setItemSize(QSizeF(4, 3)); // Sets aspect ratio
-            // mediaWall->enableReflections(true);
+//            mediaWall->setItemSize(QSizeF(4, 3)); // Sets aspect ratio
+            HbStyleLoader::registerFilePath(":/test/hgmediawall.css");
+            HbStyleLoader::registerFilePath(":/test/hgmediawall.widgetml");
             widget = mediaWall;
             }
             break;
@@ -801,13 +825,15 @@ HgWidget *HgWidgetTestView::createWidget(HgTestWidgetType type) const
             mModel->setThumbnailSize(ThumbnailManager::ThumbnailMedium);
             mModel->setBuffer(COVERFLOWBUFFERSIZE, COVERFLOWBUFFERSIZE/3);
             widget = new HgMediawall;
+            HbStyleLoader::registerFilePath(":/test/hgmediawall.css");
+            HbStyleLoader::registerFilePath(":/test/hgmediawall.widgetml");
             break;
         default:
             break;
     }
 
     HANDLE_ERROR_NULL(widget);
-
+    
     widget->setModel(mModel);
     widget->setSelectionModel(mSelectionModel);
     widget->setLongPressEnabled(true);
@@ -852,6 +878,8 @@ void HgWidgetTestView::onScrollingStarted()
 {
     FUNC_LOG;
 
+    qDebug() << "SCROLLING onScrollingStarted";
+    
     // scrolling started, need to hide
     // label displaying full resolution image
     if (mFrontItem)
@@ -862,6 +890,8 @@ void HgWidgetTestView::onScrollingStarted()
 void HgWidgetTestView::onScrollingEnded()
 {
     FUNC_LOG;
+
+    qDebug() << "SCROLLING onScrollingEnded";
 
     if (mModel->lowResImagesEnabled()) {
 
@@ -914,11 +944,13 @@ void HgWidgetTestView::orientationChanged(Qt::Orientation orientation)
     delete mCoverItem;
     mCoverItem = 0;
     mAnimationGroup->clear();
-
     
-    if (orientation == Qt::Horizontal && (mWidgetType == HgWidgetCoverflow || mWidgetType == HgWidgetGrid )) {
+    if (orientation == Qt::Horizontal && mWidgetType == HgWidgetCoverflow) {
         setItemVisible(Hb::AllItems, false);
     }
+    else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetGrid && mainWindow()->currentView() == this ) {
+        setItemVisible(Hb::AllItems, false);
+    }        
     else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetTBone) {
         initWidget(HgWidgetCoverflow);
         setItemVisible(Hb::AllItems, false);

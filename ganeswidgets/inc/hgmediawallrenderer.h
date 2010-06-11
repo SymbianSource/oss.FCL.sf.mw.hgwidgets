@@ -17,9 +17,9 @@
 #ifndef HGMEDIAWALLRENDERER_H
 #define HGMEDIAWALLRENDERER_H
 
-#include <qmatrix4x4>
-#include <qobject>
-#include <qmap>
+#include <QMatrix4x4>
+#include <QObject>
+#include <QMap>
 
 class HgQuadRenderer;
 class HgMediaWallDataProvider;

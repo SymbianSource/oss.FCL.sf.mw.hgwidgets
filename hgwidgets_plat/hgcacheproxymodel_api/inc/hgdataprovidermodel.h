@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 8 %
 */
 #ifndef HGDATAPROVIDERMODEL_H_
 #define HGDATAPROVIDERMODEL_H_
@@ -21,7 +21,7 @@
 #include <QObject>
 #include <QList>
 #include <QPair>
-#include <QPixmap.h>
+#include <QPixmap>
 #include <QMap>
 #include <QMutex>
 #include <QAbstractItemModel>
@@ -96,6 +96,7 @@ public:
 
 protected:    
     virtual void doResetModel() {};
+    virtual QVariant getData(int idx, int role) const {return QVariant(); };
     
 // helpers fot emits
 protected:  
@@ -119,7 +120,8 @@ private:
     QList< QPixmap* > mFreePixmaps;
     QMap< int, QPixmap* > mUsedPixmaps;    
     int mUnallocatedPixmaps;
-//    QMutex mQPixmapsLock;
+    QMutex mQPixmapsLock;
+    QMutex mDataLock;    
     HgDataProviderModelObserver *mObserver;
 };
 
@@ -135,8 +137,5 @@ inline bool HgDataProviderModel::containsRole(int idx, int role) const
     return ( isIndexValid(idx) && 
              mCache->at(idx)->contains(role) ); 
 }
-
-
-
 
 #endif // HGDATAPROVIDERMODEL_H_

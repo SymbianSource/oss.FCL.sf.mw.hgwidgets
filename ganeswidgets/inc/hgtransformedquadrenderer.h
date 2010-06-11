@@ -19,8 +19,8 @@
 #define HGTRANSFORMEDQUADRENDERER_H
 
 #include "hgquadrenderer.h"
-#include <qlist>
-#include <qimage>
+#include <QList>
+#include <QImage>
 
 class QPoint;
 class QPainter;

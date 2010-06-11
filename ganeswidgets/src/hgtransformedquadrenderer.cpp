@@ -21,10 +21,10 @@
 #include "trace.h"
 #include "hgimage.h"
 
-#include <qvector2d>
-#include <qpolygon>
-#include <qmatrix4x4>
-#include <qpainter>
+#include <QVector2D>
+#include <QPolygon>
+#include <QMatrix4x4>
+#include <QPainter>
 
 
 HgTransformedQuadRenderer::HgTransformedQuadRenderer(int maxQuads) : 

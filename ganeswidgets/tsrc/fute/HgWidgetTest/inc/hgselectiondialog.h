@@ -41,6 +41,7 @@ private:
     HgWidget *mHgWidget;
     HbPushButton *mSelectAll;
     HbLabel *mCountLabel;
+    HbAction* mPrimaryAction;
 };
 
 #endif  //HGSELECTIONDIALOG_H

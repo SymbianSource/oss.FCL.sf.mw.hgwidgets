@@ -18,9 +18,9 @@
 #ifndef HGIMAGEFADER_H_
 #define HGIMAGEFADER_H_
 
-#include <qobject>
-#include <qtimer>
-#include <qlinkedlist>
+#include <QObject>
+#include <QTimer>
+#include <QLinkedList>
 
 class HgImage;
 

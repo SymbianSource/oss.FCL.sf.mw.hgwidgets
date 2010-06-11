@@ -51,6 +51,8 @@ public:
     void setFrontItemPositionDelta(const QPointF& position);
     QPointF frontItemPositionDelta() const;
 
+    void setFrontItemElevationFactor(qreal factor);
+    
     void enableReflections(bool enabled);
     bool reflectionsEnabled() const;
 
@@ -70,6 +72,8 @@ private:
     void onScrollingStarted();
     void onScrollingEnded();
 
+    void resizeEvent(QGraphicsSceneResizeEvent *event);
+    
 private:
     int              mPrevPos;
     QSizeF           mAutoSize;

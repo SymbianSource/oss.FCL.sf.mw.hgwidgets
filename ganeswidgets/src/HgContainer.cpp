@@ -18,9 +18,8 @@
 #include <QGesture>
 #include <QPainter>
 #include <QTimer>
-#include <hbgridviewitem>
-#include <hbmainwindow>
-#include "hgcontainer.h"
+#include <HbMainWindow>
+#include "HgContainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgquad.h"
 #include "hgvgquadrenderer.h"
@@ -28,13 +27,12 @@
 #include "hgwidgetitem.h"
 #include "trace.h"
 
-//#include <hbstyleoptioncheckbox.h>
-//#include <hbcheckbox>
-#include <hbgridviewitem>
-#include <hbgridview>
-#include <hbiconitem>
-#include <qabstractitemmodel>
-#include <hbtapgesture>
+#include <HbCheckBox>
+#include <HbGridViewItem>
+#include <HbGridView>
+#include <HbIconItem>
+#include <QAbstractItemModel>
+#include <HbTapGesture>
 #include "hglongpressvisualizer.h"
 
 static const qreal KSpringKScrolling(50.0);
@@ -231,9 +229,10 @@ void HgContainer::setOrientation(Qt::Orientation orientation, bool animate)
     mOrientation = orientation;
     mRenderer->setOrientation(orientation);
     mRenderer->setScrollDirection(orientation, animate);
-    if (!mSpring.isActive() && mSpring.pos().x() > worldWidth())
-        boundSpring();
-
+    if (mSpring.isActive()) {
+        // Need to stop scrolling.
+        mSpring.cancel();
+    }
 }
 
 void HgContainer::scrollToPosition(qreal value, bool animate)
@@ -406,11 +405,10 @@ int HgContainer::flags(int index) const
 {
     if (index >= 0 && index < itemCount()) {
         if (mSelectionMode != HgWidget::NoSelection) {
-            // TODO, fix these returns values when we can use the checkbox indicators.
             if (mSelectionModel && mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
                 return 1; // TODO: Assign flag to mark indicator
             } else
-                return 0;
+                return 2;
         }
     }
     return 0;
@@ -505,6 +503,12 @@ void HgContainer::gestureEvent(QGestureEvent *event)
 {
     FUNC_LOG;
 
+    if (mItems.count() == 0) {
+        // we have no items so no need to handle the gesture.
+        event->ignore();
+        return;
+    }
+    
     bool eventHandled(false);
     // Event may contain more than one gesture type
     HbTapGesture *tap = 0;
@@ -541,40 +545,35 @@ void HgContainer::init(Qt::Orientation scrollDirection)
 
     mQuadRenderer = mRenderer->getRenderer();
 
-    QImage markImage(":/images/mark.svg");
-    if (markImage.isNull()) {
-        ERROR("Failed to load :/images/mark.svg");
-    }
-    mMarkImageOn = mQuadRenderer->createNativeImage();
-    HANDLE_ERROR_NULL(mMarkImageOn);
-    if (mMarkImageOn) {
-        mMarkImageOn->setImage(markImage);
-    }
+    // Fetch icons for marking mode (on and off states).
 
-/*    mMarkImageOn = mQuadRenderer->createNativeImage();
+    mMarkImageOn = mQuadRenderer->createNativeImage();
     HANDLE_ERROR_NULL(mMarkImageOn);
     mMarkImageOff = mQuadRenderer->createNativeImage();
     HANDLE_ERROR_NULL(mMarkImageOff);
 
-    // Fetch icons for marking mode (on and off states).
-    QGraphicsItem* checkBox = style()->createPrimitive(HbStyle::P_CheckBox_icon, this);
-    HbIconItem* iconItem = static_cast<HbIconItem*>(checkBox);
-    HbStyleOptionCheckBox checkBoxOption;
-    checkBoxOption.state = QStyle::State_On;
-    style()->updatePrimitive(iconItem, HbStyle::P_CheckBox_icon, &checkBoxOption);
-
-    if (mMarkImageOn) {
-        mMarkImageOn->setPixmap(iconItem->icon().pixmap());
+    // Since there is no way to create the icons directly currently
+    // lets create HbCheckBox and ask primitives from it.
+    HbCheckBox* checkBox = new HbCheckBox();
+    checkBox->setCheckState(Qt::Checked);
+    QGraphicsItem *icon = checkBox->HbWidget::primitive("icon");
+    HbIconItem *iconItem = 0;
+    if (icon) {
+        iconItem = static_cast<HbIconItem*>(icon);    
+        if (mMarkImageOn) {
+            mMarkImageOn->setPixmap(iconItem->icon().pixmap());
+        }
     }
-
-    checkBoxOption.state = QStyle::State_Off;
-    style()->updatePrimitive(iconItem, HbStyle::P_CheckBox_icon, &checkBoxOption);
-    if (mMarkImageOff) {
-        mMarkImageOff->setPixmap(iconItem->icon().pixmap());
-    }
-
+    checkBox->setCheckState(Qt::Unchecked);
+    icon = checkBox->HbWidget::primitive("icon");    
+    if (icon) {
+        iconItem = static_cast<HbIconItem*>(icon);
+        if (mMarkImageOff) {
+            mMarkImageOff->setPixmap(iconItem->icon().pixmap());
+        }
+    }    
     delete checkBox;
-*/
+
     connect(&mSpring, SIGNAL(updated()), SLOT(updateBySpringPosition()));
     connect(&mSpring, SIGNAL(started()), SIGNAL(scrollingStarted()));
     connect(&mSpring, SIGNAL(started()), SLOT(onScrollingStarted()));
@@ -883,7 +882,9 @@ QList<QModelIndex> HgContainer::getVisibleItemIndices() const
     for (int i = 0; i < quads.count(); i++) {
         bool ok;
         int index = quads.at(i)->userData().toInt(&ok);
-        result.append(itemByIndex(index)->modelIndex());
+        HgWidgetItem *item = itemByIndex(index);
+        if (item)
+            result.append(item->modelIndex());
     }
     qSort(result);
     return result;
@@ -892,7 +893,7 @@ QList<QModelIndex> HgContainer::getVisibleItemIndices() const
 void HgContainer::itemDataChanged(const int &firstIndex, const int &lastIndex)
 {
     FUNC_LOG;
-
+    
     int firstItemOnScreen = 0, lastItemOnScreen = 0;
     firstItemOnScreen = mSpring.pos().x();
     firstItemOnScreen *= rowCount();
@@ -900,14 +901,15 @@ void HgContainer::itemDataChanged(const int &firstIndex, const int &lastIndex)
     int itemsOnScreen = mRenderer->getVisibleQuads().count();
     lastItemOnScreen = firstItemOnScreen+itemsOnScreen;
 
-    if ((firstIndex >= firstItemOnScreen && firstIndex < lastItemOnScreen) ||
+    if ( itemsOnScreen == 0 || (firstIndex >= firstItemOnScreen && firstIndex < lastItemOnScreen) ||
         (lastIndex >= firstItemOnScreen && lastIndex < lastItemOnScreen)) {
         update();
-    }
+    }    
 }
 
 void HgContainer::selectItem(int index)
 {
+    Q_UNUSED(index)
     // TODO: replace this with own selection implementation
 /*    if (index < 0 && index >= mItems.count())
         return;

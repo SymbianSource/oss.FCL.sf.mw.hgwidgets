@@ -85,6 +85,7 @@ private slots:
     void activated(/*HbListWidgetItem *item*/);
     void animationFinished();
     void animationAboutToEnd(const QModelIndex& targetIndex);
+    void dialogFinished(HbAction* action);
     
 private:
 

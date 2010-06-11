@@ -20,9 +20,9 @@
 #include <hgwidgets/hgwidgets.h>
 
 #include "hgwidgets_p.h"
-#include "hgcontainer.h"
+#include "HgContainer.h"
 #include "hgcoverflowcontainer.h"
-#include "hgscrollbuffermanager.h"
+#include "HgScrollBufferManager.h"
 #include "hgwidgetitem.h"
 #include "trace.h"
 //#include "hgindexfeedback.h"
@@ -122,12 +122,18 @@ void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
             QItemSelectionModel *oldSelectionModel = mDefaultSelectionModel;
             mDefaultSelectionModel = 0;
             mDefaultSelectionModel = new QItemSelectionModel(mModel);
+            q->connect(mDefaultSelectionModel,
+                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
             mContainer->setSelectionModel(mDefaultSelectionModel, defaultItem);
             delete oldSelectionModel;
         }
         else if (selectionModel != mContainer->selectionModel()) {
             QItemSelectionModel *oldSelectionModel = mDefaultSelectionModel;
             mDefaultSelectionModel = 0;
+            q->connect(selectionModel,
+                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
             mContainer->setSelectionModel(selectionModel, defaultItem);
             delete oldSelectionModel;
         }
@@ -140,9 +146,6 @@ void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
 //            mIndexFeedback = new HgIndexFeedback(q);
 //            mIndexFeedback->setWidget(q);
 
-            q->connect(mContainer->selectionModel(),
-                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
-                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
         }
     }
 }
@@ -348,7 +351,16 @@ void HgWidgetPrivate::_q_requestItems(int requestStart, int requestEnd)
     // is visible.
     if (firstUpdated != -1 && lastUpdated != -1) {
         mContainer->itemDataChanged(firstUpdated, lastUpdated);
-    }
+        // if item data for current has changed we need to update current.
+        if (mContainer->selectionModel()) {
+            QModelIndex currentIndex = mContainer->selectionModel()->currentIndex();
+            if (currentIndex.isValid() &&
+                currentIndex.row() >= firstUpdated &&
+                currentIndex.row() <= lastUpdated) {
+                updateCurrentItem(currentIndex);
+            }
+        }
+    }    
 }
 
 void HgWidgetPrivate::_q_scrollPositionChanged(qreal index,bool scrollBarAnimation)
@@ -571,17 +583,19 @@ void HgWidgetPrivate::_q_modelReset()
 
             // Buffermanager requests items to be updated.
             mBufferManager->resetBuffer(0, newItemCount);
-            QItemSelectionModel *selectionModel = mContainer->selectionModel();
-            if (mModel->rowCount() > 0) {
-                if (selectionModel && selectionModel->currentIndex().isValid()) {
-                    scrollTo(selectionModel->currentIndex());
-                }
-                else {
-                    setCurrentIndex(mModel->index(0, 0));
-                    scrollTo(mModel->index(0, 0));
-                }
-            }
         }
+
+        // Update selection model's current.
+        QItemSelectionModel *selectionModel = mContainer->selectionModel();
+        if (mModel->rowCount() > 0) {
+            if (selectionModel && selectionModel->currentIndex().isValid()) {
+                scrollTo(selectionModel->currentIndex());
+            }
+            else {
+                setCurrentIndex(mModel->index(0, 0));
+                scrollTo(mModel->index(0, 0));
+            }
+        }    
     }
 }
 
@@ -761,6 +775,7 @@ QList<QModelIndex> HgWidgetPrivate::getVisibleItemIndices() const
 
 void HgWidgetPrivate::setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy)
 {
+    Q_UNUSED(policy)
 //    mIndexFeedback->setIndexFeedbackPolicy(policy);
 }
 

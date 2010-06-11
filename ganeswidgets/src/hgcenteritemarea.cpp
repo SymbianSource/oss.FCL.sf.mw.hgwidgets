@@ -35,6 +35,14 @@ void HgCenterItemArea::resizeEvent(QGraphicsSceneResizeEvent *event)
     FUNC_LOG;
     INFO("HgCenterItemArea: size:" << size() << event->newSize());
 
-    emit sizeChanged();
     HbWidget::resizeEvent(event);
+    emit geometryChanged();
 }
+
+void HgCenterItemArea::moveEvent(QGraphicsSceneMoveEvent *event)
+{
+    HbWidget::moveEvent(event);
+    emit geometryChanged();
+}
+
+

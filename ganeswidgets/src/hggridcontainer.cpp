@@ -18,9 +18,9 @@
 #include <QGesture>
 #include <QPainter>
 #include <QTimer>
-#include <hblabel.h>
-#include <hbgridviewitem>
-#include <hbmainwindow>
+#include <HbLabel>
+#include <HbGridViewItem>
+#include <HbMainWindow>
 #include "hggridcontainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgquad.h"
@@ -29,10 +29,9 @@
 #include "hgwidgetitem.h"
 #include "trace.h"
 
-#include <hbgridviewitem>
-#include <hbgridview>
-#include <hbiconitem>
-#include <qabstractitemmodel>
+#include <HbGridView>
+#include <HbIconItem>
+#include <QAbstractItemModel>
 #include "hglongpressvisualizer.h"
 
 

@@ -15,8 +15,8 @@
 *
 */
 
-#include "HgSpring.h"
-#include <qtimer>
+#include "hgspring.h"
+#include <QTimer>
 #include "trace.h"
 
 const int KTimeDelta(10);

@@ -18,9 +18,9 @@
 #include <QGesture>
 #include <QPainter>
 #include <QTimer>
-#include <hblabel.h>
-#include <hbgridviewitem>
-#include <hbmainwindow>
+#include <HbLabel>
+#include <HbGridViewItem>
+#include <HbMainWindow>
 #include "hglongpressvisualizer.h"
 
 HgLongPressVisualizer::HgLongPressVisualizer(QGraphicsItem* parent) : HbWidget(parent),

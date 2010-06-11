@@ -18,7 +18,7 @@
 #ifndef HGQUADRENDERER_H
 #define HGQUADRENDERER_H
 
-#include <qlist>
+#include <QList>
 #include <QImage>
 #include <QVector2D>
 

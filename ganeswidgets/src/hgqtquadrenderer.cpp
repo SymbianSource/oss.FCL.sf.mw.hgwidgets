@@ -21,11 +21,11 @@
 #include "trace.h"
 #include "hgimage.h"
 
-#include <qvector2d>
-#include <qpolygon>
-#include <qmatrix4x4>
-#include <qpainter>
-#include <qpixmapcache>
+#include <QVector2D>
+#include <QPolygon>
+#include <QMatrix4x4>
+#include <QPainter>
+#include <QPixmapCache>
 
 
 class HgQtImage : public HgImage
@@ -33,7 +33,7 @@ class HgQtImage : public HgImage
 public:    
     HgQtImage(HgQtQuadRenderer* renderer)
     {
-        
+    Q_UNUSED(renderer)
     }
 
     ~HgQtImage()
@@ -90,6 +90,7 @@ public:
     
     const QPixmap& mirrorPixmap(QPainter* painter)
     {
+        Q_UNUSED(painter)
 
         return mPixmap;
 /*        
@@ -253,6 +254,8 @@ void HgQtQuadRenderer::drawQuads(QPainter* painter, const QRectF& rect,
     Qt::Orientation orientation, 
     const QTransform& sceneTransform)
 {
+    Q_UNUSED(orientation)
+    Q_UNUSED(sceneTransform)
 
     transformQuads(viewMatrix, projectionMatrix, 
         QPointF(rect.width()/2, rect.height()/2), QSizeF(rect.width(), rect.height()));

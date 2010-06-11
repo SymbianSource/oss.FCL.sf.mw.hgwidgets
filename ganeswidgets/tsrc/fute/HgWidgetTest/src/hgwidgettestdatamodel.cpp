@@ -101,6 +101,7 @@ void HgWidgetTestDataModel::timeOut()
             if (s.indexOf(QString(".jpg"),0,Qt::CaseInsensitive)>0){
                 mFiles.append(s);
                 mImages.append(QImage());
+                mPixmaps.append(QPixmap());
                 mVisibility.append(true);
             }
         }
@@ -269,7 +270,15 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
                     break;
                     case ImageTypeHbIcon:
                     {
-                        returnValue = mHbIcon;
+                    QPixmap pixmap = mPixmaps.at(row);
+                    if (!pixmap.isNull()) {
+                        QIcon qicon(mPixmaps.at(row));
+                        if (!qicon.isNull()){
+                            returnValue = HbIcon(qicon);
+                        }else {
+                            returnValue = mHbIcon;
+                        }
+                    }
                     }
                     break;
                     case ImageTypeQIcon:
@@ -509,7 +518,7 @@ void HgWidgetTestDataModel::setBuffer(int buffer, int treshhold)
     delete mBufferManager;
     mBufferManager = 0;
     mBufferManager = new BufferManager(this, buffer, treshhold, 0, mFiles.count());
-    if (mImageType == ImageTypeQPixmap)
+    if (mImageType == ImageTypeQPixmap || mImageType == ImageTypeHbIcon)
     {
         for (int i = 0; i<mPixmaps.count();i++) {
             mPixmaps.replace(i, QPixmap());
@@ -589,7 +598,7 @@ void HgWidgetTestDataModel::thumbnailReady( QPixmap pixmap, void* data, int /*id
 {
     if (!error && !pixmap.isNull() ){
 //        int idx = reinterpret_cast<int>(data);
-        if (mImageType == ImageTypeQPixmap)
+        if (mImageType == ImageTypeQPixmap || mImageType == ImageTypeHbIcon)
         {
             mPixmaps.replace(mThumbnailRequestIndex, pixmap);
         }

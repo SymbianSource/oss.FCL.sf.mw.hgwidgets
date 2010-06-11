@@ -102,4 +102,5 @@ EXPORTS
 	_ZN11HgMediawall19animationAboutToEndERK11QModelIndex @ 101 NONAME
 	_ZN6HgGrid18setEffect3dEnabledEb @ 102 NONAME
 	_ZNK6HgGrid15effect3dEnabledEv @ 103 NONAME
+	_ZN11HgMediawall6polishER17HbStyleParameters @ 104 NONAME
 

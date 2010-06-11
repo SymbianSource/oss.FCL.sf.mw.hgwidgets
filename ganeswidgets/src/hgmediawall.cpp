@@ -19,8 +19,14 @@
 #include "hgmediawall_p.h"
 #include "hgwidgets_p.h"
 #include "hgcoverflowcontainer.h"
-#include <hbmainwindow>
-#include <hbstyleloader.h>
+#include <HbMainWindow>
+#include <HbStyleLoader>
+
+/*
+    string name from the mediwall .css for the front cover elevation factor.
+*/
+static const QString FRONT_COVER_ELEVATION_FACTOR = QLatin1String("front-cover-elevation-factor");
+
 
 HgMediawall::HgMediawall(QGraphicsItem *parent ) :
     HgWidget( *new HgMediawallPrivate, parent )
@@ -132,5 +138,21 @@ bool HgMediawall::reflectionsEnabled() const
     Q_D(const HgMediawall);
     return d->container()->reflectionsEnabled();
 }
+
+void HgMediawall::polish(HbStyleParameters& params)
+{
+    // Read front cover elevation factor from css file.
+    params.addParameter( FRONT_COVER_ELEVATION_FACTOR );
+
+    HbWidget::polish( params );
+
+    bool success = false;
+    double factor = params.value( FRONT_COVER_ELEVATION_FACTOR ).toDouble(&success);
+    if (success) {
+        Q_D(HgMediawall);
+        d->container()->setFrontItemElevationFactor(factor);
+    }
+}
+
 
 // EOF

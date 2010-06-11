@@ -53,6 +53,7 @@ signals:
 
 protected:
     HgMediawall(HgMediawallPrivate &dd, QGraphicsItem *parent);
+    void polish(HbStyleParameters& params);
 
 private:
     Q_DECLARE_PRIVATE_D(p_ptr, HgMediawall)

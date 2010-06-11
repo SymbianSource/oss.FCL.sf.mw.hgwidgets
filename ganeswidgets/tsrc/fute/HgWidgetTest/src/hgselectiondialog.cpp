@@ -36,9 +36,9 @@ HgSelectionDialog::HgSelectionDialog(
     setDismissPolicy(HbDialog::NoDismiss);
     setTimeout(HbDialog::NoTimeout);
     setHeadingWidget(new HbLabel(title, this));
-    HbAction *action = new HbAction(primaryText, this);
-    addAction(action);
-    action->setDisabled(true);
+    mPrimaryAction = new HbAction(primaryText, this);
+    addAction(mPrimaryAction);
+    mPrimaryAction->setDisabled(true);
     addAction(new HbAction("Cancel", this));
 
     connect(content->selectionModel(),
@@ -95,7 +95,7 @@ void HgSelectionDialog::updateItems()
         QItemSelectionModel *selectionModel = mHgWidget->selectionModel();
         QAbstractItemModel *model = mHgWidget->model();
         if (selectionModel && model) {
-            primaryAction()->setEnabled(selectionModel->hasSelection());
+            mPrimaryAction->setEnabled(selectionModel->hasSelection());
 
             int selectedCount = selectionModel->selectedIndexes().count();
             int itemCount = model->rowCount();

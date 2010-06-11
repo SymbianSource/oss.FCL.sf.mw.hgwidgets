@@ -18,10 +18,10 @@
 #include "hgtransformedquad.h"
 #include "hgquad.h"
 #include "trace.h"
-#include <qvector2d>
-#include <qpolygon>
-#include <qmatrix4x4>
-#include <qpainter>
+#include <QVector2D>
+#include <QPolygon>
+#include <QMatrix4x4>
+#include <QPainter>
 
     HgTransformedQuad::HgTransformedQuad(qreal yDir) : mYDir(yDir)
     {

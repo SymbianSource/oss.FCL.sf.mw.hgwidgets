@@ -132,4 +132,5 @@ EXPORTS
 	?sourceModelAboutToBeReset@HgCacheProxyModel@@AAEXXZ @ 131 NONAME ; void HgCacheProxyModel::sourceModelAboutToBeReset(void)
 	?qt_metacall@HgDataProviderModel@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 132 NONAME ; int HgDataProviderModel::qt_metacall(enum QMetaObject::Call, int, void * *)
 	?filterKeyColumn@HgCacheProxyModel@@QBEHXZ @ 133 NONAME ; int HgCacheProxyModel::filterKeyColumn(void) const
+	?getData@HgDataProviderModel@@MBE?AVQVariant@@HH@Z @ 134 NONAME ; class QVariant HgDataProviderModel::getData(int, int) const
 

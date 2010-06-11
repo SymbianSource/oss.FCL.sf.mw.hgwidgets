@@ -16,16 +16,16 @@
 */
 
 #include <QGraphicsSceneResizeEvent>
-#include <hbmainwindow>
-#include <hbscrollbar.h>
-#include <qapplication.h>
+#include <HbMainWindow>
+#include <HbScrollBar>
+#include <QApplication>
 #include <hgwidgets/hgwidgets.h>
-#include <hbstyleloader.h>
+#include <HbStyleLoader>
 
 #include "hgwidgets_p.h"
-#include "hgcontainer.h"
+#include "HgContainer.h"
 #include "hgwidgetitem.h"
-#include "hgscrollbuffermanager.h"
+#include "HgScrollBufferManager.h"
 #include "hggridcontainer.h"
 #include "trace.h"
 

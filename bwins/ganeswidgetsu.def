@@ -93,4 +93,5 @@ EXPORTS
 	?animationAboutToEnd@HgMediawall@@IAEXABVQModelIndex@@@Z @ 92 NONAME ; void HgMediawall::animationAboutToEnd(class QModelIndex const &)
 	?setEffect3dEnabled@HgGrid@@QAEX_N@Z @ 93 NONAME ; void HgGrid::setEffect3dEnabled(bool)
 	?effect3dEnabled@HgGrid@@QBE_NXZ @ 94 NONAME ; bool HgGrid::effect3dEnabled(void) const
+	?polish@HgMediawall@@MAEXAAVHbStyleParameters@@@Z @ 95 NONAME ; void HgMediawall::polish(class HbStyleParameters &)
 

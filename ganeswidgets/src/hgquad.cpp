@@ -15,7 +15,7 @@
 *
 */
 
-#include "HgQuad.h"
+#include "hgquad.h"
 
 HgQuad::HgQuad() : 
 mRotation(QQuaternion(1,0,0,0)), 

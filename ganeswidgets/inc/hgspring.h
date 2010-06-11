@@ -18,9 +18,9 @@
 #ifndef HGSPRING_H
 #define HGSPRING_H
 
-#include <qpoint>
-#include <qobject>
-#include <qtime>
+#include <QPoint>
+#include <QObject>
+#include <QTime>
 
 class QTimer;
 

@@ -208,6 +208,11 @@ QPointF HgCoverflowContainer::frontItemPositionDelta() const
     return mRenderer ? mRenderer->frontItemPosition() : QPointF();
 }
 
+void HgCoverflowContainer::setFrontItemElevationFactor(qreal factor)
+{
+    mRenderer->setFrontCoverElevationFactor(factor);
+}
+
 void HgCoverflowContainer::enableReflections(bool enabled)
 {
     if (mRenderer)
@@ -225,9 +230,14 @@ void HgCoverflowContainer::setCenterItemArea(HgCenterItemArea *centerItemArea)
 
     if (!mCenterItemArea) {
         mCenterItemArea = centerItemArea;
-        connect(mCenterItemArea, SIGNAL(sizeChanged()), SLOT(updateItemSize()));
+        connect(mCenterItemArea, SIGNAL(geometryChanged()), SLOT(updateItemSize()));
     }
 }
 
+void HgCoverflowContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
+{
+    HgContainer::resizeEvent(event);
+    updateItemSize();
+}
 
-
+// EOF

@@ -15,7 +15,7 @@
 *
 */
 
-#include "HgVgImage.h"
+#include "hgvgimage.h"
 #include "HgImageFader.h"
 #include "hgvgquadrenderer.h"
 
@@ -91,7 +91,7 @@ void HgVgImage::setImage(const QImage& image)
 
 void HgVgImage::setPixmap(const QPixmap& pixmap)
 {
-    
+    Q_UNUSED(pixmap)    
 }
 
 QImage HgVgImage::getQImage() const

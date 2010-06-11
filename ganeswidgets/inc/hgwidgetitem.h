@@ -21,8 +21,8 @@
 #include <QString>
 #include <QPixmap>
 #include <QModelIndex>
-#include <qobject>
-#include <hgvgimage.h>
+#include <QObject>
+#include "hgvgimage.h"
 
 class HgQuadRenderer;
 class HgImage;

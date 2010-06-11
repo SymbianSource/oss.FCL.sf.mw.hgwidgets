@@ -13,11 +13,11 @@
 *
 * Description:
 *
-*  Version     : %version: 9 %
+*  Version     : %version: 12 %
 */
 #include <e32debug.h>
 #include <QVariant>
-#include <HbIcon.h>
+#include <HbIcon>
 #include <qpixmapdata_p.h>
 #include <hgwidgets/hgdataprovidermodel.h>
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -132,8 +132,13 @@ QVariant HgDataProviderModel::data(int idx, int role) const
     QVariant res;
     if ( containsRole(idx, role)){
         res = mCache->at(idx)->value(role);
-    } else if (role == Qt::DecorationRole ){
-        res = defaultIcon();
+    } else if (isIndexValid(idx)){
+        if (role == Qt::DecorationRole ){
+            res = defaultIcon();
+        } else {
+            res = getData(idx,role);
+        }
+        
     }
     return res;
 }
@@ -165,7 +170,7 @@ int HgDataProviderModel::count() const
 bool HgDataProviderModel::update(int pos, QList< QPair< QVariant, int > >* list, bool silent)
 {
     bool change(false);
-    if (list && list->count() && pos >=0 && pos<count() && mCache->at(pos)) {
+    if (list && list->count() && isIndexValid(pos)) {
         while(list->count()>0){
             QPair< QVariant, int > pair = list->takeFirst();
             change = update(pos, pair.first, pair.second, true)|change;
@@ -182,7 +187,9 @@ bool HgDataProviderModel::update(int pos, QVariant obj, int role, bool silent)
     bool change(false);
     
     if ( isIndexValid(pos)){
+        mDataLock.lock();
         mCache->at(pos)->insert(role, obj); //this will remove old one if needed
+        mDataLock.unlock();        
         change = true;
     }
     
@@ -196,7 +203,9 @@ bool HgDataProviderModel::updateIcon(int pos, QVariant obj, bool silent)
 {
     bool change(false);
     if ( obj.isValid() && !obj.isNull() && isIndexValid(pos) ){
+        mDataLock.lock();
         mCache->at(pos)->insert(Qt::DecorationRole, obj); //will remove old if needed
+        mDataLock.unlock();        
         change = true;
         if (!silent){
             TX_LOG_ARGS(QString("pos:%1").arg( pos ) );
@@ -251,7 +260,10 @@ void HgDataProviderModel::doInsertItem(int pos, QList< QPair< QVariant, int > >*
         beginInsertRows(QModelIndex(), pos, pos);
     }
     
+    mDataLock.lock();    
     mCache->insert(pos, new QMap<int, QVariant>());
+    mDataLock.unlock();
+    
     if (list && list->count()){
         update(pos, list, true);
     }
@@ -283,9 +295,11 @@ void HgDataProviderModel::removeItems(int pos, int size)
     }
     
     beginRemoveRows(QModelIndex(),pos, pos+size-1);
+    mDataLock.lock();
     for (int i=0; i<size && pos<mCache->count(); i++){
         mCache->removeAt(pos);
     }
+    mDataLock.unlock();
     endRemoveRows();
 }
         
@@ -308,7 +322,7 @@ void HgDataProviderModel::emitDataChanged(int from, int to, bool silent)
 
 void HgDataProviderModel::resizeQPixmapPool(int newSize)
 {
-//    mQPixmapsLock.lock();
+    mQPixmapsLock.lock();
     int currentSize = mFreePixmaps.count() + mUsedPixmaps.count();
     int diff = currentSize - newSize - KQPixmapCacheEmergencyBuffer;
     mUnallocatedPixmaps = 0;
@@ -325,13 +339,13 @@ void HgDataProviderModel::resizeQPixmapPool(int newSize)
             diff--;
         }
     }
-//    mQPixmapsLock.unlock();
+    mQPixmapsLock.unlock();
     mCacheSize = newSize;
 }
 
 void HgDataProviderModel::releasePixmap(int idx)
 {
-//    mQPixmapsLock.lock();
+    mQPixmapsLock.lock();
     if (mUsedPixmaps.contains(idx)) {
         QPixmap* pix = mUsedPixmaps.take(idx);
         if ( ( mFreePixmaps.count() + mUsedPixmaps.count() + mUnallocatedPixmaps ) > ( mCacheSize + KQPixmapCacheEmergencyBuffer ) ) {
@@ -342,7 +356,7 @@ void HgDataProviderModel::releasePixmap(int idx)
     } else {
 //        TX_LOG_ARGS( QString("can't release pixmap for idx=%0").arg(idx));
     }
-//    mQPixmapsLock.unlock();    
+    mQPixmapsLock.unlock();    
 }
 
 QVariant HgDataProviderModel::createIcon(int index, QPixmap aPixmap)
@@ -355,9 +369,9 @@ QVariant HgDataProviderModel::createIcon(int index, QPixmap aPixmap)
 		} else {
 			*pix = aPixmap;
 		}
-//		mQPixmapsLock.lock();
+		mQPixmapsLock.lock();
 		mUsedPixmaps.insert(index, pix);
-//		mQPixmapsLock.unlock();
+		mQPixmapsLock.unlock();
 		return HbIcon(QIcon(*pix));	
 	}
 	TX_EXIT_ARGS( QString("No pixmap avilable"));
@@ -368,7 +382,7 @@ QPixmap* HgDataProviderModel::getPixmap(int idx)
 {
 //    TX_ENTRY
     QPixmap* res = NULL;
-//    mQPixmapsLock.lock();
+    mQPixmapsLock.lock();
     if ( mUsedPixmaps.contains(idx)){
         res = mUsedPixmaps.take(idx);//let's just replace pixmapdata for that pixmap
     } else {
@@ -381,7 +395,7 @@ QPixmap* HgDataProviderModel::getPixmap(int idx)
             TX_LOG_ARGS(QString("no free pixmaps"));
         }
     }
-//    mQPixmapsLock.unlock();
+    mQPixmapsLock.unlock();
 //    TX_EXIT
     return res;
 }

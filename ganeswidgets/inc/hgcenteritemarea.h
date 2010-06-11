@@ -30,11 +30,12 @@ public:
     virtual ~HgCenterItemArea();
 
 signals:
-    void sizeChanged();
+    void geometryChanged();
 
 private:
-    virtual void resizeEvent(QGraphicsSceneResizeEvent *event);
-
+    void resizeEvent(QGraphicsSceneResizeEvent *event);
+    void moveEvent(QGraphicsSceneMoveEvent *event);
+    
 private: // Data
 
 };

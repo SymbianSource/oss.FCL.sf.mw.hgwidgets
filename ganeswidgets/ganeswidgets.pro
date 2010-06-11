@@ -33,9 +33,9 @@ symbian {
 # Input
 SOURCES += src/hgwidgets.cpp \
     src/hgwidgets_p.cpp \
-    src/hgcontainer.cpp \
+    src/HgContainer.cpp \
     src/hgwidgetitem.cpp \
-    src/hgscrollbuffermanager.cpp \
+    src/HgScrollBufferManager.cpp \
     src/hgquad.cpp \
     src/hgquadrenderer.cpp \
     src/hgvgquadrenderer.cpp \
@@ -43,7 +43,7 @@ SOURCES += src/hgwidgets.cpp \
     src/hgmediawallrenderer.cpp \
     src/hgspring.cpp \
     src/hgdrag.cpp \
-    src/hgimagefader.cpp \
+    src/HgImageFader.cpp \
     src/hglongpressvisualizer.cpp \
     src/hgcoverflowcontainer.cpp \
     src/hggridcontainer.cpp \

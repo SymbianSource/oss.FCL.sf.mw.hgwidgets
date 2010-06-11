@@ -18,10 +18,10 @@
 #ifndef HGVGIMAGE_H
 #define HGVGIMAGE_H
 
-#include <qstring>
-#include <qimage>
+#include <QString>
+#include <QImage>
 #include <VG/openvg.h>
-#include "HgImage.h"
+#include "hgimage.h"
 
 class HgVgImagePool;
 class HgImageFader;

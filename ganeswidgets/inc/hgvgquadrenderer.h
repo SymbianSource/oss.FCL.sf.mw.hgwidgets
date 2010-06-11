@@ -19,10 +19,10 @@
 #define HGVGQUADRENDERER_H
 
 #include "hgtransformedquadrenderer.h"
-#include <qlist>
+#include <QList>
 #include <VG/openvg.h>
-#include <qimage>
-#include <qtransform>
+#include <QImage>
+#include <QTransform>
 
 class QPoint;
 class QPainter;

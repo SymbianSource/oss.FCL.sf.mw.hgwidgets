@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 4 %
+*  Version     : %version: 5 %
 */
 #include "hgbuffermanager.h"
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -246,7 +246,7 @@ void HgBufferManager::removedItem(int pos)
 
 void HgBufferManager::aboutToInsertItem(int pos)
 {
-    if(pos < 0 || pos >= mTotalCount ){
+    if(pos < 0 || pos > mTotalCount ){
         return;
     }
 
@@ -260,7 +260,7 @@ void HgBufferManager::aboutToInsertItem(int pos)
 
 void HgBufferManager::insertedItem(int pos)
 {
-    if(pos < 0 || pos >= mTotalCount ){
+    if(pos < 0 || pos > mTotalCount ){
         return;
     }
 
