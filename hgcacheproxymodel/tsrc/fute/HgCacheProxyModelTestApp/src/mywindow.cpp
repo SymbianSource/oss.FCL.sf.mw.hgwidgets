@@ -13,13 +13,13 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 8 %
 */
 #include "mywindow.h"
-#include <hbmenu.h>
-#include <hbaction.h>
-#include <hbmainwindow.h>
-#include <hbslider.h>
+#include <HbMenu>
+#include <HbAction>
+#include <HbMainWindow>
+#include <HbSlider>
 #include <QTimer>
 #include <QtGui>
 #include <QDebug>
@@ -27,17 +27,21 @@
 #include <QApplication>
 #include <QGraphicsLinearLayout>
 #include <QCoreApplication>
-#include <hbgridview.h>
-#include <hbinstance.h>
+#include <HbGridView>
+#include <HbInstance>
 #include <HbInputDialog>
 #include <QFileSystemWatcher>
 #include <hgwidgets/hgcacheproxymodel.h>
+#include <hgwidgets/hgmediawall.h>
+#include <hgwidgets/hggrid.h>
 
 #include "mydataprovider.h"
 #include "hglogger.h"
 
 const int KGridViewCommand = 1;
 const int KListViewCommand = 2;
+const int KMediaWallViewCommand = 3;
+const int KHgGridViewCommand = 4;
 
 const int KSort1Command = 1101;
 const int KSort2Command = 1102;
@@ -69,6 +73,10 @@ const int KRemoveEnd10Command = 2206;
 const int KRemoveCustomCommand = 2207;
 const int KShowImagesCommand = 2300;
 const int KShowAudioCommand = 2301;
+const int KHbIconModeCommand = 2400;
+const int KQIconModeCommand = 2401;
+const int KQImageModeCommand = 2402;
+const int KQPixmapModeCommand = 2403;
 
 const int KResetCommand = 10000;
 
@@ -122,10 +130,16 @@ HbMenu *MyWindow::createMainMenu()
 void MyWindow::addChangeViewMenu(HbMenu* parent)
 {
     HbMenu *viewSubMenu = parent->addMenu("Change view");
-    HbAction* action = viewSubMenu->addAction("GridView");
+    HbAction* action = viewSubMenu->addAction("Orbit Grid View");
     action->setData(QVariant(KGridViewCommand));
-    action = viewSubMenu->addAction("ListView");
+    action = viewSubMenu->addAction("Orbit List View");
     action->setData(QVariant(KListViewCommand));
+    action = viewSubMenu->addAction("Hg MediaWall");
+    action->setData(QVariant(KMediaWallViewCommand));
+    action = viewSubMenu->addAction("Hg Grid");
+    action->setData(QVariant(KHgGridViewCommand));
+    
+    
 }
 
 void MyWindow::addCacheProxyModelMenu(HbMenu* parent)
@@ -211,6 +225,15 @@ void MyWindow::addDataProviderMenu(HbMenu* parent)
     action = dpSubMenu->addAction("Show Audio");
     action->setData(QVariant(KShowAudioCommand));
 
+    action = dpSubMenu->addAction("HbIcon Mode");
+    action->setData(QVariant(KHbIconModeCommand));
+    action = dpSubMenu->addAction("QIcon Mode");
+    action->setData(QVariant(KQIconModeCommand));
+    action = dpSubMenu->addAction("QImage Mode");
+    action->setData(QVariant(KQImageModeCommand));
+    action = dpSubMenu->addAction("QPixmap Mode");
+    action->setData(QVariant(KQPixmapModeCommand));
+    
 }
 
 
@@ -244,6 +267,20 @@ void MyWindow::processAction( HbAction* action )
             view->setModel(mModel);
             mMainView->setWidget( view );
             mView = view;            
+            break;
+        }
+        case KMediaWallViewCommand : {
+            HgMediawall * view = new HgMediawall();
+            view->setModel(mModel);
+            mMainView->setWidget( view );
+            mView = view;
+            break;
+        }
+        case KHgGridViewCommand : {
+        HgGrid * view = new HgGrid(Qt::Vertical);
+            view->setModel(mModel);
+            mMainView->setWidget( view );
+            mView = view;
             break;
         }
         case KSort1Command : {
@@ -372,10 +409,11 @@ void MyWindow::processAction( HbAction* action )
             break;
         }
         case KInsertCustomCommand : {
-            int val = HbInputDialog::getInteger( QString("Insert at position:"));
-            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
-            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
-            mMyDataProvider->testInsertItem(val, data);
+		//TODO fix me
+//            int val = HbInputDialog::getInteger( QString("Insert at position:"));
+//            QList< QPair< QVariant, int > >* data = new QList< QPair< QVariant, int > >();
+//            data->append( QPair< QVariant, int >(QString("NEW ITEM!!!!"), Qt::DisplayRole) );
+//            mMyDataProvider->testInsertItem(val, data);
             break;
         }
         case KRemove0Command : {
@@ -407,8 +445,9 @@ void MyWindow::processAction( HbAction* action )
             break;
         }
         case KRemoveCustomCommand : {
-            int val = HbInputDialog::getInteger( QString("Remove from position:"));
-            mMyDataProvider->testRemoveItem(val);
+		//TODO fix me		
+//            int val = HbInputDialog::getInteger( QString("Remove from position:"));
+//            mMyDataProvider->testRemoveItem(val);
             break;
         }
         case KShowImagesCommand : {
@@ -419,6 +458,23 @@ void MyWindow::processAction( HbAction* action )
         case KShowAudioCommand : {
             mMyDataProvider->changeIconSize(ThumbnailManager::ThumbnailSmall);
             mMyDataProvider->changeMode(1);
+            break;
+        }
+        
+        case KHbIconModeCommand : {
+            mMyDataProvider->setIconMode(HgDataProviderModel::HgDataProviderIconHbIcon);
+            break;
+        }
+        case KQIconModeCommand : {
+            mMyDataProvider->setIconMode(HgDataProviderModel::HgDataProviderIconQIcon);
+            break;
+        }
+            case KQImageModeCommand : {
+            mMyDataProvider->setIconMode(HgDataProviderModel::HgDataProviderIconQImage);
+            break;
+        }
+            case KQPixmapModeCommand : {
+            mMyDataProvider->setIconMode(HgDataProviderModel::HgDataProviderIconQPixmap);
             break;
         }
         case KResetCommand : {

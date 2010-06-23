@@ -13,10 +13,11 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 6 %
 */
 #include "dataproviderhelper.h"
 #include <QtDebug>
+#include <QtTest/QtTest>
 
 const int KRole1 = Qt::UserRole+1;
 const int KRole2 = Qt::UserRole+2;
@@ -43,26 +44,33 @@ HgDataProviderModel(parent)
         newItem(&list, true);
     }
     
-    connect(this, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
-            this, SLOT(slotDataUpdated(QModelIndex,QModelIndex)));
+    bool res = connect(this, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+                        this, SLOT(slotDataUpdated(QModelIndex,QModelIndex)));
+    QCOMPARE(res, true);
     
-    connect(this, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
-            this, SLOT(slotRowsAboutToBeInserted(QModelIndex,int,int)));
-
-    connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)),
-            this, SLOT(slotRowsInserted(QModelIndex,int,int)));    
+    res = connect(this, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
+                    this, SLOT(slotRowsAboutToBeInserted(QModelIndex,int,int)));
+    QCOMPARE(res, true);
     
-    connect(this, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-            this, SLOT(slotRowsAboutToBeRemoved(QModelIndex,int,int)));
-
-    connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-            this, SLOT(slotRowsRemoved(QModelIndex,int,int)));    
+    res = connect(this, SIGNAL(rowsInserted(QModelIndex,int,int)),
+                    this, SLOT(slotRowsInserted(QModelIndex,int,int)));    
+    QCOMPARE(res, true);
     
-    connect(this, SIGNAL(modelAboutToBeReset()), 
-            this, SLOT(slotModelAboutToBeReset()));
+    res = connect(this, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
+                    this, SLOT(slotRowsAboutToBeRemoved(QModelIndex,int,int)));
+    QCOMPARE(res, true);
     
-    connect(this, SIGNAL(modelReset()), 
-            this, SLOT(slotModelReset()));
+    res = connect(this, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+                    this, SLOT(slotRowsRemoved(QModelIndex,int,int)));    
+    QCOMPARE(res, true);
+    
+    res = connect(this, SIGNAL(modelAboutToBeReset()), 
+                    this, SLOT(slotModelAboutToBeReset()));
+    QCOMPARE(res, true);
+    
+    res = connect(this, SIGNAL(modelReset()), 
+                this, SLOT(slotModelReset()));
+    QCOMPARE(res, true);    
 }
 
 DataProviderHelper::~DataProviderHelper()
@@ -311,6 +319,49 @@ void DataProviderHelper::testEmitModelAboutToBeReset()
 void DataProviderHelper::testEmitModelReset()
 {
     endResetModel();
+}
+
+bool DataProviderHelper::testEmitColumnsAboutToBeMoved(int from, int to)
+{
+    return beginMoveColumns(parent(index(0,0)), from, to, parent(index(0,0)), 0);
+}
+
+void DataProviderHelper::testEmitColumnsMoved(int from, int to)
+{
+    endMoveColumns();
+}
+
+bool DataProviderHelper::testEmitRowsAboutToBeMoved(int from, int to)
+{
+    return beginMoveRows(parent(index(0,0)), from, to, parent(index(0,0)), 0);
+}
+
+void DataProviderHelper::testEmitRowsMoved(int from, int to)
+{
+    endMoveRows();
+}
+
+void DataProviderHelper::testChangeIconMode(HgDataProviderModel::HgDataProviderIconMode mode)
+{
+    setIconMode(mode);
+}
+
+HgDataProviderModel::HgDataProviderIconMode DataProviderHelper::testIconMode()
+{
+    return iconMode();
+}
+
+void DataProviderHelper::testClearItem(int pos, bool silent )
+{
+    clearItem(pos, silent);
+}
+QModelIndex DataProviderHelper::testCreateIndex(int row, int col)
+{
+    return createIndex(row, col);
+}
+int DataProviderHelper::getCount()
+{
+    return count();
 }
 
 void DataProviderHelper::dataUpdated(int from, int to)

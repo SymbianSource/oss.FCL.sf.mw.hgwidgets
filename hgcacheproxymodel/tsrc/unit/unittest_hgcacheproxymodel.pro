@@ -15,9 +15,10 @@ TARGET = unittest_hgcacheproxymodel
 #fix that later
 #CONFIG += symbian_test
 
+CONFIG += hb
+INCLUDEPATH += $$MW_LAYER_SYSTEMINCLUDE $$APP_LAYER_SYSTEMINCLUDE
+
 INCLUDEPATH += . \
-    $$APP_LAYER_SYSTEMINCLUDE \
-    $$MW_LAYER_SYSTEMINCLUDE \
 	../../inc
 
 TARGET.CAPABILITY = ALL -TCB

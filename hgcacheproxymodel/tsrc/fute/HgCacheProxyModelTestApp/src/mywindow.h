@@ -13,26 +13,26 @@
 *
 * Description:
 *
-*  Version     : %version: 4 %
+*  Version     : %version: 6 %
 */
 #ifndef CONTENTWIDGET_H
 #define CONTENTWIDGET_H
 
-#include <hbview.h>
+#include <HbView>
 #include <QGraphicsWidget>
 #include <QAbstractItemModel>
 #include <QtGui>
-#include <hbgridviewitem.h>
+#include <HbGridViewItem>
 
 #include <QtGui>
-#include <hbapplication.h>
-#include <hblistview.h>
-#include <hbicon.h>
-#include <hblabel.h>
-#include <hbgridview.h>
-#include <hbgridviewitem.h>
-#include <hbmainwindow.h>
-#include <hbmenu.h>
+#include <HbApplication>
+#include <HbListview>
+#include <HbIcon>
+#include <HbLabel>
+#include <HbGridView>
+#include <HbGridViewItem>
+#include <HbMainWindow>
+#include <HbMenu>
 #include <QDirModel>
 
 class QTimer;
@@ -67,7 +67,7 @@ private:
     void addDataProviderMenu(HbMenu* parent);
     
 private:
-    HbAbstractItemView* mView;      
+    HbWidget* mView;      
     HgCacheProxyModel *mModel;
 	
 	MyDataProvider *mMyDataProvider;

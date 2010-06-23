@@ -15,9 +15,9 @@
 *
 */
 
-#include <hbaction.h>
-#include <hblabel.h>
-#include <hbpushbutton.h>
+#include <HbAction>
+#include <HbLabel>
+#include <HbPushButton>
 #include <hgwidgets/hgwidgets.h>
 #include <QGraphicsLinearLayout>
 #include "hgselectiondialog.h"

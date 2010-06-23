@@ -18,8 +18,8 @@
 #define HGCOVERITEM_H_
 
 #include <QGraphicsPixmapItem>
-#include <hbiconitem>
-#include <hblistwidget>
+#include <HbIconItem>
+#include <HbListWidget>
 
 class HgCoverItem : public HbIconItem
 {

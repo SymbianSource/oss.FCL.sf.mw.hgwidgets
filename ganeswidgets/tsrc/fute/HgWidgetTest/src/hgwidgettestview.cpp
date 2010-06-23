@@ -15,14 +15,14 @@
 *
 */
 
-#include <hbaction.h>
-#include <hbdialog.h>
-#include <hbinstance.h>
-#include <hblabel.h>
-#include <hblistwidget.h>
-#include <hblistwidgetitem.h>
-#include <hbmenu.h>
-#include <hbscrollbar>
+#include <HbAction>
+#include <HbDialog>
+#include <HbInstance>
+#include <HbLabel>
+#include <HbListWidget>
+#include <HbListWidgetItem>
+#include <HbMenu>
+#include <HbScrollbar>
 #include <QActionGroup>
 #include <QGraphicsLinearLayout>
 #include <QSettings>
@@ -39,7 +39,7 @@
 #include "hgcoveritem.h"
 #include <hgwidgets/hggrid.h>
 #include <hgwidgets/hgmediawall.h>
-#include <hbstyleloader.h>
+#include <HbStyleLoader>
 
 static const int GRIDBUFFERSIZE(400);
 static const int COVERFLOWBUFFERSIZE(100);

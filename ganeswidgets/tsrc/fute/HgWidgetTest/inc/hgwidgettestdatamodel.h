@@ -22,7 +22,7 @@
 #include <QItemSelection>
 #include <QStringList>
 #include <QFileInfoList>
-#include <hbicon>
+#include <HbIcon>
 #include <thumbnailmanager_qt.h>
 #include <QImage>
 #include <QList>

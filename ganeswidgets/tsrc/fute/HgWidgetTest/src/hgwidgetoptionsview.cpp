@@ -15,10 +15,10 @@
 *
 */
 
-#include <hbaction.h>
-#include <hbdataform.h>
-#include <hbdataformmodel.h>
-#include <hbabstractviewitem.h>
+#include <HbAction>
+#include <HbDataform>
+#include <HbDataformModel>
+#include <HbAbstractViewItem>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneResizeEvent>
 #include <QSettings>

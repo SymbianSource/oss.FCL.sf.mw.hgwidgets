@@ -67,6 +67,8 @@ HgContainer::HgContainer(QGraphicsItem* parent) :
 {
     FUNC_LOG;
 
+    setFlag(QGraphicsItem::ItemHasNoContents, false);
+
     grabGesture(Qt::PanGesture);
     grabGesture(Qt::TapGesture);
 }
@@ -477,7 +479,7 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
     mRenderer->draw(mSpring.startPos(), mSpring.pos(), mSpring.endPos(),
                     springVel, painter, sceneTransform(), rect());
 
-    painter->setRenderHint(QPainter::SmoothPixmapTransform, false);
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, (hints.testFlag(QPainter::SmoothPixmapTransform)) );
 }
 
 void HgContainer::resizeEvent(QGraphicsSceneResizeEvent *event)

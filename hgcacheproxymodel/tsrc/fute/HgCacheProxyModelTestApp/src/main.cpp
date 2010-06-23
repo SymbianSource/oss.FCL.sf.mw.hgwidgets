@@ -13,16 +13,16 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 2 %
 */
 #include <QtGui>
-#include <hbapplication.h>
-#include <hblistview.h>
-#include <hbicon.h>
-#include <hbgridview.h>
-#include <hbgridviewitem.h>
-#include <hbmainwindow.h>
-#include <hbmenu.h>
+#include <HbApplication>
+#include <HbListView>
+#include <HbIcon>
+#include <HbGridView>
+#include <HbGridViewItem>
+#include <HbMainWindow>
+#include <HbMenu>
 #include <QDirModel>
 
 #include "mywindow.h"

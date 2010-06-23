@@ -19,7 +19,7 @@
 #include <QColor>
 #include <QtCore>
 
-#include <hbicon.h>
+#include <HbIcon>
 #include <hbnamespace.h>
 #include <hgwidgets/hgwidgets.h>
 

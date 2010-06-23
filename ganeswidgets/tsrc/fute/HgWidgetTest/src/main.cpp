@@ -15,8 +15,8 @@
 *
 */
 
-#include <hbapplication.h>
-#include <hbmainwindow.h>
+#include <HbApplication>
+#include <HbMainWindow>
 #include "hgwidgettestview.h"
 
 int main(int argc, char **argv)

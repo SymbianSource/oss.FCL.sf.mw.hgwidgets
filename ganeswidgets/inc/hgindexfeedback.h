@@ -18,8 +18,8 @@
 #ifndef HGINDEXFEEDBACK_H
 #define HGINDEXFEEDBACK_H
 
-#include <hbglobal.h>
-#include <hbwidget.h>
+#include <HbGlobal>
+#include <HbWidget>
 #include <hgwidgets/hgwidgets.h>
 
 class HbScrollBar;

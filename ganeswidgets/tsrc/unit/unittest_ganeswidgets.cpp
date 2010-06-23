@@ -19,11 +19,11 @@
 #include <QMetaType>
 #include <QModelIndex>
 #include "hbautotest.h"
-#include <hbapplication.h>
-#include <hblabel.h>
-#include <hbmainwindow.h>
-#include <hbscrollbar>
-#include <hbview>
+#include <HbApplication>
+#include <HbLabel>
+#include <HbMainWindow>
+#include <HbScrollbar>
+#include <HbView>
 #include <hgwidgets/hgwidgets.h>
 #include <hgwidgets/hggrid.h>
 #include <hgwidgets/hgmediawall.h>

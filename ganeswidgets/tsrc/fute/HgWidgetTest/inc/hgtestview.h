@@ -17,7 +17,7 @@
 #ifndef HGTESTVIEW_H_
 #define HGTESTVIEW_H_
 
-#include <hbview.h>
+#include <HbView>
 
 class HbAction;
 class HbLabel;

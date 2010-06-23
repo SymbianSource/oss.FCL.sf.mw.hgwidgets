@@ -42,6 +42,11 @@ private slots:
     void slotLayoutChanged();
     void slotModelAboutToBeReset();
     void slotModelReset();
+    void slotRowsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int);
+    void slotRowsMoved(const QModelIndex&, int, int, const QModelIndex&, int);
+    void slotColumnsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int);
+    void slotColumnsMoved(const QModelIndex&, int, int, const QModelIndex&, int);
+    
     
 public:
     QList< QPair< int, int > > getSignalDataChanged();
@@ -58,6 +63,10 @@ public:
     bool getSignalLayoutChanged();
     bool getSignalModelAboutToBeReset();
     bool getSignalModelReset();
+    QList< QPair< int, int > > getSignalRowsAboutToBeMoved();
+    QList< QPair< int, int > > getSignalRowsMoved();
+    QList< QPair< int, int > > getSignalColumnsAboutToBeMoved();
+    QList< QPair< int, int > > getSignalColumnsMoved();
     
 private:
 	HgCacheProxyModel* mModel;
@@ -76,6 +85,10 @@ private:
     bool mSignalLayoutChanged;
     bool mSignalModelAboutToBeReset;
     bool mSignalModelReset;
+    QList< QPair< int, int > > mSignalRowsAboutToBeMoved;
+    QList< QPair< int, int > > mSignalRowsMoved;
+    QList< QPair< int, int > > mSignalColumnsAboutToBeMoved;
+    QList< QPair< int, int > > mSignalColumnsMoved;
     
 };
 

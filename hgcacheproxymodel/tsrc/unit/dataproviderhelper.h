@@ -76,6 +76,19 @@ public:
     void testEmitLayoutChanged();
     void testEmitModelAboutToBeReset();
     void testEmitModelReset();
+
+    bool testEmitColumnsAboutToBeMoved(int from, int to);
+    void testEmitColumnsMoved(int from, int to);
+    bool testEmitRowsAboutToBeMoved(int from, int to);
+    void testEmitRowsMoved(int from, int to);
+    
+    
+    void testChangeIconMode(HgDataProviderIconMode mode);
+    HgDataProviderIconMode testIconMode();
+    
+    void testClearItem(int pos, bool silent);
+    QModelIndex testCreateIndex(int row, int col);
+    int getCount();
     
 //from HgDataProviderModelObserver
 public:

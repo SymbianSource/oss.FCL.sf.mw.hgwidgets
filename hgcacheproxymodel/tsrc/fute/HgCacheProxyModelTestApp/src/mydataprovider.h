@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 4 %
+*  Version     : %version: 5 %
 */
 #ifndef MYDATAPROVIDER2_H
 #define MYDATAPROVIDER2_H
@@ -69,7 +69,7 @@ public:
     void testInsertItem(int pos, QList< QPair< QVariant, int > >* data);
     
 private:
-    HbIcon* mDefaultIcon;
+    QVariant mDefaultIcon;
     CActiveSchedulerWait* mScheduler;
     ThumbnailManager* mWrapper;
     QList<int> mWaitingThumbnails;

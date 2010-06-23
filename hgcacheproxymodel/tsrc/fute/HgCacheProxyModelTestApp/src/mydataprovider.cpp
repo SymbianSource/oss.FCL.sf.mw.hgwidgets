@@ -13,15 +13,12 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 7 %
 */
 #include <QList>
 #include "hglogger.h"
-#include <hbicon.h>
+#include <HbIcon>
 #include "mydataprovider.h"
-
-//#include "x:\sf\mw\qt\src\openvg\qpixmapdata_vg_p.h"
-//typedef VGImage (*pfnVgCreateEGLImageTargetKHR)(VGeglImageKHR);
 
 const int KItemIdRole = Qt::UserRole+1;
 
@@ -30,7 +27,7 @@ const int KThumbnailsPriority = EPriorityLess; //standard priority
 
 MyDataProvider::MyDataProvider(QObject *parent) :
 HgDataProviderModel(parent),
-mDefaultIcon(new HbIcon(QIcon(QPixmap(":/icons/default.png")))),
+mDefaultIcon(QIcon(QPixmap(":/icons/default.png"))),
 mScheduler(new CActiveSchedulerWait()),
 mWrapper( new ThumbnailManager() ),
 mThumbnailRequestPending(false),
@@ -42,6 +39,7 @@ mMode(0)
 {
 //    TX_ENTRY
     Q_UNUSED(parent);
+    
     mWrapper->setThumbnailSize( mThumbnailsize );
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
 
@@ -54,7 +52,6 @@ mMode(0)
 MyDataProvider::~MyDataProvider()
 {
 //    TX_ENTRY
-    delete mDefaultIcon;
     delete mWrapper;
     delete mScheduler;
 //    TX_EXIT
@@ -165,7 +162,7 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
 
 QVariant MyDataProvider::defaultIcon() const
 {
-    return *mDefaultIcon;
+    return mDefaultIcon;
 }
 
 void MyDataProvider::HandleSessionOpened(CMdESession& aSession, TInt aError)
