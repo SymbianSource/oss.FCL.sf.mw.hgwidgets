@@ -18,13 +18,13 @@
 #include "hgindexfeedback.h"
 #include "hgindexfeedback_p.h"
 
-#include <hbscrollbar.h>
-#include <hbstyleoptionindexfeedback.h>
-#include <hbstyleparameters.h>
-#include <hbstyle.h>
-#include <hbdeviceprofile.h>
+#include <HbScrollbar>
+#include <HbStyleOptionIndexFeedback>
+#include <HbStyleParameters>
+#include <HbStyle>
+#include <HbDeviceProfile>
 #include <hgwidgets/hgwidgets.h>
-#include <hbstyleloader.h>
+#include <HbStyleLoader>
 
 #include <QEvent>
 #include <QObject>

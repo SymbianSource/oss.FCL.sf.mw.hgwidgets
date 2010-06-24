@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 6 %
 */
 #include "hgbuffermanager.h"
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -201,11 +201,24 @@ void HgBufferManager::resetBuffer( int aPosition, int aTotalCount)
         mBufferPosition = 0;
     }
     
-    //request new Buffer
-    mRequestStart = mBufferPosition;
-    mRequestCount = mBufferSize;
-    mResetOrdered = true;
-    calculate();
+    if (mBufferPosition>1){
+        mObserver->release(0, mBufferPosition-1);
+    }
+    
+    mObserver->request( mBufferPosition, 
+                        mBufferPosition + mBufferSize -1 );
+
+    if (mBufferPosition + mBufferSize < mTotalCount){
+        mObserver->release(mBufferPosition + mBufferSize, mTotalCount);
+    }
+    
+    mDiff = 0;
+    mResetOrdered = false;
+    mRequestStart = 0;
+    mRequestCount = 0;
+    mReleaseStart = 0;
+    mReleaseCount = 0;
+    
 }
 
 void HgBufferManager::aboutToRemoveItem(int pos)

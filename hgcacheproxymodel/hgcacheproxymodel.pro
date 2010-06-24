@@ -19,6 +19,9 @@ QT -= gui
 symbian {
 	TARGET.EPOCALLOWDLLDATA = 1
 	TARGET.CAPABILITY = ALL -TCB
+	
+	#the def files are located in the root of hgwidgets so this is needed
+	defFilePath=..
 }
 
 DEFINES += BUILD_CACHEPROXYMODEL

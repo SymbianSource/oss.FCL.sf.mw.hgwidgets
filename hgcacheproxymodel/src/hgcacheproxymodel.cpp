@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 10 %
+*  Version     : %version: 11 %
 */
 #include <QList>
 #include <QAbstractItemModel>
@@ -582,20 +582,12 @@ void HgCacheProxyModel::sourceLayoutAboutToBeChanged()
 {
     TX_ENTRY
     emit layoutAboutToBeChanged();
-    mSupressBM = true;
-    releaseAll();
     TX_EXIT
 }
 
 void HgCacheProxyModel::sourceLayoutChanged()
 {
     TX_ENTRY
-    mSupressBM = true;
-    if (mBufferManager){
-        mCurrentPos = 0;
-        mBufferManager->resetBuffer( mCurrentPos, count() );
-    }
-    mSupressBM = false;
     emit layoutChanged();
     TX_EXIT    
 }

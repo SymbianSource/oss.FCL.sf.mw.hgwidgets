@@ -13,58 +13,91 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 3 %
 */
 #include "cacheproxyhelper.h"
+#include <QtTest/QtTest>
+
 
 CacheProxyHelper::CacheProxyHelper(HgCacheProxyModel *model, QObject *parent):
 QObject(parent),
 mModel(model)
 {
     ASSERT(mModel!=0);
+    bool res;
     
-    connect(mModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+    res = connect(mModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
             this, SLOT(slotDataChanged(QModelIndex,QModelIndex)));
-    
-    connect(mModel, SIGNAL(headerDataChanged(Qt::Orientation,int,int)),
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(headerDataChanged(Qt::Orientation,int,int)),
             this, SLOT(slotHeaderDataChanged(Qt::Orientation,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
             this, SLOT(slotRowsAboutToBeInserted(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
             this, SLOT(slotRowsInserted(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(columnsAboutToBeInserted(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(columnsAboutToBeInserted(QModelIndex,int,int)),
             this, SLOT(slotColumnsAboutToBeInserted(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(columnsInserted(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(columnsInserted(QModelIndex,int,int)),
             this, SLOT(slotColumnsInserted(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
             this, SLOT(slotRowsAboutToBeRemoved(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
             this, SLOT(slotRowsRemoved(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(columnsAboutToBeRemoved(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(columnsAboutToBeRemoved(QModelIndex,int,int)),
             this, SLOT(slotColumnsAboutToBeRemoved(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(columnsRemoved(QModelIndex,int,int)),
+    res = connect(mModel, SIGNAL(columnsRemoved(QModelIndex,int,int)),
             this, SLOT(slotColumnsRemoved(QModelIndex,int,int)));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(layoutAboutToBeChanged()),
+    res = connect(mModel, SIGNAL(layoutAboutToBeChanged()),
             this, SLOT(slotLayoutAboutToBeChanged()));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(layoutChanged()), 
+    res = connect(mModel, SIGNAL(layoutChanged()), 
             this, SLOT(slotLayoutChanged()));
+    QCOMPARE(res, true);
 
-    connect(mModel, SIGNAL(modelAboutToBeReset()), 
+    res = connect(mModel, SIGNAL(modelAboutToBeReset()), 
             this, SLOT(slotModelAboutToBeReset()));
-    
-    connect(mModel, SIGNAL(modelReset()), 
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(modelReset()), 
             this, SLOT(slotModelReset()));	
-    
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(rowsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(slotRowsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(rowsMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(slotRowsMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(columnsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(slotColumnsAboutToBeMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    QCOMPARE(res, true);
+
+    res = connect(mModel, SIGNAL(columnsMoved(const QModelIndex&, int, int, const QModelIndex&, int)),
+            this, SLOT(slotColumnsMoved(const QModelIndex&, int, int, const QModelIndex&, int)));
+    QCOMPARE(res, true);
+
 }
 
 CacheProxyHelper::~CacheProxyHelper()
@@ -181,6 +214,39 @@ void CacheProxyHelper::slotModelReset()
     mSignalModelReset = true;
 }
 
+
+void CacheProxyHelper::slotRowsAboutToBeMoved(const QModelIndex&, int from, int to, const QModelIndex&, int)
+{
+    QPair< int, int > p;
+    p.first = from;
+    p.second = to;      
+    mSignalRowsAboutToBeMoved.append(p);
+}
+
+void CacheProxyHelper::slotRowsMoved(const QModelIndex&, int from, int to, const QModelIndex&, int)
+{
+    QPair< int, int > p;
+    p.first = from;
+    p.second = to;       
+    mSignalRowsMoved.append(p);
+}
+
+void CacheProxyHelper::slotColumnsAboutToBeMoved(const QModelIndex&, int from, int to, const QModelIndex&, int)
+{
+    QPair< int, int > p;
+    p.first = from;
+    p.second = to;       
+    mSignalColumnsAboutToBeMoved.append(p);
+}
+
+void CacheProxyHelper::slotColumnsMoved(const QModelIndex&, int from, int to, const QModelIndex&, int)
+{
+    QPair< int, int > p;
+    p.first = from;
+    p.second = to;       
+    mSignalColumnsMoved.append(p);
+}
+
 QList< QPair< int, int > > CacheProxyHelper::getSignalDataChanged()
 {
     QList< QPair< int, int > > res = mSignalDataChanged;
@@ -279,6 +345,32 @@ bool CacheProxyHelper::getSignalModelReset()
     return res;
 }
 
+QList< QPair< int, int > > CacheProxyHelper::getSignalRowsAboutToBeMoved()
+{
+    QList< QPair< int, int > > res = mSignalRowsAboutToBeMoved;
+    mSignalRowsAboutToBeMoved.clear();
+    return res;
+}
 
+QList< QPair< int, int > > CacheProxyHelper::getSignalRowsMoved()
+{
+    QList< QPair< int, int > > res = mSignalRowsMoved;
+    mSignalRowsMoved.clear();
+    return res;
+}
+
+QList< QPair< int, int > > CacheProxyHelper::getSignalColumnsAboutToBeMoved()
+{
+    QList< QPair< int, int > > res = mSignalColumnsAboutToBeMoved;
+    mSignalColumnsAboutToBeMoved.clear();
+    return res;
+}
+
+QList< QPair< int, int > > CacheProxyHelper::getSignalColumnsMoved()
+{
+    QList< QPair< int, int > > res = mSignalColumnsMoved;
+    mSignalColumnsMoved.clear();
+    return res;
+}
 
 

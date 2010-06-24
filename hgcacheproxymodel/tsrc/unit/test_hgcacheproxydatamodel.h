@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 6 %
 */
 #ifndef TestCacheProxy_H
 #define TestCacheProxy_H
@@ -55,6 +55,7 @@ private slots:
     void testDP_RequestReleaseAndData();
     void testDP_CacheManagment();
     void testDP_QPixmapPool();
+    void testDP_IconMode();
     
     //HgCacheProxyModel
     void testCP_QAbstractItemModel();

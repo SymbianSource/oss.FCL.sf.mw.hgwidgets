@@ -19,7 +19,7 @@
 #define HGLONGPRESSVISUALIZER_H
 
 #include <QTime>
-#include <hbwidget.h>
+#include <HbWidget>
 #include <hgwidgets/hgwidgets.h>
 
 #include "hgmediawalldataprovider.h"

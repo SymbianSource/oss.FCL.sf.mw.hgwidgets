@@ -15,7 +15,7 @@
 *
 */
 
-#include <hbtextitem.h>
+#include <HbTextItem>
 #include "hgmediawall_p.h"
 #include "hgwidgetitem.h"
 #include "hgcoverflowcontainer.h"

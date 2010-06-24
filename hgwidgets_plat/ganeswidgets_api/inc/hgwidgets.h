@@ -19,9 +19,9 @@
 #define HGWIDGET_H
 
 #include <QItemSelectionModel>
-#include <hbglobal.h>
+#include <HbGlobal>
 #include <hbnamespace.h>
-#include <hbwidget.h>
+#include <HbWidget>
 
 #ifdef BUILD_HG_WIDGETS
 #    define HG_WIDGETS_EXPORT Q_DECL_EXPORT

@@ -18,7 +18,7 @@
 #ifndef HGWIDGETOPTIONSVIEW_H_
 #define HGWIDGETOPTIONSVIEW_H_
 
-#include <hbview.h>
+#include <HbView>
 #include <hgwidgets/hgmediawall.h>
 #include "hgtestdefs.h"
 

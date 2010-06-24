@@ -19,7 +19,7 @@
 #include <QColor>
 #include <QtCore>
 
-#include <hbicon.h>
+#include <HbIcon>
 #include <hbnamespace.h>
 #include <hgwidgets/hgwidgets.h>
 
@@ -57,12 +57,12 @@ HgWidgetTestDataModel::HgWidgetTestDataModel(QObject *parent)
       mImageType(ImageTypeNone),
 //      mDefaultIcon((":/images/default.svg")),
       mUseLowResImages(false),
+      mBufferManager(0),
+      mSilentDataFetch(false),
       mWrapper( new ThumbnailManager() ),
       mThumbnailRequestPending(false),
       mThumbnailRequestIndex(-1),
-      mThumbnailRequestID(-1),
-      mBufferManager(0),
-      mSilentDataFetch(false)
+      mThumbnailRequestID(-1)
 {
     FUNC_LOG;
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
@@ -596,6 +596,8 @@ void HgWidgetTestDataModel::request(int start, int end, requestsOrder order)
 
 void HgWidgetTestDataModel::thumbnailReady( QPixmap pixmap, void* data, int /*id*/, int error )
 {
+    Q_UNUSED(data);
+    
     if (!error && !pixmap.isNull() ){
 //        int idx = reinterpret_cast<int>(data);
         if (mImageType == ImageTypeQPixmap || mImageType == ImageTypeHbIcon)

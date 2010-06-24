@@ -19,7 +19,7 @@
 #define HGCOVERFLOWCONTAINER_H
 
 #include <hgwidgets/hgmediawall.h>
-#include "HgContainer.h"
+#include "hgcontainer.h"
 
 class HgCenterItemArea;
 

@@ -16,10 +16,10 @@
 */
 #include <qgraphicslinearlayout.h>
 #include <qgraphicssceneresizeevent>
-#include <hbaction.h>
-#include <hbinstance.h>
-#include <hblabel.h>
-#include <hbmainwindow.h>
+#include <HbAction>
+#include <HbInstance>
+#include <HbLabel>
+#include <HbMainWindow>
 #include "hgtestview.h"
 #include "trace.h"
 

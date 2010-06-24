@@ -18,7 +18,7 @@
 #ifndef HGCENTERICONAREA_H
 #define HGCENTERICONAREA_H
 
-#include <hbwidget.h>
+#include <HbWidget>
 
 class HgCenterItemArea: public HbWidget
 {

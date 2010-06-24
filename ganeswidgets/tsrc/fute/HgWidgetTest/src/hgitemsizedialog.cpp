@@ -18,8 +18,8 @@
 
 #include <qgraphicslinearlayout.h>
 #include <qgraphicssceneresizeevent>
-#include <hbslider>
-#include <hbpushbutton>
+#include <HbSlider>
+#include <HbPushButton>
 
 #include "trace.h"
 

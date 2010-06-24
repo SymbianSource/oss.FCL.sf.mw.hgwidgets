@@ -11,126 +11,129 @@ EXPORTS
 	??0HgDataProviderModel@@QAE@PAVQObject@@@Z @ 10 NONAME ; HgDataProviderModel::HgDataProviderModel(class QObject *)
 	?dropMimeData@HgCacheProxyModel@@UAE_NPBVQMimeData@@W4DropAction@Qt@@HHABVQModelIndex@@@Z @ 11 NONAME ; bool HgCacheProxyModel::dropMimeData(class QMimeData const *, enum Qt::DropAction, int, int, class QModelIndex const &)
 	?setFilterRegExp@HgCacheProxyModel@@QAEXABVQRegExp@@@Z @ 12 NONAME ; void HgCacheProxyModel::setFilterRegExp(class QRegExp const &)
-	?columnCount@HgDataProviderModel@@UBEHABVQModelIndex@@@Z @ 13 NONAME ; int HgDataProviderModel::columnCount(class QModelIndex const &) const
-	?update@HgDataProviderModel@@IAE_NHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 14 NONAME ; bool HgDataProviderModel::update(int, class QList<struct QPair<class QVariant, int> > *, bool)
-	?doResetModel@HgDataProviderModel@@MAEXXZ @ 15 NONAME ; void HgDataProviderModel::doResetModel(void)
-	?canFetchMore@HgCacheProxyModel@@UBE_NABVQModelIndex@@@Z @ 16 NONAME ; bool HgCacheProxyModel::canFetchMore(class QModelIndex const &) const
-	?emitDataChanged@HgDataProviderModel@@IAEXHH_N@Z @ 17 NONAME ; void HgDataProviderModel::emitDataChanged(int, int, bool)
-	?staticMetaObject@HgDataProviderModel@@2UQMetaObject@@B @ 18 NONAME ; struct QMetaObject const HgDataProviderModel::staticMetaObject
-	?mapFromDataProviderIndex@HgCacheProxyModel@@ABEHH@Z @ 19 NONAME ; int HgCacheProxyModel::mapFromDataProviderIndex(int) const
-	?sourceLayoutChanged@HgCacheProxyModel@@AAEXXZ @ 20 NONAME ; void HgCacheProxyModel::sourceLayoutChanged(void)
-	?data@HgDataProviderModel@@UBE?AVQVariant@@ABVQModelIndex@@H@Z @ 21 NONAME ; class QVariant HgDataProviderModel::data(class QModelIndex const &, int) const
-	?setSortCaseSensitivity@HgCacheProxyModel@@QAEXW4CaseSensitivity@Qt@@@Z @ 22 NONAME ; void HgCacheProxyModel::setSortCaseSensitivity(enum Qt::CaseSensitivity)
-	?itemData@HgCacheProxyModel@@UBE?AV?$QMap@HVQVariant@@@@ABVQModelIndex@@@Z @ 23 NONAME ; class QMap<int, class QVariant> HgCacheProxyModel::itemData(class QModelIndex const &) const
-	?submit@HgCacheProxyModel@@UAE_NXZ @ 24 NONAME ; bool HgCacheProxyModel::submit(void)
-	?sourceColumnsAboutToBeRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 25 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeRemoved(class QModelIndex const &, int, int)
-	?hasChildren@HgCacheProxyModel@@UBE_NABVQModelIndex@@@Z @ 26 NONAME ; bool HgCacheProxyModel::hasChildren(class QModelIndex const &) const
-	?sourceColumnsRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 27 NONAME ; void HgCacheProxyModel::sourceColumnsRemoved(class QModelIndex const &, int, int)
-	?trUtf8@HgDataProviderModel@@SA?AVQString@@PBD0H@Z @ 28 NONAME ; class QString HgDataProviderModel::trUtf8(char const *, char const *, int)
-	?tr@HgDataProviderModel@@SA?AVQString@@PBD0H@Z @ 29 NONAME ; class QString HgDataProviderModel::tr(char const *, char const *, int)
-	?setFilterRole@HgCacheProxyModel@@QAEXH@Z @ 30 NONAME ; void HgCacheProxyModel::setFilterRole(int)
-	?setSortLocaleAware@HgCacheProxyModel@@QAEX_N@Z @ 31 NONAME ; void HgCacheProxyModel::setSortLocaleAware(bool)
-	?removeItem@HgDataProviderModel@@IAEXH@Z @ 32 NONAME ; void HgDataProviderModel::removeItem(int)
-	?trUtf8@HgCacheProxyModel@@SA?AVQString@@PBD0H@Z @ 33 NONAME ; class QString HgCacheProxyModel::trUtf8(char const *, char const *, int)
-	?getStaticMetaObject@HgCacheProxyModel@@SAABUQMetaObject@@XZ @ 34 NONAME ; struct QMetaObject const & HgCacheProxyModel::getStaticMetaObject(void)
-	?sourceColumnsAboutToBeMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 35 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
-	?clearCache@HgDataProviderModel@@IAEXXZ @ 36 NONAME ; void HgDataProviderModel::clearCache(void)
-	??1HgDataProviderModel@@UAE@XZ @ 37 NONAME ; HgDataProviderModel::~HgDataProviderModel(void)
-	?sourceColumnsMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 38 NONAME ; void HgCacheProxyModel::sourceColumnsMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
-	?isSortLocaleAware@HgCacheProxyModel@@QBE_NXZ @ 39 NONAME ; bool HgCacheProxyModel::isSortLocaleAware(void) const
-	?isIndexValid@HgDataProviderModel@@IBE_NH@Z @ 40 NONAME ; bool HgDataProviderModel::isIndexValid(int) const
-	?sortColumn@HgCacheProxyModel@@QBEHXZ @ 41 NONAME ; int HgCacheProxyModel::sortColumn(void) const
-	?request@HgDataProviderModel@@QAEXV?$QList@H@@_N@Z @ 42 NONAME ; void HgDataProviderModel::request(class QList<int>, bool)
-	?resizeCache@HgCacheProxyModel@@QAEXHH@Z @ 43 NONAME ; void HgCacheProxyModel::resizeCache(int, int)
-	?doInsertItem@HgDataProviderModel@@AAEXHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 44 NONAME ; void HgDataProviderModel::doInsertItem(int, class QList<struct QPair<class QVariant, int> > *, bool)
-	?mapToDataProviderIndex@HgCacheProxyModel@@ABEHH@Z @ 45 NONAME ; int HgCacheProxyModel::mapToDataProviderIndex(int) const
-	?qt_metacast@HgCacheProxyModel@@UAEPAXPBD@Z @ 46 NONAME ; void * HgCacheProxyModel::qt_metacast(char const *)
-	?request@HgCacheProxyModel@@UAEXHHW4HgRequestOrder@HgBufferManagerObserver@@@Z @ 47 NONAME ; void HgCacheProxyModel::request(int, int, enum HgBufferManagerObserver::HgRequestOrder)
-	?mimeTypes@HgCacheProxyModel@@UBE?AVQStringList@@XZ @ 48 NONAME ; class QStringList HgCacheProxyModel::mimeTypes(void) const
-	?sortCaseSensitivity@HgCacheProxyModel@@QBE?AW4CaseSensitivity@Qt@@XZ @ 49 NONAME ; enum Qt::CaseSensitivity HgCacheProxyModel::sortCaseSensitivity(void) const
-	?setItemData@HgCacheProxyModel@@UAE_NABVQModelIndex@@ABV?$QMap@HVQVariant@@@@@Z @ 50 NONAME ; bool HgCacheProxyModel::setItemData(class QModelIndex const &, class QMap<int, class QVariant> const &)
-	?staticMetaObject@HgCacheProxyModel@@2UQMetaObject@@B @ 51 NONAME ; struct QMetaObject const HgCacheProxyModel::staticMetaObject
-	?rowCount@HgCacheProxyModel@@UBEHABVQModelIndex@@@Z @ 52 NONAME ; int HgCacheProxyModel::rowCount(class QModelIndex const &) const
-	??_EHgDataProviderModel@@UAE@I@Z @ 53 NONAME ; HgDataProviderModel::~HgDataProviderModel(unsigned int)
-	?newItem@HgDataProviderModel@@IAEXPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 54 NONAME ; void HgDataProviderModel::newItem(class QList<struct QPair<class QVariant, int> > *, bool)
-	?setHeaderData@HgCacheProxyModel@@UAE_NHW4Orientation@Qt@@ABVQVariant@@H@Z @ 55 NONAME ; bool HgCacheProxyModel::setHeaderData(int, enum Qt::Orientation, class QVariant const &, int)
-	?releaseAll@HgCacheProxyModel@@AAEXXZ @ 56 NONAME ; void HgCacheProxyModel::releaseAll(void)
-	?setSortRole@HgCacheProxyModel@@QAEXH@Z @ 57 NONAME ; void HgCacheProxyModel::setSortRole(int)
-	?trUtf8@HgDataProviderModel@@SA?AVQString@@PBD0@Z @ 58 NONAME ; class QString HgDataProviderModel::trUtf8(char const *, char const *)
-	?flags@HgCacheProxyModel@@UBE?AV?$QFlags@W4ItemFlag@Qt@@@@ABVQModelIndex@@@Z @ 59 NONAME ; class QFlags<enum Qt::ItemFlag> HgCacheProxyModel::flags(class QModelIndex const &) const
-	?DataProvider@HgCacheProxyModel@@QAEPAVHgDataProviderModel@@XZ @ 60 NONAME ; class HgDataProviderModel * HgCacheProxyModel::DataProvider(void)
-	?insertItem@HgDataProviderModel@@IAEXHU?$QPair@VQVariant@@H@@_N@Z @ 61 NONAME ; void HgDataProviderModel::insertItem(int, struct QPair<class QVariant, int>, bool)
-	?sourceColumnsAboutToBeInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 62 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeInserted(class QModelIndex const &, int, int)
-	?data@HgCacheProxyModel@@UBE?AVQVariant@@ABVQModelIndex@@H@Z @ 63 NONAME ; class QVariant HgCacheProxyModel::data(class QModelIndex const &, int) const
-	?createIcon@HgDataProviderModel@@IAE?AVQVariant@@HVQPixmap@@@Z @ 64 NONAME ; class QVariant HgDataProviderModel::createIcon(int, class QPixmap)
-	?parent@HgCacheProxyModel@@UBE?AVQModelIndex@@ABV2@@Z @ 65 NONAME ; class QModelIndex HgCacheProxyModel::parent(class QModelIndex const &) const
-	?parent@HgDataProviderModel@@UBE?AVQModelIndex@@ABV2@@Z @ 66 NONAME ; class QModelIndex HgDataProviderModel::parent(class QModelIndex const &) const
-	?setDataProvider@HgCacheProxyModel@@QAEXPAVHgDataProviderModel@@HH@Z @ 67 NONAME ; void HgCacheProxyModel::setDataProvider(class HgDataProviderModel *, int, int)
-	?release@HgDataProviderModel@@QAEXV?$QList@H@@_N@Z @ 68 NONAME ; void HgDataProviderModel::release(class QList<int>, bool)
-	?qt_metacast@HgDataProviderModel@@UAEPAXPBD@Z @ 69 NONAME ; void * HgDataProviderModel::qt_metacast(char const *)
-	?mapToSource@HgCacheProxyModel@@ABE?AVQModelIndex@@ABV2@@Z @ 70 NONAME ; class QModelIndex HgCacheProxyModel::mapToSource(class QModelIndex const &) const
-	?sourceDataChanged@HgCacheProxyModel@@AAEXABVQModelIndex@@0@Z @ 71 NONAME ; void HgCacheProxyModel::sourceDataChanged(class QModelIndex const &, class QModelIndex const &)
-	?sourceRowsAboutToBeRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 72 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeRemoved(class QModelIndex const &, int, int)
-	?columnCount@HgCacheProxyModel@@UBEHABVQModelIndex@@@Z @ 73 NONAME ; int HgCacheProxyModel::columnCount(class QModelIndex const &) const
-	?mapToSource@HgCacheProxyModel@@ABE?AVQModelIndex@@HH@Z @ 74 NONAME ; class QModelIndex HgCacheProxyModel::mapToSource(int, int) const
-	?tr@HgDataProviderModel@@SA?AVQString@@PBD0@Z @ 75 NONAME ; class QString HgDataProviderModel::tr(char const *, char const *)
-	?sourceRowsRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 76 NONAME ; void HgCacheProxyModel::sourceRowsRemoved(class QModelIndex const &, int, int)
-	?sourceHeaderDataChanged@HgCacheProxyModel@@AAEXW4Orientation@Qt@@HH@Z @ 77 NONAME ; void HgCacheProxyModel::sourceHeaderDataChanged(enum Qt::Orientation, int, int)
-	??1HgCacheProxyModel@@UAE@XZ @ 78 NONAME ; HgCacheProxyModel::~HgCacheProxyModel(void)
-	?registerObserver@HgDataProviderModel@@QAEXPAVHgDataProviderModelObserver@@@Z @ 79 NONAME ; void HgDataProviderModel::registerObserver(class HgDataProviderModelObserver *)
-	?sourceRowsAboutToBeMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 80 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
-	??0HgCacheProxyModel@@QAE@PAVQObject@@@Z @ 81 NONAME ; HgCacheProxyModel::HgCacheProxyModel(class QObject *)
-	?supportedDropActions@HgCacheProxyModel@@UBE?AV?$QFlags@W4DropAction@Qt@@@@XZ @ 82 NONAME ; class QFlags<enum Qt::DropAction> HgCacheProxyModel::supportedDropActions(void) const
-	?updateIcon@HgDataProviderModel@@IAE_NHVQVariant@@_N@Z @ 83 NONAME ; bool HgDataProviderModel::updateIcon(int, class QVariant, bool)
-	?index@HgDataProviderModel@@UBE?AVQModelIndex@@HHABV2@@Z @ 84 NONAME ; class QModelIndex HgDataProviderModel::index(int, int, class QModelIndex const &) const
-	?sort@HgCacheProxyModel@@UAEXHW4SortOrder@Qt@@@Z @ 85 NONAME ; void HgCacheProxyModel::sort(int, enum Qt::SortOrder)
-	?releasePixmap@HgDataProviderModel@@IAEXH@Z @ 86 NONAME ; void HgDataProviderModel::releasePixmap(int)
-	?sourceRowsMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 87 NONAME ; void HgCacheProxyModel::sourceRowsMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
-	?removeColumns@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 88 NONAME ; bool HgCacheProxyModel::removeColumns(int, int, class QModelIndex const &)
-	?insertRows@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 89 NONAME ; bool HgCacheProxyModel::insertRows(int, int, class QModelIndex const &)
-	?tr@HgCacheProxyModel@@SA?AVQString@@PBD0H@Z @ 90 NONAME ; class QString HgCacheProxyModel::tr(char const *, char const *, int)
-	?insertItem@HgDataProviderModel@@IAEXHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 91 NONAME ; void HgDataProviderModel::insertItem(int, class QList<struct QPair<class QVariant, int> > *, bool)
-	?revert@HgCacheProxyModel@@UAEXXZ @ 92 NONAME ; void HgCacheProxyModel::revert(void)
-	?dynamicSortFilter@HgCacheProxyModel@@QBE_NXZ @ 93 NONAME ; bool HgCacheProxyModel::dynamicSortFilter(void) const
-	?data@HgDataProviderModel@@IBE?AVQVariant@@HH@Z @ 94 NONAME ; class QVariant HgDataProviderModel::data(int, int) const
-	?rowCount@HgDataProviderModel@@UBEHABVQModelIndex@@@Z @ 95 NONAME ; int HgDataProviderModel::rowCount(class QModelIndex const &) const
-	?setFilterCaseSensitivity@HgCacheProxyModel@@QAEXW4CaseSensitivity@Qt@@@Z @ 96 NONAME ; void HgCacheProxyModel::setFilterCaseSensitivity(enum Qt::CaseSensitivity)
-	?count@HgCacheProxyModel@@ABEHXZ @ 97 NONAME ; int HgCacheProxyModel::count(void) const
-	?sortOrder@HgCacheProxyModel@@QBE?AW4SortOrder@Qt@@XZ @ 98 NONAME ; enum Qt::SortOrder HgCacheProxyModel::sortOrder(void) const
-	?removeRows@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 99 NONAME ; bool HgCacheProxyModel::removeRows(int, int, class QModelIndex const &)
-	?getStaticMetaObject@HgDataProviderModel@@SAABUQMetaObject@@XZ @ 100 NONAME ; struct QMetaObject const & HgDataProviderModel::getStaticMetaObject(void)
-	?setBufferPosition@HgCacheProxyModel@@ABEXH@Z @ 101 NONAME ; void HgCacheProxyModel::setBufferPosition(int) const
-	?dataUpdated@HgCacheProxyModel@@UAEXHH@Z @ 102 NONAME ; void HgCacheProxyModel::dataUpdated(int, int)
-	?sourceRowsAboutToBeInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 103 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeInserted(class QModelIndex const &, int, int)
-	?fetchMore@HgCacheProxyModel@@UAEXABVQModelIndex@@@Z @ 104 NONAME ; void HgCacheProxyModel::fetchMore(class QModelIndex const &)
-	?filterCaseSensitivity@HgCacheProxyModel@@QBE?AW4CaseSensitivity@Qt@@XZ @ 105 NONAME ; enum Qt::CaseSensitivity HgCacheProxyModel::filterCaseSensitivity(void) const
-	?newItem@HgDataProviderModel@@IAEXU?$QPair@VQVariant@@H@@_N@Z @ 106 NONAME ; void HgDataProviderModel::newItem(struct QPair<class QVariant, int>, bool)
-	?setDynamicSortFilter@HgCacheProxyModel@@QAEX_N@Z @ 107 NONAME ; void HgCacheProxyModel::setDynamicSortFilter(bool)
-	?sourceModelReset@HgCacheProxyModel@@AAEXXZ @ 108 NONAME ; void HgCacheProxyModel::sourceModelReset(void)
-	?index@HgCacheProxyModel@@UBE?AVQModelIndex@@HHABV2@@Z @ 109 NONAME ; class QModelIndex HgCacheProxyModel::index(int, int, class QModelIndex const &) const
-	?removeItems@HgDataProviderModel@@IAEXHH@Z @ 110 NONAME ; void HgDataProviderModel::removeItems(int, int)
-	?count@HgDataProviderModel@@IBEHXZ @ 111 NONAME ; int HgDataProviderModel::count(void) const
-	?sourceColumnsInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 112 NONAME ; void HgCacheProxyModel::sourceColumnsInserted(class QModelIndex const &, int, int)
-	?tr@HgCacheProxyModel@@SA?AVQString@@PBD0@Z @ 113 NONAME ; class QString HgCacheProxyModel::tr(char const *, char const *)
-	?qt_metacall@HgCacheProxyModel@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 114 NONAME ; int HgCacheProxyModel::qt_metacall(enum QMetaObject::Call, int, void * *)
-	?setData@HgCacheProxyModel@@UAE_NABVQModelIndex@@ABVQVariant@@H@Z @ 115 NONAME ; bool HgCacheProxyModel::setData(class QModelIndex const &, class QVariant const &, int)
-	?mimeData@HgCacheProxyModel@@UBEPAVQMimeData@@ABV?$QList@VQModelIndex@@@@@Z @ 116 NONAME ; class QMimeData * HgCacheProxyModel::mimeData(class QList<class QModelIndex> const &) const
-	?match@HgCacheProxyModel@@UBE?AV?$QList@VQModelIndex@@@@ABVQModelIndex@@HABVQVariant@@HV?$QFlags@W4MatchFlag@Qt@@@@@Z @ 117 NONAME ; class QList<class QModelIndex> HgCacheProxyModel::match(class QModelIndex const &, int, class QVariant const &, int, class QFlags<enum Qt::MatchFlag>) const
-	?update@HgDataProviderModel@@IAE_NHVQVariant@@H_N@Z @ 118 NONAME ; bool HgDataProviderModel::update(int, class QVariant, int, bool)
-	?sourceRowsInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 119 NONAME ; void HgCacheProxyModel::sourceRowsInserted(class QModelIndex const &, int, int)
-	?release@HgCacheProxyModel@@UAEXHH@Z @ 120 NONAME ; void HgCacheProxyModel::release(int, int)
-	?resetModel@HgDataProviderModel@@QAEXXZ @ 121 NONAME ; void HgDataProviderModel::resetModel(void)
-	?span@HgCacheProxyModel@@UBE?AVQSize@@ABVQModelIndex@@@Z @ 122 NONAME ; class QSize HgCacheProxyModel::span(class QModelIndex const &) const
-	?insertColumns@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 123 NONAME ; bool HgCacheProxyModel::insertColumns(int, int, class QModelIndex const &)
-	??_EHgCacheProxyModel@@UAE@I@Z @ 124 NONAME ; HgCacheProxyModel::~HgCacheProxyModel(unsigned int)
-	?filterRole@HgCacheProxyModel@@QBEHXZ @ 125 NONAME ; int HgCacheProxyModel::filterRole(void) const
-	?metaObject@HgDataProviderModel@@UBEPBUQMetaObject@@XZ @ 126 NONAME ; struct QMetaObject const * HgDataProviderModel::metaObject(void) const
-	?resetIcon@HgDataProviderModel@@IAEXH@Z @ 127 NONAME ; void HgDataProviderModel::resetIcon(int)
-	?sourceLayoutAboutToBeChanged@HgCacheProxyModel@@AAEXXZ @ 128 NONAME ; void HgCacheProxyModel::sourceLayoutAboutToBeChanged(void)
-	?metaObject@HgCacheProxyModel@@UBEPBUQMetaObject@@XZ @ 129 NONAME ; struct QMetaObject const * HgCacheProxyModel::metaObject(void) const
-	?getPixmap@HgDataProviderModel@@AAEPAVQPixmap@@H@Z @ 130 NONAME ; class QPixmap * HgDataProviderModel::getPixmap(int)
-	?sourceModelAboutToBeReset@HgCacheProxyModel@@AAEXXZ @ 131 NONAME ; void HgCacheProxyModel::sourceModelAboutToBeReset(void)
-	?qt_metacall@HgDataProviderModel@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 132 NONAME ; int HgDataProviderModel::qt_metacall(enum QMetaObject::Call, int, void * *)
-	?filterKeyColumn@HgCacheProxyModel@@QBEHXZ @ 133 NONAME ; int HgCacheProxyModel::filterKeyColumn(void) const
-	?getData@HgDataProviderModel@@MBE?AVQVariant@@HH@Z @ 134 NONAME ; class QVariant HgDataProviderModel::getData(int, int) const
+	?clearItem@HgDataProviderModel@@IAEXH_N@Z @ 13 NONAME ; void HgDataProviderModel::clearItem(int, bool)
+	?columnCount@HgDataProviderModel@@UBEHABVQModelIndex@@@Z @ 14 NONAME ; int HgDataProviderModel::columnCount(class QModelIndex const &) const
+	?update@HgDataProviderModel@@IAE_NHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 15 NONAME ; bool HgDataProviderModel::update(int, class QList<struct QPair<class QVariant, int> > *, bool)
+	?doResetModel@HgDataProviderModel@@MAEXXZ @ 16 NONAME ; void HgDataProviderModel::doResetModel(void)
+	?canFetchMore@HgCacheProxyModel@@UBE_NABVQModelIndex@@@Z @ 17 NONAME ; bool HgCacheProxyModel::canFetchMore(class QModelIndex const &) const
+	?emitDataChanged@HgDataProviderModel@@IAEXHH_N@Z @ 18 NONAME ; void HgDataProviderModel::emitDataChanged(int, int, bool)
+	?staticMetaObject@HgDataProviderModel@@2UQMetaObject@@B @ 19 NONAME ; struct QMetaObject const HgDataProviderModel::staticMetaObject
+	?mapFromDataProviderIndex@HgCacheProxyModel@@ABEHH@Z @ 20 NONAME ; int HgCacheProxyModel::mapFromDataProviderIndex(int) const
+	?sourceLayoutChanged@HgCacheProxyModel@@AAEXXZ @ 21 NONAME ; void HgCacheProxyModel::sourceLayoutChanged(void)
+	?data@HgDataProviderModel@@UBE?AVQVariant@@ABVQModelIndex@@H@Z @ 22 NONAME ; class QVariant HgDataProviderModel::data(class QModelIndex const &, int) const
+	?setSortCaseSensitivity@HgCacheProxyModel@@QAEXW4CaseSensitivity@Qt@@@Z @ 23 NONAME ; void HgCacheProxyModel::setSortCaseSensitivity(enum Qt::CaseSensitivity)
+	?itemData@HgCacheProxyModel@@UBE?AV?$QMap@HVQVariant@@@@ABVQModelIndex@@@Z @ 24 NONAME ; class QMap<int, class QVariant> HgCacheProxyModel::itemData(class QModelIndex const &) const
+	?removeItems@HgDataProviderModel@@IAEXHH_N@Z @ 25 NONAME ; void HgDataProviderModel::removeItems(int, int, bool)
+	?submit@HgCacheProxyModel@@UAE_NXZ @ 26 NONAME ; bool HgCacheProxyModel::submit(void)
+	?sourceColumnsAboutToBeRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 27 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeRemoved(class QModelIndex const &, int, int)
+	?hasChildren@HgCacheProxyModel@@UBE_NABVQModelIndex@@@Z @ 28 NONAME ; bool HgCacheProxyModel::hasChildren(class QModelIndex const &) const
+	?sourceColumnsRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 29 NONAME ; void HgCacheProxyModel::sourceColumnsRemoved(class QModelIndex const &, int, int)
+	?trUtf8@HgDataProviderModel@@SA?AVQString@@PBD0H@Z @ 30 NONAME ; class QString HgDataProviderModel::trUtf8(char const *, char const *, int)
+	?tr@HgDataProviderModel@@SA?AVQString@@PBD0H@Z @ 31 NONAME ; class QString HgDataProviderModel::tr(char const *, char const *, int)
+	?setFilterRole@HgCacheProxyModel@@QAEXH@Z @ 32 NONAME ; void HgCacheProxyModel::setFilterRole(int)
+	?setSortLocaleAware@HgCacheProxyModel@@QAEX_N@Z @ 33 NONAME ; void HgCacheProxyModel::setSortLocaleAware(bool)
+	?trUtf8@HgCacheProxyModel@@SA?AVQString@@PBD0H@Z @ 34 NONAME ; class QString HgCacheProxyModel::trUtf8(char const *, char const *, int)
+	?getStaticMetaObject@HgCacheProxyModel@@SAABUQMetaObject@@XZ @ 35 NONAME ; struct QMetaObject const & HgCacheProxyModel::getStaticMetaObject(void)
+	?sourceColumnsAboutToBeMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 36 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
+	?clearCache@HgDataProviderModel@@IAEXXZ @ 37 NONAME ; void HgDataProviderModel::clearCache(void)
+	??1HgDataProviderModel@@UAE@XZ @ 38 NONAME ; HgDataProviderModel::~HgDataProviderModel(void)
+	?sourceColumnsMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 39 NONAME ; void HgCacheProxyModel::sourceColumnsMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
+	?isSortLocaleAware@HgCacheProxyModel@@QBE_NXZ @ 40 NONAME ; bool HgCacheProxyModel::isSortLocaleAware(void) const
+	?isIndexValid@HgDataProviderModel@@IBE_NH@Z @ 41 NONAME ; bool HgDataProviderModel::isIndexValid(int) const
+	?sortColumn@HgCacheProxyModel@@QBEHXZ @ 42 NONAME ; int HgCacheProxyModel::sortColumn(void) const
+	?request@HgDataProviderModel@@QAEXV?$QList@H@@_N@Z @ 43 NONAME ; void HgDataProviderModel::request(class QList<int>, bool)
+	?resizeCache@HgCacheProxyModel@@QAEXHH@Z @ 44 NONAME ; void HgCacheProxyModel::resizeCache(int, int)
+	?doInsertItem@HgDataProviderModel@@AAEXHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 45 NONAME ; void HgDataProviderModel::doInsertItem(int, class QList<struct QPair<class QVariant, int> > *, bool)
+	?mapToDataProviderIndex@HgCacheProxyModel@@ABEHH@Z @ 46 NONAME ; int HgCacheProxyModel::mapToDataProviderIndex(int) const
+	?qt_metacast@HgCacheProxyModel@@UAEPAXPBD@Z @ 47 NONAME ; void * HgCacheProxyModel::qt_metacast(char const *)
+	?request@HgCacheProxyModel@@UAEXHHW4HgRequestOrder@HgBufferManagerObserver@@@Z @ 48 NONAME ; void HgCacheProxyModel::request(int, int, enum HgBufferManagerObserver::HgRequestOrder)
+	?mimeTypes@HgCacheProxyModel@@UBE?AVQStringList@@XZ @ 49 NONAME ; class QStringList HgCacheProxyModel::mimeTypes(void) const
+	?sortCaseSensitivity@HgCacheProxyModel@@QBE?AW4CaseSensitivity@Qt@@XZ @ 50 NONAME ; enum Qt::CaseSensitivity HgCacheProxyModel::sortCaseSensitivity(void) const
+	?setItemData@HgCacheProxyModel@@UAE_NABVQModelIndex@@ABV?$QMap@HVQVariant@@@@@Z @ 51 NONAME ; bool HgCacheProxyModel::setItemData(class QModelIndex const &, class QMap<int, class QVariant> const &)
+	?staticMetaObject@HgCacheProxyModel@@2UQMetaObject@@B @ 52 NONAME ; struct QMetaObject const HgCacheProxyModel::staticMetaObject
+	?rowCount@HgCacheProxyModel@@UBEHABVQModelIndex@@@Z @ 53 NONAME ; int HgCacheProxyModel::rowCount(class QModelIndex const &) const
+	??_EHgDataProviderModel@@UAE@I@Z @ 54 NONAME ; HgDataProviderModel::~HgDataProviderModel(unsigned int)
+	?newItem@HgDataProviderModel@@IAEXPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 55 NONAME ; void HgDataProviderModel::newItem(class QList<struct QPair<class QVariant, int> > *, bool)
+	?setHeaderData@HgCacheProxyModel@@UAE_NHW4Orientation@Qt@@ABVQVariant@@H@Z @ 56 NONAME ; bool HgCacheProxyModel::setHeaderData(int, enum Qt::Orientation, class QVariant const &, int)
+	?releaseAll@HgCacheProxyModel@@AAEXXZ @ 57 NONAME ; void HgCacheProxyModel::releaseAll(void)
+	?setSortRole@HgCacheProxyModel@@QAEXH@Z @ 58 NONAME ; void HgCacheProxyModel::setSortRole(int)
+	?trUtf8@HgDataProviderModel@@SA?AVQString@@PBD0@Z @ 59 NONAME ; class QString HgDataProviderModel::trUtf8(char const *, char const *)
+	?flags@HgCacheProxyModel@@UBE?AV?$QFlags@W4ItemFlag@Qt@@@@ABVQModelIndex@@@Z @ 60 NONAME ; class QFlags<enum Qt::ItemFlag> HgCacheProxyModel::flags(class QModelIndex const &) const
+	?DataProvider@HgCacheProxyModel@@QAEPAVHgDataProviderModel@@XZ @ 61 NONAME ; class HgDataProviderModel * HgCacheProxyModel::DataProvider(void)
+	?insertItem@HgDataProviderModel@@IAEXHU?$QPair@VQVariant@@H@@_N@Z @ 62 NONAME ; void HgDataProviderModel::insertItem(int, struct QPair<class QVariant, int>, bool)
+	?getData@HgDataProviderModel@@MBE?AVQVariant@@HH@Z @ 63 NONAME ; class QVariant HgDataProviderModel::getData(int, int) const
+	?sourceColumnsAboutToBeInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 64 NONAME ; void HgCacheProxyModel::sourceColumnsAboutToBeInserted(class QModelIndex const &, int, int)
+	?data@HgCacheProxyModel@@UBE?AVQVariant@@ABVQModelIndex@@H@Z @ 65 NONAME ; class QVariant HgCacheProxyModel::data(class QModelIndex const &, int) const
+	?createIcon@HgDataProviderModel@@IAE?AVQVariant@@HVQPixmap@@@Z @ 66 NONAME ; class QVariant HgDataProviderModel::createIcon(int, class QPixmap)
+	?parent@HgCacheProxyModel@@UBE?AVQModelIndex@@ABV2@@Z @ 67 NONAME ; class QModelIndex HgCacheProxyModel::parent(class QModelIndex const &) const
+	?parent@HgDataProviderModel@@UBE?AVQModelIndex@@ABV2@@Z @ 68 NONAME ; class QModelIndex HgDataProviderModel::parent(class QModelIndex const &) const
+	?removeItem@HgDataProviderModel@@IAEXH_N@Z @ 69 NONAME ; void HgDataProviderModel::removeItem(int, bool)
+	?setDataProvider@HgCacheProxyModel@@QAEXPAVHgDataProviderModel@@HH@Z @ 70 NONAME ; void HgCacheProxyModel::setDataProvider(class HgDataProviderModel *, int, int)
+	?release@HgDataProviderModel@@QAEXV?$QList@H@@_N@Z @ 71 NONAME ; void HgDataProviderModel::release(class QList<int>, bool)
+	?qt_metacast@HgDataProviderModel@@UAEPAXPBD@Z @ 72 NONAME ; void * HgDataProviderModel::qt_metacast(char const *)
+	?mapToSource@HgCacheProxyModel@@ABE?AVQModelIndex@@ABV2@@Z @ 73 NONAME ; class QModelIndex HgCacheProxyModel::mapToSource(class QModelIndex const &) const
+	?sourceDataChanged@HgCacheProxyModel@@AAEXABVQModelIndex@@0@Z @ 74 NONAME ; void HgCacheProxyModel::sourceDataChanged(class QModelIndex const &, class QModelIndex const &)
+	?sourceRowsAboutToBeRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 75 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeRemoved(class QModelIndex const &, int, int)
+	?columnCount@HgCacheProxyModel@@UBEHABVQModelIndex@@@Z @ 76 NONAME ; int HgCacheProxyModel::columnCount(class QModelIndex const &) const
+	?mapToSource@HgCacheProxyModel@@ABE?AVQModelIndex@@HH@Z @ 77 NONAME ; class QModelIndex HgCacheProxyModel::mapToSource(int, int) const
+	?tr@HgDataProviderModel@@SA?AVQString@@PBD0@Z @ 78 NONAME ; class QString HgDataProviderModel::tr(char const *, char const *)
+	?sourceRowsRemoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 79 NONAME ; void HgCacheProxyModel::sourceRowsRemoved(class QModelIndex const &, int, int)
+	?sourceHeaderDataChanged@HgCacheProxyModel@@AAEXW4Orientation@Qt@@HH@Z @ 80 NONAME ; void HgCacheProxyModel::sourceHeaderDataChanged(enum Qt::Orientation, int, int)
+	??1HgCacheProxyModel@@UAE@XZ @ 81 NONAME ; HgCacheProxyModel::~HgCacheProxyModel(void)
+	?registerObserver@HgDataProviderModel@@QAEXPAVHgDataProviderModelObserver@@@Z @ 82 NONAME ; void HgDataProviderModel::registerObserver(class HgDataProviderModelObserver *)
+	?sourceRowsAboutToBeMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 83 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
+	??0HgCacheProxyModel@@QAE@PAVQObject@@@Z @ 84 NONAME ; HgCacheProxyModel::HgCacheProxyModel(class QObject *)
+	?supportedDropActions@HgCacheProxyModel@@UBE?AV?$QFlags@W4DropAction@Qt@@@@XZ @ 85 NONAME ; class QFlags<enum Qt::DropAction> HgCacheProxyModel::supportedDropActions(void) const
+	?updateIcon@HgDataProviderModel@@IAE_NHVQVariant@@_N@Z @ 86 NONAME ; bool HgDataProviderModel::updateIcon(int, class QVariant, bool)
+	?index@HgDataProviderModel@@UBE?AVQModelIndex@@HHABV2@@Z @ 87 NONAME ; class QModelIndex HgDataProviderModel::index(int, int, class QModelIndex const &) const
+	?sort@HgCacheProxyModel@@UAEXHW4SortOrder@Qt@@@Z @ 88 NONAME ; void HgCacheProxyModel::sort(int, enum Qt::SortOrder)
+	?releasePixmap@HgDataProviderModel@@IAEXH@Z @ 89 NONAME ; void HgDataProviderModel::releasePixmap(int)
+	?sourceRowsMoved@HgCacheProxyModel@@AAEXABVQModelIndex@@HH0H@Z @ 90 NONAME ; void HgCacheProxyModel::sourceRowsMoved(class QModelIndex const &, int, int, class QModelIndex const &, int)
+	?removeColumns@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 91 NONAME ; bool HgCacheProxyModel::removeColumns(int, int, class QModelIndex const &)
+	?insertRows@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 92 NONAME ; bool HgCacheProxyModel::insertRows(int, int, class QModelIndex const &)
+	?tr@HgCacheProxyModel@@SA?AVQString@@PBD0H@Z @ 93 NONAME ; class QString HgCacheProxyModel::tr(char const *, char const *, int)
+	?insertItem@HgDataProviderModel@@IAEXHPAV?$QList@U?$QPair@VQVariant@@H@@@@_N@Z @ 94 NONAME ; void HgDataProviderModel::insertItem(int, class QList<struct QPair<class QVariant, int> > *, bool)
+	?revert@HgCacheProxyModel@@UAEXXZ @ 95 NONAME ; void HgCacheProxyModel::revert(void)
+	?dynamicSortFilter@HgCacheProxyModel@@QBE_NXZ @ 96 NONAME ; bool HgCacheProxyModel::dynamicSortFilter(void) const
+	?data@HgDataProviderModel@@IBE?AVQVariant@@HH@Z @ 97 NONAME ; class QVariant HgDataProviderModel::data(int, int) const
+	?rowCount@HgDataProviderModel@@UBEHABVQModelIndex@@@Z @ 98 NONAME ; int HgDataProviderModel::rowCount(class QModelIndex const &) const
+	?setFilterCaseSensitivity@HgCacheProxyModel@@QAEXW4CaseSensitivity@Qt@@@Z @ 99 NONAME ; void HgCacheProxyModel::setFilterCaseSensitivity(enum Qt::CaseSensitivity)
+	?count@HgCacheProxyModel@@ABEHXZ @ 100 NONAME ; int HgCacheProxyModel::count(void) const
+	?sortOrder@HgCacheProxyModel@@QBE?AW4SortOrder@Qt@@XZ @ 101 NONAME ; enum Qt::SortOrder HgCacheProxyModel::sortOrder(void) const
+	?removeRows@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 102 NONAME ; bool HgCacheProxyModel::removeRows(int, int, class QModelIndex const &)
+	?getStaticMetaObject@HgDataProviderModel@@SAABUQMetaObject@@XZ @ 103 NONAME ; struct QMetaObject const & HgDataProviderModel::getStaticMetaObject(void)
+	?setBufferPosition@HgCacheProxyModel@@ABEXH@Z @ 104 NONAME ; void HgCacheProxyModel::setBufferPosition(int) const
+	?dataUpdated@HgCacheProxyModel@@UAEXHH@Z @ 105 NONAME ; void HgCacheProxyModel::dataUpdated(int, int)
+	?sourceRowsAboutToBeInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 106 NONAME ; void HgCacheProxyModel::sourceRowsAboutToBeInserted(class QModelIndex const &, int, int)
+	?fetchMore@HgCacheProxyModel@@UAEXABVQModelIndex@@@Z @ 107 NONAME ; void HgCacheProxyModel::fetchMore(class QModelIndex const &)
+	?filterCaseSensitivity@HgCacheProxyModel@@QBE?AW4CaseSensitivity@Qt@@XZ @ 108 NONAME ; enum Qt::CaseSensitivity HgCacheProxyModel::filterCaseSensitivity(void) const
+	?newItem@HgDataProviderModel@@IAEXU?$QPair@VQVariant@@H@@_N@Z @ 109 NONAME ; void HgDataProviderModel::newItem(struct QPair<class QVariant, int>, bool)
+	?setDynamicSortFilter@HgCacheProxyModel@@QAEX_N@Z @ 110 NONAME ; void HgCacheProxyModel::setDynamicSortFilter(bool)
+	?sourceModelReset@HgCacheProxyModel@@AAEXXZ @ 111 NONAME ; void HgCacheProxyModel::sourceModelReset(void)
+	?index@HgCacheProxyModel@@UBE?AVQModelIndex@@HHABV2@@Z @ 112 NONAME ; class QModelIndex HgCacheProxyModel::index(int, int, class QModelIndex const &) const
+	?setIconMode@HgDataProviderModel@@QAEXW4HgDataProviderIconMode@1@@Z @ 113 NONAME ; void HgDataProviderModel::setIconMode(enum HgDataProviderModel::HgDataProviderIconMode)
+	?count@HgDataProviderModel@@IBEHXZ @ 114 NONAME ; int HgDataProviderModel::count(void) const
+	?sourceColumnsInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 115 NONAME ; void HgCacheProxyModel::sourceColumnsInserted(class QModelIndex const &, int, int)
+	?tr@HgCacheProxyModel@@SA?AVQString@@PBD0@Z @ 116 NONAME ; class QString HgCacheProxyModel::tr(char const *, char const *)
+	?qt_metacall@HgCacheProxyModel@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 117 NONAME ; int HgCacheProxyModel::qt_metacall(enum QMetaObject::Call, int, void * *)
+	?setData@HgCacheProxyModel@@UAE_NABVQModelIndex@@ABVQVariant@@H@Z @ 118 NONAME ; bool HgCacheProxyModel::setData(class QModelIndex const &, class QVariant const &, int)
+	?mimeData@HgCacheProxyModel@@UBEPAVQMimeData@@ABV?$QList@VQModelIndex@@@@@Z @ 119 NONAME ; class QMimeData * HgCacheProxyModel::mimeData(class QList<class QModelIndex> const &) const
+	?iconMode@HgDataProviderModel@@QAE?AW4HgDataProviderIconMode@1@XZ @ 120 NONAME ; enum HgDataProviderModel::HgDataProviderIconMode HgDataProviderModel::iconMode(void)
+	?update@HgDataProviderModel@@IAE_NHVQVariant@@H_N@Z @ 121 NONAME ; bool HgDataProviderModel::update(int, class QVariant, int, bool)
+	?match@HgCacheProxyModel@@UBE?AV?$QList@VQModelIndex@@@@ABVQModelIndex@@HABVQVariant@@HV?$QFlags@W4MatchFlag@Qt@@@@@Z @ 122 NONAME ; class QList<class QModelIndex> HgCacheProxyModel::match(class QModelIndex const &, int, class QVariant const &, int, class QFlags<enum Qt::MatchFlag>) const
+	?sourceRowsInserted@HgCacheProxyModel@@AAEXABVQModelIndex@@HH@Z @ 123 NONAME ; void HgCacheProxyModel::sourceRowsInserted(class QModelIndex const &, int, int)
+	?release@HgCacheProxyModel@@UAEXHH@Z @ 124 NONAME ; void HgCacheProxyModel::release(int, int)
+	?resetModel@HgDataProviderModel@@QAEXXZ @ 125 NONAME ; void HgDataProviderModel::resetModel(void)
+	?span@HgCacheProxyModel@@UBE?AVQSize@@ABVQModelIndex@@@Z @ 126 NONAME ; class QSize HgCacheProxyModel::span(class QModelIndex const &) const
+	?insertColumns@HgCacheProxyModel@@UAE_NHHABVQModelIndex@@@Z @ 127 NONAME ; bool HgCacheProxyModel::insertColumns(int, int, class QModelIndex const &)
+	??_EHgCacheProxyModel@@UAE@I@Z @ 128 NONAME ; HgCacheProxyModel::~HgCacheProxyModel(unsigned int)
+	?filterRole@HgCacheProxyModel@@QBEHXZ @ 129 NONAME ; int HgCacheProxyModel::filterRole(void) const
+	?metaObject@HgDataProviderModel@@UBEPBUQMetaObject@@XZ @ 130 NONAME ; struct QMetaObject const * HgDataProviderModel::metaObject(void) const
+	?resetIcon@HgDataProviderModel@@IAEXH@Z @ 131 NONAME ; void HgDataProviderModel::resetIcon(int)
+	?sourceLayoutAboutToBeChanged@HgCacheProxyModel@@AAEXXZ @ 132 NONAME ; void HgCacheProxyModel::sourceLayoutAboutToBeChanged(void)
+	?metaObject@HgCacheProxyModel@@UBEPBUQMetaObject@@XZ @ 133 NONAME ; struct QMetaObject const * HgCacheProxyModel::metaObject(void) const
+	?getPixmap@HgDataProviderModel@@AAEPAVQPixmap@@H@Z @ 134 NONAME ; class QPixmap * HgDataProviderModel::getPixmap(int)
+	?sourceModelAboutToBeReset@HgCacheProxyModel@@AAEXXZ @ 135 NONAME ; void HgCacheProxyModel::sourceModelAboutToBeReset(void)
+	?qt_metacall@HgDataProviderModel@@UAEHW4Call@QMetaObject@@HPAPAX@Z @ 136 NONAME ; int HgDataProviderModel::qt_metacall(enum QMetaObject::Call, int, void * *)
+	?filterKeyColumn@HgCacheProxyModel@@QBEHXZ @ 137 NONAME ; int HgCacheProxyModel::filterKeyColumn(void) const
 

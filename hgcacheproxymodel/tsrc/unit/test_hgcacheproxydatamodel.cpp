@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 8 %
+*  Version     : %version: 10 %
 */
 #include <QtTest/QtTest>
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -25,6 +25,11 @@
 #include "dataproviderhelper.h"
 #include "cacheproxyhelper.h"
 #include <QtDebug>
+#include <HbIcon>
+#include <QIcon>
+#include <QImage>
+#include <QPixmap>
+
 
 // ======== MEMBER FUNCTIONS ========
 void TestCacheProxy::testQAbstractItemModel(QAbstractItemModel* model, int rows, int columns)
@@ -84,10 +89,7 @@ void TestCacheProxy::testQAbstractItemModel(QAbstractItemModel* model, int rows,
     QVERIFY(idx.isValid() == false);
     QVERIFY(model->columnCount() == columns);
     QVERIFY(model->rowCount() == rows);
-    
-//    QVERIFY(model->hasChildren() == false);
-//    QVERIFY(model->headerData(0, Qt::Horizontal).isValid == false);
-    
+        
 }
 
 void TestCacheProxy::initTestCase()
@@ -384,6 +386,24 @@ void TestCacheProxy::testBM_ItemCountChanged()
     QCOMPARE(bmh->totalSize(), totalsize);
     
     
+    bm->aboutToRemoveItem(totalsize+10);
+    bmh->remove(totalsize+10);
+    bm->removedItem(totalsize+10);
+    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize--; //no item remove since totalsize+200 is outside
+    QCOMPARE(bmh->totalSize(), totalsize);
+
+    
+    bm->resetBuffer(0, 10);
+    bmh->resizeCache(10);
+    bm->aboutToRemoveItem(1);
+    bmh->remove(1);
+    bm->removedItem(1);
+    QCOMPARE(bmh->totalSize(), 9);
+
+    bmh->resizeCache(totalsize);
+    bm->resetBuffer(0, totalsize);
+    
     //insert
     
     bm->setPosition(0);
@@ -440,6 +460,15 @@ void TestCacheProxy::testBM_ItemCountChanged()
     QVERIFY(bmh->isIntergal(bufferSize));
 //    totalsize++; //no insert
     QCOMPARE(bmh->totalSize(), totalsize);
+
+    bm->setPosition(2*totalsize);
+    bm->aboutToInsertItem(2*totalsize);
+    bmh->insert(2*totalsize); 
+    bm->insertedItem(2*totalsize);
+    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize++; //no insert
+    QCOMPARE(bmh->totalSize(), totalsize);
+
     
 }
 
@@ -619,6 +648,23 @@ void TestCacheProxy::testDP_RequestReleaseAndData()
     res = dph->data(idx, Qt::DecorationRole);
     QVERIFY(res == dph->defaultIcon());    
     
+    dph->testClearItem(2, false);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 1); //1 update
+    QVERIFY(updates[0].first == 2); //for 2
+    QVERIFY(updates[0].second == 2); //for 2
+    QVERIFY(dph->itemData(idx).count() == 0 ); //for 2
+    
+    QVERIFY(dph->itemData( dph->testCreateIndex(999999, 0)).count() == 0 );
+
+    dph->testClearItem(2, true);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 0); //no updates
+    
+    dph->testClearItem(-10, true);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 0); //no updates
+
     idx = dph->index(3, 0);
     res = dph->data(idx, Qt::DecorationRole);
     QVERIFY(res == dph->defaultIcon());    
@@ -838,7 +884,7 @@ void TestCacheProxy::testDP_CacheManagment()
     
     res = dph->data(idx, Qt::DisplayRole);
     QCOMPARE(res.isValid(), false);
-    
+
 }
 
 void TestCacheProxy::testDP_QPixmapPool()
@@ -885,6 +931,60 @@ void TestCacheProxy::testDP_QPixmapPool()
     dph->resizeQPixmapPool(1);
     res = dph->testCreateIcon(10, pix);
     QVERIFY(res.isValid() == false);    
+    
+    dph->resizeQPixmapPool(110);
+    for ( int i = 0; i < 100; i ++)
+        dph->testCreateIcon(i, pix);
+    
+    for ( int i = 20; i < 40; i ++)
+        dph->testReleasePixmap(i);
+    
+    dph->resizeQPixmapPool(50);
+    dph->testReleasePixmap(5);
+    
+    dph->resizeQPixmapPool(1);
+    dph->testReleasePixmap(0);
+    dph->testReleasePixmap(2);
+    dph->testReleasePixmap(1);
+    dph->resizeQPixmapPool(10);
+
+    
+    
+}
+
+void TestCacheProxy::testDP_IconMode()
+{
+    dph = new DataProviderHelper(100);
+    QCOMPARE( dph->testIconMode(), HgDataProviderModel::HgDataProviderIconHbIcon);
+    dph->resizeQPixmapPool(10);
+    QPixmap pix;
+    QVariant res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<HbIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconHbIcon);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<HbIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQIcon);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQImage);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QImage>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQPixmap);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QPixmap>());
+    
+    dph->testChangeIconMode( (HgDataProviderModel::HgDataProviderIconMode)10 );
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == false);
 }
 
 void TestCacheProxy::testCP_QAbstractItemModel()
@@ -912,6 +1012,65 @@ void TestCacheProxy::testCP_QAbstractItemModel()
     
     dph->testRemoveItems(0, 1);//should remove item
 
+    QModelIndex idx = cp->index(0,0);
+    QCOMPARE(cp->hasChildren(idx), true);
+    QSize s1 = cp->span(idx);
+    QSize s2 = cp->span(cp->index(1, 0));
+    QVERIFY(s1 == s2);
+    cp->submit();
+    cp->revert();
+    Qt::ItemFlags f1 = cp->flags(idx);
+    Qt::ItemFlags f2 = cp->flags(cp->index(1, 0));
+    QVERIFY(f1 == f2);
+    
+    QVariant res = cp->headerData(0, Qt::Horizontal, Qt::DecorationRole);
+    QCOMPARE(res.isValid(), false);
+    //default implementation ignores that
+    cp->setHeaderData(0, Qt::Horizontal, QString("headerdata"), Qt::DecorationRole);
+    res = cp->headerData(0, Qt::Horizontal, Qt::DecorationRole);
+    QCOMPARE(res.isValid(), false);
+    
+    QStringList li = cp->mimeTypes();
+    QCOMPARE(li.count(), 1);
+    
+    QModelIndexList li2;
+    li2<< idx;
+    QMimeData* md1 = cp->mimeData(li2);
+    QVERIFY(md1 != NULL);
+    QCOMPARE(cp->dropMimeData(NULL, Qt::MoveAction, 10, 0, QModelIndex() ), false);    
+    QCOMPARE(cp->supportedDragActions(), Qt::CopyAction);
+
+    QCOMPARE(cp->canFetchMore(idx), false);
+    cp->fetchMore(idx);
+    
+    QModelIndex idx2 = cp->buddy(idx);
+    QCOMPARE(idx2.row(), idx.row());
+    QCOMPARE(idx2.column(), idx.column());
+    
+    li2 = cp->match(idx, Qt::DisplayRole, QString("ITEM"), 1000, Qt::MatchContains);
+    QCOMPARE(li2.count(), dph->getCount());
+
+    
+    
+    cp->setDataProvider(NULL);
+    QVERIFY(cp->DataProvider() == NULL);
+    idx = cp->index(100,0);
+    res = dph->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), false);
+    
+    QCOMPARE(cp->insertRows(0, 10), false); //default implementation returns false
+    QCOMPARE(cp->removeRows(0, 10), false);//default implementation returns false
+
+    QCOMPARE(cp->insertRow(0), false); //default implementation returns false
+    QCOMPARE(cp->removeRow(0), false);//default implementation returns false
+    
+    QCOMPARE(cp->insertColumns(0, 10), false); //default implementation returns false
+    QCOMPARE(cp->removeColumns(0, 10), false);//default implementation returns false
+
+    QCOMPARE(cp->insertColumn(0), false); //default implementation returns false
+    QCOMPARE(cp->removeColumn(0), false);//default implementation returns false
+    
+    
 }
 
 void TestCacheProxy::testCP_SignalsForward()
@@ -959,6 +1118,67 @@ void TestCacheProxy::testCP_SignalsForward()
     QVERIFY(cph->getSignalModelReset() == true);
     QVERIFY(cp->columnCount() == 1);
     QVERIFY(cp->rowCount() == 1000);    
+    
+    cph->getSignalDataChanged();
+    dph->testEmitDataChanged(dph->index(0,0), dph->index(10,0));
+    resList = cph->getSignalDataChanged();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+
+    cph->getSignalColumnsAboutToBeInserted();
+    cph->getSignalColumnsInserted();
+    dph->testEmitColumnsInsert(dph->index(0,0),0, 10);
+    resList = cph->getSignalColumnsAboutToBeInserted();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    resList = cph->getSignalColumnsInserted();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+
+    cph->getSignalColumnsAboutToBeRemoved();
+    cph->getSignalColumnsRemoved();
+    dph->testEmitColumnsRemove(dph->index(0,0),0, 10);
+    resList = cph->getSignalColumnsAboutToBeRemoved();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    resList = cph->getSignalColumnsRemoved();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    
+//    cph->getSignalColumnsAboutToBeMoved();
+//    cph->getSignalColumnsMoved();
+//    QCOMPARE(dph->testEmitColumnsAboutToBeMoved(0, 10), false);
+//    resList = cph->getSignalColumnsAboutToBeMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+//    dph->testEmitColumnsMoved(0, 10);
+//    resList = cph->getSignalColumnsMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+    
+//    cph->getSignalRowsAboutToBeMoved();
+//    cph->getSignalRowsMoved();
+//    QCOMPARE(dph->testEmitRowsAboutToBeMoved(0, 10), false);
+//    resList = cph->getSignalRowsAboutToBeMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+//    dph->testEmitRowsMoved(0, 10);
+//    resList = cph->getSignalRowsMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+    
+    cph->getSignalHeaderDataChanged();
+    dph->testEmitHeaderDataChanged(Qt::Horizontal, 0, 0);
+    resList = cph->getSignalHeaderDataChanged();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 0);
+
     
 }
 
@@ -1065,6 +1285,10 @@ void TestCacheProxy::testCP_Data()
     cp->setDataProvider(NULL, 50, 20);
     res = cp->data(idx, v);
     QCOMPARE(res.isValid(), false);
+    cp->request(0, 100, HgBufferManagerObserver::HgRequestOrderAscending);   
+    QCOMPARE(dph->getLastRequest().count(), 0);    
+    cp->release(0, 100);
+    QCOMPARE(dph->getLastRelease().count(), 0);
 
 }
 

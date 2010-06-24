@@ -14,7 +14,7 @@
 * Description:
 *
 */
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 #include "hgimage.h"
 
 HgImageFader::HgImageFader()

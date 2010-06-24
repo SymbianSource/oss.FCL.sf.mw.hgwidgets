@@ -19,7 +19,7 @@
 #define HBAUTOTEST_H
 
 #include <hbnamespace.h>
-#include <hbmainwindow.h>
+#include <HbMainWindow>
 #include <QtTest/QtTest>
 
 class HbMainWindow;

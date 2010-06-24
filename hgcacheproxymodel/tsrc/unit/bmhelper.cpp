@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 6 %
 */
 #include "bmhelper.h"
 #include <QDebug>
@@ -120,6 +120,22 @@ bool BMHelper::isIntergal(int bufferSize)
 int BMHelper::totalSize()
 {
     return mBuffer.count();
+}
+
+void BMHelper::resizeCache(int newSize)
+{
+    int diff = totalSize() - newSize;
+    
+    while (diff != 0){
+        if (diff >0){
+            remove(mBuffer.count()-1);
+            diff--;
+        }else{
+            insert(mBuffer.count());
+            diff++;
+        }
+    }
+    
 }
 
 void BMHelper::remove(int pos)

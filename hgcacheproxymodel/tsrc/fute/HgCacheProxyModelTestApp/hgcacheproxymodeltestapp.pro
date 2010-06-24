@@ -10,7 +10,7 @@
 # Description:
 
 TEMPLATE = app
-CONFIG += qtestlib console hb
+CONFIG += hb
 
 TARGET = hgcacheproxymodeltestapp
 DEPENDPATH += . \
@@ -25,6 +25,7 @@ symbian {
         -TCB
 }
 LIBS += -lhgcacheproxymodel \
+		-lganeswidgets \
         -lharvesterclient.dll \
         -lmdeclient.dll \ 
 		-lthumbnailmanagerqt.dll \

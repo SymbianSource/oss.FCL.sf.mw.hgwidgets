@@ -17,10 +17,10 @@
 #ifndef HGITEMSIZEDIALOG_H_
 #define HGITEMSIZEDIALOG_H_
 
-#include <hbdialog>
-#include <hblabel>
-#include <hbwidget>
-#include <hbslider>
+#include <HbDialog>
+#include <HbLabel>
+#include <HbWidget>
+#include <HbSlider>
 
 class HgItemSizeDialog : public HbDialog
 {

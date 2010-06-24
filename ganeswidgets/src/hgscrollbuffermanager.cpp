@@ -18,7 +18,7 @@
 
 #include <QTimer>
 
-#include "HgScrollBufferManager.h"
+#include "hgscrollbuffermanager.h"
 #include "trace.h"
 
 // -----------------------------------------------------------------------------

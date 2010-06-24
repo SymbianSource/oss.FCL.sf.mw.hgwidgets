@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 12 %
+*  Version     : %version: 15 %
 */
 #include <e32debug.h>
 #include <QVariant>
@@ -31,7 +31,8 @@ HgDataProviderModel::HgDataProviderModel(QObject *parent) :
     mCache(new QList<QMap<int, QVariant>*>()),
     mCacheSize(0),
     mUnallocatedPixmaps(0),
-    mObserver(0)
+    mObserver(0),
+    mIconMode(HgDataProviderIconHbIcon)
 {
     TX_ENTRY
     TX_EXIT
@@ -250,6 +251,21 @@ void HgDataProviderModel::insertItem(int pos, QPair< QVariant, int > item, bool 
     doInsertItem(pos, &list, silent);
 }
 
+void HgDataProviderModel::clearItem(int pos, bool silent)
+{
+    bool change = false;
+    if ( isIndexValid(pos)){
+        mDataLock.lock();    
+        mCache->at(pos)->clear();
+        mDataLock.unlock();
+        change = true;
+    }
+    
+    if ( change && !silent){
+        emit dataChanged( index(pos, 0), index(pos, 0) );
+    }
+}
+
 void HgDataProviderModel::doInsertItem(int pos, QList< QPair< QVariant, int > >* list, bool silent)
 {
     if (pos >mCache->count() || pos <0){
@@ -274,12 +290,12 @@ void HgDataProviderModel::doInsertItem(int pos, QList< QPair< QVariant, int > >*
 }
 
 
-void HgDataProviderModel::removeItem(int pos)
+void HgDataProviderModel::removeItem(int pos, bool silent)
 {
-    removeItems(pos, 1);
+    removeItems(pos, 1, silent);
 }
 
-void HgDataProviderModel::removeItems(int pos, int size)
+void HgDataProviderModel::removeItems(int pos, int size, bool silent)
 {
     if (pos >=mCache->count()){
         return;
@@ -290,24 +306,41 @@ void HgDataProviderModel::removeItems(int pos, int size)
     
     if (size >mCache->count()){
         size = mCache->count();
-    } else if (size <0){
+    }
+    if (size <=0){
         return;
     }
+    if (!silent){
+        beginRemoveRows(QModelIndex(),pos, pos+size-1);
+    } else {
+        qWarning("Removing items without notifying might be danger.");
+    }
     
-    beginRemoveRows(QModelIndex(),pos, pos+size-1);
     mDataLock.lock();
     for (int i=0; i<size && pos<mCache->count(); i++){
         mCache->removeAt(pos);
     }
     mDataLock.unlock();
-    endRemoveRows();
+    
+    if (!silent)
+        endRemoveRows();
 }
-        
+
 void HgDataProviderModel::resetModel() 
 {
     beginResetModel();
     doResetModel();
     endResetModel();
+}
+
+void HgDataProviderModel::setIconMode(HgDataProviderModel::HgDataProviderIconMode mode)
+{
+    mIconMode = mode;
+}
+
+HgDataProviderModel::HgDataProviderIconMode HgDataProviderModel::iconMode()
+{
+    return mIconMode;
 }
 
 void HgDataProviderModel::emitDataChanged(int from, int to, bool silent)
@@ -348,7 +381,7 @@ void HgDataProviderModel::releasePixmap(int idx)
     mQPixmapsLock.lock();
     if (mUsedPixmaps.contains(idx)) {
         QPixmap* pix = mUsedPixmaps.take(idx);
-        if ( ( mFreePixmaps.count() + mUsedPixmaps.count() + mUnallocatedPixmaps ) > ( mCacheSize + KQPixmapCacheEmergencyBuffer ) ) {
+        if ( ( mFreePixmaps.count() + mUsedPixmaps.count() + mUnallocatedPixmaps ) >= ( mCacheSize + KQPixmapCacheEmergencyBuffer ) ) {
             delete pix; //we have too many pixmaps
         } else {
             mFreePixmaps.append(pix);
@@ -362,6 +395,7 @@ void HgDataProviderModel::releasePixmap(int idx)
 QVariant HgDataProviderModel::createIcon(int index, QPixmap aPixmap)
 {
     TX_ENTRY
+    QVariant res;
 	QPixmap* pix = getPixmap(index);
 	if (pix){
 		if ( pix->pixmapData() ) {
@@ -372,10 +406,29 @@ QVariant HgDataProviderModel::createIcon(int index, QPixmap aPixmap)
 		mQPixmapsLock.lock();
 		mUsedPixmaps.insert(index, pix);
 		mQPixmapsLock.unlock();
-		return HbIcon(QIcon(*pix));	
+		switch (mIconMode){
+            case HgDataProviderIconHbIcon : 
+                res = HbIcon(QIcon(*pix));  
+                break;
+		    case HgDataProviderIconQIcon : 
+                res = QIcon(*pix);
+                break;
+		    case HgDataProviderIconQImage : 
+                res = pix->toImage();
+                break;
+		    case HgDataProviderIconQPixmap:		    
+		        res = *pix;  
+		        break;
+            default:
+                break;
+		}
 	}
-	TX_EXIT_ARGS( QString("No pixmap avilable"));
-	return QVariant();
+	
+	if (res.isNull()){
+	    TX_EXIT_ARGS( QString("No pixmap avilable"));
+	}
+	
+	return res;
 }
 
 QPixmap* HgDataProviderModel::getPixmap(int idx)

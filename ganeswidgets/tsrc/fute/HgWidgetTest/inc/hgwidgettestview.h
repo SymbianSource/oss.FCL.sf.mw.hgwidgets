@@ -18,7 +18,7 @@
 #ifndef HGWIDGETTESTVIEW_H_
 #define HGWIDGETTESTVIEW_H_
 
-#include <hbview.h>
+#include <HbView>
 #include <hgwidgets/hgmediawall.h>
 #include "hgtestdefs.h"
 
@@ -112,11 +112,11 @@ private: // data
     QModelIndex             mFlippedIndex;
     HbLabel*                mFrontItem;
     HbView*                 mOptionsView;
-    HgItemSizeDialog*       mItemSizeDialog;
-    HgItemSizeDialog*       mItemPosDialog;
-    QParallelAnimationGroup* mAnimationGroup;
-    HbDialog*               mDialog;
-    HgCoverItem*            mCoverItem;
+    HgItemSizeDialog        *mItemSizeDialog;
+    HgItemSizeDialog        *mItemPosDialog;
+    QParallelAnimationGroup *mAnimationGroup;
+    HbDialog                *mDialog;
+    HgCoverItem             *mCoverItem;
 };
 
 

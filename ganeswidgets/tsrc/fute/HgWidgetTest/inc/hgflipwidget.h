@@ -17,8 +17,8 @@
 #ifndef HGFLIPWIDGET_H_
 #define HGFLIPWIDGET_H_
 
-#include <hbwidget.h>
-#include <hbstackedwidget.h>
+#include <HbWidget>
+#include <HbStackedWidget>
 
 class HbAction;
 class HbLabel;

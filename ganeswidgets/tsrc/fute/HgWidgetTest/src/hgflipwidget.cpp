@@ -18,12 +18,12 @@
 
 #include <qgraphicslinearlayout.h>
 #include <qgraphicssceneresizeevent>
-#include <hbaction.h>
-#include <hbinstance.h>
-#include <hblabel.h>
-#include <hbmainwindow.h>
-#include <hblistwidget.h>
-#include <hbpushbutton.h>
+#include <HbAction>
+#include <HbInstance>
+#include <HbLabel>
+#include <HbMainWindow>
+#include <HbListWidget>
+#include <HbPushButton>
 #include <qpropertyanimation>
 #include <qstate.h>
 #include <qabstracttransition>

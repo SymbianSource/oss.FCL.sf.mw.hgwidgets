@@ -18,7 +18,7 @@
 #include <QGesture>
 #include <QGraphicsSceneResizeEvent>
 #include <QPainter>
-#include <hblabel.h>
+#include <HbLabel>
 #include "hgcoverflowcontainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgwidgetitem.h"
@@ -46,9 +46,10 @@ HgCoverflowContainer::~HgCoverflowContainer()
 // events
 void HgCoverflowContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
+    QPainter::RenderHints hints = painter->renderHints();
     painter->setRenderHint(QPainter::Antialiasing, true);
     HgContainer::paint(painter, option, widget);
-    painter->setRenderHint(QPainter::Antialiasing, false);
+    painter->setRenderHint(QPainter::Antialiasing, (hints.testFlag(QPainter::Antialiasing)) );
 }
 
 // from HgContainer
