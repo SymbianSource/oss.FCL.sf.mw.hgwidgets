@@ -23,9 +23,9 @@
 #include <HbStyleLoader>
 
 #include "hgwidgets_p.h"
-#include "HgContainer.h"
+#include "hgcontainer.h"
 #include "hgwidgetitem.h"
-#include "HgScrollBufferManager.h"
+#include "hgscrollBufferManager.h"
 #include "hggridcontainer.h"
 #include "trace.h"
 

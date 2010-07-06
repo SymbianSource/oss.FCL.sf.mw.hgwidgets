@@ -28,14 +28,17 @@ LIBS += -lestor.dll \
     -llibOpenVGU.dll
 symbian { 
     TARGET.EPOCALLOWDLLDATA = 1
+    
+    #the def files are located in the root of hgwidgets so this is needed
+    defFilePath=..
 }
 
 # Input
 SOURCES += src/hgwidgets.cpp \
     src/hgwidgets_p.cpp \
-    src/HgContainer.cpp \
+    src/hgcontainer.cpp \
     src/hgwidgetitem.cpp \
-    src/HgScrollBufferManager.cpp \
+    src/hgscrollbuffermanager.cpp \
     src/hgquad.cpp \
     src/hgquadrenderer.cpp \
     src/hgvgquadrenderer.cpp \
@@ -43,7 +46,7 @@ SOURCES += src/hgwidgets.cpp \
     src/hgmediawallrenderer.cpp \
     src/hgspring.cpp \
     src/hgdrag.cpp \
-    src/HgImageFader.cpp \
+    src/hgimagefader.cpp \
     src/hglongpressvisualizer.cpp \
     src/hgcoverflowcontainer.cpp \
     src/hggridcontainer.cpp \

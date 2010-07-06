@@ -23,6 +23,7 @@ HgCoverItem::HgCoverItem(QPixmap pixmap, QGraphicsItem *parent) : HbIconItem(par
 
 void HgCoverItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     {
+    Q_UNUSED(event);
     emit close();
     }
 

@@ -20,7 +20,7 @@
 #include "hgquad.h"
 #include "hgvgimage.h"
 #include "trace.h"
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 
 #include <VG/openvg.h>
 #include <VG/vgu.h>

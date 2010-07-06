@@ -19,7 +19,7 @@
 #include "hgquadrenderer.h"
 #include "hgquad.h"
 #include "hgimage.h"
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 #include "hgvgquadrenderer.h"
 #include "hgqtquadrenderer.h"
 #include <QVector3D>

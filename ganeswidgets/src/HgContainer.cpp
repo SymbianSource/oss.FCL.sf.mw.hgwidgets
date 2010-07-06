@@ -19,7 +19,7 @@
 #include <QPainter>
 #include <QTimer>
 #include <HbMainWindow>
-#include "HgContainer.h"
+#include "hgcontainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgquad.h"
 #include "hgvgquadrenderer.h"

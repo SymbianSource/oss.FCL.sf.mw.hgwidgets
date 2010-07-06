@@ -20,9 +20,9 @@
 #include <hgwidgets/hgwidgets.h>
 
 #include "hgwidgets_p.h"
-#include "HgContainer.h"
+#include "hgcontainer.h"
 #include "hgcoverflowcontainer.h"
-#include "HgScrollBufferManager.h"
+#include "hgscrollbuffermanager.h"
 #include "hgwidgetitem.h"
 #include "trace.h"
 //#include "hgindexfeedback.h"

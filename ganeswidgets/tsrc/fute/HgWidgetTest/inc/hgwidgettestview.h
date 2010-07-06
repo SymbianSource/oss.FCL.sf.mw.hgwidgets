@@ -112,11 +112,11 @@ private: // data
     QModelIndex             mFlippedIndex;
     HbLabel*                mFrontItem;
     HbView*                 mOptionsView;
-    HgItemSizeDialog*       mItemSizeDialog;
-    HgItemSizeDialog*       mItemPosDialog;
-    QParallelAnimationGroup* mAnimationGroup;
-    HbDialog*               mDialog;
-    HgCoverItem*            mCoverItem;
+    HgItemSizeDialog        *mItemSizeDialog;
+    HgItemSizeDialog        *mItemPosDialog;
+    QParallelAnimationGroup *mAnimationGroup;
+    HbDialog                *mDialog;
+    HgCoverItem             *mCoverItem;
 };
 
 

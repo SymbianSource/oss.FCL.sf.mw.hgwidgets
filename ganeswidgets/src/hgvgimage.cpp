@@ -16,7 +16,7 @@
 */
 
 #include "hgvgimage.h"
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 #include "hgvgquadrenderer.h"
 
 const int KMaxMirrorWidth(128);

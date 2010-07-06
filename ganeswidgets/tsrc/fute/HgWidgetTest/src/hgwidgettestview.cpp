@@ -56,9 +56,9 @@ HgWidgetTestView::HgWidgetTestView(QGraphicsItem *parent) :
     mOptionsView(0),
     mItemSizeDialog(0),
     mItemPosDialog(0),
+    mAnimationGroup(0),
     mDialog(0),
-    mCoverItem(0),
-    mAnimationGroup(0)
+    mCoverItem(0)
 {    
     mModel = new HgWidgetTestDataModel(this);
     mSelectionModel = new QItemSelectionModel(mModel, this);

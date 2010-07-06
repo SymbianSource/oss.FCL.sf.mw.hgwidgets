@@ -18,7 +18,7 @@
 #ifndef HGGRIDCONTAINER_H
 #define HGGRIDCONTAINER_H
 
-#include "HgContainer.h"
+#include "hgcontainer.h"
 
 class HbLabel;
 class HgWidgetItem;
