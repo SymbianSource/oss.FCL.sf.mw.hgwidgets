@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 6 %
+*  Version     : %version: 7 %
 */
 #include "hgbuffermanager.h"
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -30,7 +30,13 @@ mObserver(aObserver),
 mBufferSize( aBufferSize ),
 mBufferTreshold( aBufferTreshold ),
 mBufferPosition( aInitialPosition ),
-mTotalCount( aTotalCount )
+mDiff(0),
+mTotalCount( aTotalCount ),
+mResetOrdered(false),
+mRequestStart(0),
+mRequestCount(0),
+mReleaseStart(0),
+mReleaseCount(0)
 {
     ASSERT( mObserver != 0 );
     mBufferPosition -= (mBufferSize / 2);

@@ -12,9 +12,7 @@
 TEMPLATE = app
 TARGET = unittest_hgcacheproxymodel
 
-#fix that later
-#CONFIG += symbian_test
-
+CONFIG += symbian_test
 CONFIG += hb
 INCLUDEPATH += $$MW_LAYER_SYSTEMINCLUDE $$APP_LAYER_SYSTEMINCLUDE
 
@@ -23,7 +21,7 @@ INCLUDEPATH += . \
 
 TARGET.CAPABILITY = ALL -TCB
 
-DEFINES += _CACHEPROXYDATAMODEL_UNITTEST_LOG_TO_C
+#DEFINES += _CACHEPROXYDATAMODEL_UNITTEST_LOG_TO_C
 
 # Input
 LIBS +=     -lhgcacheproxymodel \

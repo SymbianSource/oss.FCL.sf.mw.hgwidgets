@@ -19,8 +19,7 @@ TARGET.CAPABILITY = All \
 DEPENDPATH += .
 INCLUDEPATH += . \
     inc \
-    $$MW_LAYER_SYSTEMINCLUDE \
-    /sf/mw/hb/src/hbcore/gui
+    $$MW_LAYER_SYSTEMINCLUDE
 LIBS += -lestor.dll \
     -lhbcore \
     -lhbwidgets \

@@ -16,7 +16,8 @@
     </layer>
 
     <layer name="unit_test_layer">
-      <module name="hgwidgets_unit_tests">
+      <module name="hgcacheproxy_unit_test">
+        <unit unitID="imm.hgwidgets.hgcacheproxy_unit_test" name="hgcacheproxy_unit_test" bldFile="&layer_real_source_path;/hgcacheproxymodel/tsrc/unit/" proFile="unittest_hgcacheproxymodel.pro" mrp="" />
       </module>
     </layer>
 

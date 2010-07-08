@@ -16,7 +16,7 @@
 */
 
 #include <QApplication>
-#include <hbscrollbar_p.h>
+#include <HbScrollbar>
 #include <hgwidgets/hgwidgets.h>
 
 #include "hgwidgets_p.h"

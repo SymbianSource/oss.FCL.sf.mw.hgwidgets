@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 10 %
+*  Version     : %version: 11 %
 */
 #include <QtTest/QtTest>
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -1425,5 +1425,23 @@ void TestCacheProxy::testCP_Filter()
         return QTest::qExec(&tc, c, v);
     }
 #else
-    QTEST_MAIN(TestCacheProxy)
+    int main (int argc, char* argv[]) 
+    {
+        for ( int i=0;i<argc; i++){
+            if (strcmp(argv[i], "-o")==0 && i+1 <argc ){
+                //let's make sure that folder specified after -o exists
+                QDir file( QString::fromLatin1( argv[i+1] ));
+                QString s = file.absolutePath ();
+                s = s.left( s.lastIndexOf(file.dirName()) );
+                if ( !file.exists(s) ){
+                    file.mkpath(s);
+                }
+            }
+        }
+        
+        QApplication app(argc, argv);
+        QTEST_DISABLE_KEYPAD_NAVIGATION
+        TestCacheProxy tc;
+        return QTest::qExec(&tc, argc, argv);
+    }
 #endif
