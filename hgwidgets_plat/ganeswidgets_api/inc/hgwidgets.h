@@ -19,9 +19,9 @@
 #define HGWIDGET_H
 
 #include <QItemSelectionModel>
-#include <hbglobal.h>
+#include <HbGlobal>
 #include <hbnamespace.h>
-#include <hbwidget.h>
+#include <HbWidget>
 
 #ifdef BUILD_HG_WIDGETS
 #    define HG_WIDGETS_EXPORT Q_DECL_EXPORT
@@ -53,7 +53,7 @@ public:
 
     enum HgDataRole
     {
-        HgVisibilityRole = Qt::UserRole + 1            
+        HgVisibilityRole = Qt::UserRole + 1
     };
 
     enum IndexFeedbackPolicy {
@@ -61,15 +61,15 @@ public:
         IndexFeedbackSingleCharacter,
         IndexFeedbackThreeCharacter,
         IndexFeedbackString
-    };    
-    
+    };
+
     enum ScrollBarPolicy {
         ScrollBarAsNeeded = Qt::ScrollBarAsNeeded,
         ScrollBarAlwaysOff = Qt::ScrollBarAlwaysOff,
         ScrollBarAlwaysOn = Qt::ScrollBarAlwaysOn,
         ScrollBarAutoHide
     };
-    
+
     enum ItemSizePolicy {
         ItemSizeAutomatic,
         ItemSizeUserDefined
@@ -112,23 +112,23 @@ public:
 
     bool getItemOutline(const QModelIndex& index, QPolygonF& points);
     Qt::Orientation scrollDirection() const;
-	
+
     QList<QModelIndex> getVisibleItemIndices() const;
 
     void setIndexFeedbackPolicy( IndexFeedbackPolicy policy);
     IndexFeedbackPolicy indexFeedbackPolicy() const;
-    
+
     void setDefaultImage(QImage defaultImage);
 
     void setItemSizePolicy(ItemSizePolicy policy);
     ItemSizePolicy itemSizePolicy() const;
-    
+
     void setItemSize(const QSizeF& size);
     QSizeF itemSize() const;
-    
+
     void setItemSpacing(const QSizeF& spacing);
     QSizeF itemSpacing() const;
-    
+
 signals:
     void activated(const QModelIndex &index);
     void longPressed(const QModelIndex &index, const QPointF &coords);
@@ -138,7 +138,7 @@ public slots:
 
     void aboutToChangeOrientation();
     void orientationChanged(Qt::Orientation orientation);
-    
+
 protected slots:
 
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
@@ -150,7 +150,7 @@ protected:
     bool eventFilter(QObject *obj,QEvent *event);
 
     bool event(QEvent *event);
-    
+
 private:
     Q_DECLARE_PRIVATE_D(p_ptr, HgWidget)
     Q_DISABLE_COPY(HgWidget)
@@ -164,6 +164,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_moveRows(const QModelIndex &sourceParent, int sourceStart, int sourceEnd, const QModelIndex &destinationParent, int destinationRow))
     Q_PRIVATE_SLOT(d_func(), void _q_groovePressed(qreal, Qt::Orientation))
     Q_PRIVATE_SLOT(d_func(), void _q_modelReset())
+    Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentItem(const QModelIndex &current, const QModelIndex &previous))
 };
 
 #endif  //HGWIDGET_H

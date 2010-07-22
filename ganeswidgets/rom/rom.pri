@@ -17,11 +17,7 @@
 symbian {
 	HGWIDGETS_IBY_DIR = $$section(PWD,":",1)
 
-	exists(/epoc32/include/platform_paths.hrh) {
-    	BLD_INF_RULES.prj_exports += "$${LITERAL_HASH}include <platform_paths.hrh>"
-	} else {
-    	BLD_INF_RULES.prj_exports += "$${LITERAL_HASH}include <domain\osextensions\platform_paths.hrh>"
-	}
+	BLD_INF_RULES.prj_exports += "$${LITERAL_HASH}include <platform_paths.hrh>"
 
 	BLD_INF_RULES.prj_exports += "$$HGWIDGETS_IBY_DIR/ganeswidgets.iby CORE_MW_LAYER_IBY_EXPORT_PATH(ganeswidgets.iby)"
 }

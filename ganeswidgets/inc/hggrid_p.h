@@ -31,6 +31,11 @@ public:
     virtual ~HgGridPrivate();
 
     void init(Qt::Orientation scrollDirection);
+    bool effect3dEnabled() const;
+    void setEffect3dEnabled(bool effect3dEnabled);
+    
+private: // From HgWidgetPrivate
+    void orientationChanged(Qt::Orientation orientation);
 
 private:
 

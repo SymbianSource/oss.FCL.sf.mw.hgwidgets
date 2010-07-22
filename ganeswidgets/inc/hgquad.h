@@ -18,10 +18,10 @@
 #ifndef HGQUAD_H
 #define HGQUAD_H
 
-#include <qvector3d>
-#include <qvector2d>
-#include <qquaternion>
-#include <qvariant>
+#include <QVector3D>
+#include <QVector2D>
+#include <QQuaternion>
+#include <QVariant>
 
 class HgImage;
 

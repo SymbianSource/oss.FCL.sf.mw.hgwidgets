@@ -25,7 +25,7 @@
 #include <QQueue>
 #include <QPair>
 #include <QBitmap>
-#include <hbicon.h>
+#include <HbIcon>
 #include <thumbnailmanager_qt.h>
 
 class HgWidgetTestAlbumArtManager : public QObject

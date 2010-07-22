@@ -19,9 +19,9 @@
 #define HGCOVERFLOWCONTAINER_H
 
 #include <hgwidgets/hgmediawall.h>
-#include "HgContainer.h"
+#include "hgcontainer.h"
 
-class HbLabel;
+class HgCenterItemArea;
 
 class HgCoverflowContainer: public HgContainer
 {
@@ -34,7 +34,6 @@ public:
 
     // events
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    virtual void resizeEvent(QGraphicsSceneResizeEvent *event);
 
     // from HgContainer
     virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection);
@@ -43,56 +42,43 @@ public:
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
-    virtual void handleCurrentChanged(const QModelIndex & current);
-    virtual void itemDataChanged(const int &firstIndex, const int &lastIndex);
     virtual void scrollToPosition(const QPointF& pos, bool animate);
 
     virtual QSizeF getAutoItemSize() const;
     virtual QSizeF getAutoItemSpacing() const;
     virtual void updateItemSizeAndSpacing();
-    
-    void setTitlePosition(HgMediawall::LabelPosition position);
-    HgMediawall::LabelPosition titlePosition() const;
-    void setDescriptionPosition(HgMediawall::LabelPosition position);
-    HgMediawall::LabelPosition descriptionPosition() const;
-    void setTitleFontSpec(const HbFontSpec &fontSpec);
-    HbFontSpec titleFontSpec() const;
-    void setDescriptionFontSpec(const HbFontSpec &fontSpec);
-    HbFontSpec descriptionFontSpec() const;
 
     void setFrontItemPositionDelta(const QPointF& position);
     QPointF frontItemPositionDelta() const;
 
+    void setFrontItemElevationFactor(qreal factor);
+    
     void enableReflections(bool enabled);
     bool reflectionsEnabled() const;
+
+    void setCenterItemArea(HgCenterItemArea *centerItemArea);
+
+public slots:
+
+    void updateItemSize();
 
 signals:
 
     void animationAboutToEnd(const QModelIndex& targetIndex);
 
-private: // From HgContainer
-    void setDefaultImage(QImage defaultImage);
-
 private:
 
-    void updateLabels(int itemIndex);
-
-    void updatePositions();
-    
-    void calculatePositions();    
-    void positionLabels();
+    void calculateItemSize();
     void onScrollingStarted();
     void onScrollingEnded();
 
+    void resizeEvent(QGraphicsSceneResizeEvent *event);
+    
 private:
-    HbLabel                     *mTitleLabel;
-    HbLabel                     *mDescriptionLabel;
-    HgMediawall::LabelPosition  mTitlePosition;
-    HgMediawall::LabelPosition  mDescriptionPosition;
-    int                         mPrevPos;
-    qreal                       mAspectRatio;
-    QSizeF                      mAutoSize;
-    bool                        mAnimationAboutToEndReacted;
+    int              mPrevPos;
+    QSizeF           mAutoSize;
+    bool             mAnimationAboutToEndReacted;
+    HgCenterItemArea *mCenterItemArea;
 };
 
 #endif

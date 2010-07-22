@@ -42,11 +42,10 @@ static const QString SETT_MODEL_IMAGE_TYPE = "ModelImageType";
 static const QString SETT_WIDGET_HEIGHT = "WidgetHeight";
 static const QString SETT_WIDGET_WIDTH = "WidgetWidth";
 static const QString SETT_LOW_RES_IMAGES = "LowResImages";
-static const QString SETT_TITLE_POSITION = "TitlePosition";
 static const QString SETT_TITLE_FONT = "TitleFont";
-static const QString SETT_DESCRIPTION_POSITION = "DescriptionPosition";
 static const QString SETT_DESCRIPTION_FONT = "DescriptionFont";
 static const QString SETT_REFLECTIONS_ENABLED = "Reflections enabled";
+static const QString SETT_EFFECT3D_ENABLED = "Effect3d enabled";
 static const QString SETT_ITEM_SIZE_POLICY = "ItemSizePolicy";
 
 #endif /* HGTESTDEFS_H_ */

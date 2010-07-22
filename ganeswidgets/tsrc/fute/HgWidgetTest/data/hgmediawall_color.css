@@ -1,0 +1,9 @@
+HgMediawall::title
+{
+    color: var(qtc_view_pressed);
+}
+
+HgMediawall::description
+{
+    color: var(qtc_view_link_normal);
+}

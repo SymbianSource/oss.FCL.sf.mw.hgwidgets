@@ -18,7 +18,7 @@
 #ifndef HGWIDGETOPTIONSVIEW_H_
 #define HGWIDGETOPTIONSVIEW_H_
 
-#include <hbview.h>
+#include <HbView>
 #include <hgwidgets/hgmediawall.h>
 #include "hgtestdefs.h"
 
@@ -41,13 +41,12 @@ signals:
     void scrollBarInteractivityChanged(bool);
     void imageTypeChanged(HgTestImageType);
     void lowResImageUseChanged(bool);
-    void titlePositionChanged(HgMediawall::LabelPosition);
     void titleFontChanged(const HbFontSpec &);
-    void descriptionPositionChanged(HgMediawall::LabelPosition);
     void descriptionFontChanged(const HbFontSpec &);
     void widgetHeightChanged(int);
     void widgetWidthChanged(int);
     void reflectionsEnabledChanged(bool);
+    void effect3dEnabledChanged(bool);
     void itemSizePolicyChanged(HgWidget::ItemSizePolicy);
 private slots:
     void updateData(QModelIndex startIn, QModelIndex endIn);

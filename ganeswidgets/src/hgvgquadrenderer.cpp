@@ -20,15 +20,14 @@
 #include "hgquad.h"
 #include "hgvgimage.h"
 #include "trace.h"
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 
 #include <VG/openvg.h>
 #include <VG/vgu.h>
-#include <qvector2d>
-#include <qpolygon>
-#include <qmatrix4x4>
-#include <qpainter>
-
+#include <QVector2D>
+#include <QPolygon>
+#include <QMatrix4x4>
+#include <QPainter>
 
 static void matrixFromTransform(VGfloat* matrix, const QTransform& tm)
 {
@@ -140,6 +139,7 @@ private:
     void computeWarpMatrix(VGfloat* matrix, int pxWidth, int pxHeight, const QVector2D* points, 
         const QVector2D& translate)
     {        
+        Q_UNUSED(translate)
 
         vguComputeWarpQuadToQuad(
             points[0].x(), points[0].y(), 

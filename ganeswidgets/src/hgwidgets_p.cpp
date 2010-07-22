@@ -15,7 +15,6 @@
 *
 */
 
-#include <QGraphicsLinearLayout>
 #include <QApplication>
 #include <hbscrollbar_p.h>
 #include <hgwidgets/hgwidgets.h>
@@ -29,14 +28,12 @@
 //#include "hgindexfeedback.h"
 
 static const int INITIAL_SCROLLBAR_HIDE_TIMEOUT(4000);
-static const int DEFAULT_BUFFER_SIZE(30);
+static const int DEFAULT_BUFFER_SIZE(25);
 
 HgWidgetPrivate::HgWidgetPrivate() :
-    mLayout(0),
     mContainer(0),
     mBufferManager(0),
     mModel(0),
-    mSelectionModel(0),
     mDefaultSelectionModel(0),
     mScrollBar(0),
     mAbleToScroll(false),
@@ -69,7 +66,7 @@ void HgWidgetPrivate::init(HgContainer *container)
     q->setFocusPolicy(Qt::StrongFocus);
 
     createScrollBar(container->scrollDirection());
-    
+
     //QObject::connect(&(mScrollBarHideTimer), SIGNAL(timeout()), q, SLOT(_q_hideScrollBars()));
 
     mContainer = container;
@@ -85,10 +82,10 @@ void HgWidgetPrivate::init(HgContainer *container)
     q->connect(mContainer, SIGNAL(scrollingStarted()), q, SIGNAL(scrollingStarted()));
     q->connect(mContainer, SIGNAL(scrollingEnded()), q, SIGNAL(scrollingEnded()));
     q->connect(mScrollBarHideTimer, SIGNAL(timeout()), q, SLOT(_q_hideScrollBars()));
-    
+
 //    mIndexFeedback = new HgIndexFeedback(q);
 //    mIndexFeedback->setWidget(q);
-    
+
 }
 
 void HgWidgetPrivate::setModel( QAbstractItemModel *model )
@@ -105,23 +102,42 @@ void HgWidgetPrivate::setModel( QAbstractItemModel *model )
 void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
 {
     FUNC_LOG;
-    
+
     Q_Q(HgWidget);
 
     if (mContainer) {
+        if (mContainer->selectionModel()) {
+            q->disconnect(mContainer->selectionModel(),
+                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+                q,
+                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
+        }
+
+        QModelIndex defaultItem;
+        if (mModel && mModel->rowCount() > 0) {
+            defaultItem = mModel->index(0, 0);
+        }
+
         if (selectionModel == 0) {
             QItemSelectionModel *oldSelectionModel = mDefaultSelectionModel;
             mDefaultSelectionModel = 0;
             mDefaultSelectionModel = new QItemSelectionModel(mModel);
-            mContainer->setSelectionModel(mDefaultSelectionModel);
+            q->connect(mDefaultSelectionModel,
+                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
+            mContainer->setSelectionModel(mDefaultSelectionModel, defaultItem);
             delete oldSelectionModel;
         }
         else if (selectionModel != mContainer->selectionModel()) {
             QItemSelectionModel *oldSelectionModel = mDefaultSelectionModel;
             mDefaultSelectionModel = 0;
-            mContainer->setSelectionModel(selectionModel);
+            q->connect(selectionModel,
+                SIGNAL(currentChanged(QModelIndex, QModelIndex)),
+                SLOT(_q_updateCurrentItem(QModelIndex, QModelIndex)));
+            mContainer->setSelectionModel(selectionModel, defaultItem);
             delete oldSelectionModel;
         }
+
         if (mContainer->selectionModel()) {
 //            if (mIndexFeedback) {
 //                delete mIndexFeedback;
@@ -129,7 +145,8 @@ void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
 //            }
 //            mIndexFeedback = new HgIndexFeedback(q);
 //            mIndexFeedback->setWidget(q);
-        }            
+
+        }
     }
 }
 
@@ -249,7 +266,7 @@ void HgWidgetPrivate::initializeNewModel()
         q->connect(mModel, SIGNAL(rowsMoved(QModelIndex, int, int, QModelIndex, int)),
                            SLOT(_q_moveRows(QModelIndex, int, int, QModelIndex, int)));
         q->connect(mModel, SIGNAL(modelReset()),SLOT(_q_modelReset()));
-        
+
         mContainer->setItemCount(mModel->rowCount(QModelIndex()));
         QList<HgWidgetItem*> items = mContainer->items();
 
@@ -261,14 +278,8 @@ void HgWidgetPrivate::initializeNewModel()
         }
 
         initBufferManager(itemCount);
-        
-        setSelectionModel(0); // Default
 
-        if (mModel->rowCount() > 0)
-        {
-            setCurrentIndex(mModel->index(0, 0));
-            scrollTo(mModel->index(0, 0));
-        }
+        setSelectionModel(0); // Default
     }
 }
 
@@ -340,7 +351,16 @@ void HgWidgetPrivate::_q_requestItems(int requestStart, int requestEnd)
     // is visible.
     if (firstUpdated != -1 && lastUpdated != -1) {
         mContainer->itemDataChanged(firstUpdated, lastUpdated);
-    }
+        // if item data for current has changed we need to update current.
+        if (mContainer->selectionModel()) {
+            QModelIndex currentIndex = mContainer->selectionModel()->currentIndex();
+            if (currentIndex.isValid() &&
+                currentIndex.row() >= firstUpdated &&
+                currentIndex.row() <= lastUpdated) {
+                updateCurrentItem(currentIndex);
+            }
+        }
+    }    
 }
 
 void HgWidgetPrivate::_q_scrollPositionChanged(qreal index,bool scrollBarAnimation)
@@ -410,15 +430,19 @@ void HgWidgetPrivate::displayScrollBar(qreal pos)
 
 void HgWidgetPrivate::setScrollBarPolicy(HgWidget::ScrollBarPolicy policy)
 {
-    mScrollBarPolicy = policy;
+    Q_Q(HgWidget);
 
-    if (mScrollBarPolicy == HgWidget::ScrollBarAlwaysOff &&
-        mScrollBar->isVisible()){
-        mScrollBar->setVisible(false);
-    }
+    if (mScrollBarPolicy != policy) {
+        mScrollBarPolicy = policy;
 
-    if(policy != HgWidget::ScrollBarAlwaysOff){
-        updateScrollMetrics();
+        if (mScrollBarPolicy == HgWidget::ScrollBarAlwaysOff &&
+            mScrollBar->isVisible()){
+            mScrollBar->setVisible(false);
+        }
+
+        if(policy != HgWidget::ScrollBarAlwaysOff){
+            updateScrollMetrics();
+        }
     }
 }
 
@@ -471,7 +495,7 @@ void HgWidgetPrivate::_q_insertRows(const QModelIndex &parent, int start, int en
             _q_modelReset();
             return;
         }
-        
+
         mBufferManager->addItems(start, end);
         mContainer->addItems(start, end);
         // re-set model indexes for the items including and after the added indexes
@@ -481,9 +505,6 @@ void HgWidgetPrivate::_q_insertRows(const QModelIndex &parent, int start, int en
             items.at(i)->setModelIndex(mModel->index(i, 0, QModelIndex()));
         }
         mBufferManager->flushRequestBuffers();
-        if (oldItemCount == 0 && newItemCount > 0) {
-            setCurrentIndex(mModel->index(0, 0));
-        }
         q->update();
     }
 }
@@ -539,6 +560,8 @@ void HgWidgetPrivate::_q_moveRows(const QModelIndex &sourceParent,
 
 void HgWidgetPrivate::_q_modelReset()
 {
+    FUNC_LOG;
+
     if (mContainer && mBufferManager) {
         const int oldItemCount = mContainer->itemCount();
         const int newItemCount = mModel->rowCount();
@@ -557,14 +580,22 @@ void HgWidgetPrivate::_q_modelReset()
             for( int i=0; i<itemCount; i++) {
                 items.at(i)->setModelIndex(mModel->index(i, 0, QModelIndex()));
             }
-                        
-            // Buffermanager requests items to be updated. 
+
+            // Buffermanager requests items to be updated.
             mBufferManager->resetBuffer(0, newItemCount);
-            if (mModel->rowCount() > 0) {
+        }
+
+        // Update selection model's current.
+        QItemSelectionModel *selectionModel = mContainer->selectionModel();
+        if (mModel->rowCount() > 0) {
+            if (selectionModel && selectionModel->currentIndex().isValid()) {
+                scrollTo(selectionModel->currentIndex());
+            }
+            else {
                 setCurrentIndex(mModel->index(0, 0));
                 scrollTo(mModel->index(0, 0));
             }
-        }        
+        }    
     }
 }
 
@@ -627,8 +658,9 @@ void HgWidgetPrivate::updateScrollMetrics( qreal pos)
 
 void HgWidgetPrivate::adjustGeometry()
 {
+    FUNC_LOG;
     Q_Q(HgWidget);
-    
+
     QRectF scrollAreaBoundingRect = q->boundingRect();
     if( scrollAreaBoundingRect.isNull() ||
             !scrollAreaBoundingRect.isValid() ||
@@ -645,7 +677,7 @@ void HgWidgetPrivate::adjustGeometry()
 void HgWidgetPrivate::lostForeground()
 {
     if( !mForeground ) return;
-    
+
     mForeground = false;
     QList<HgWidgetItem*> list = mContainer->items();
     foreach(HgWidgetItem* item, list){
@@ -656,7 +688,7 @@ void HgWidgetPrivate::lostForeground()
 void HgWidgetPrivate::gainedForeground()
 {
     if( mForeground ) return;
-    
+
     mForeground = true;
     QList<HgWidgetItem*> list = mContainer->items();
     int bufferStart = 0;
@@ -665,6 +697,13 @@ void HgWidgetPrivate::gainedForeground()
     for(;bufferStart<=bufferEnd;bufferStart++){
         list.at(bufferStart)->updateItemData();
     }
+}
+
+void HgWidgetPrivate::updateCurrentItem(const QModelIndex &currentItem)
+{
+    Q_UNUSED(currentItem);
+
+    // By default do nothing
 }
 
 bool HgWidgetPrivate::getItemOutline(const QModelIndex& index, QPolygonF& points)
@@ -685,7 +724,6 @@ void HgWidgetPrivate::orientationChanged(Qt::Orientation orientation)
         if (!mStaticScrollDirection) {
             createScrollBar(orientation);
         }
-        q->repolish();
         adjustGeometry();
     }
 }
@@ -696,6 +734,13 @@ void HgWidgetPrivate::_q_groovePressed(qreal value, Qt::Orientation orientation)
     Q_UNUSED(orientation);
 }
 
+void HgWidgetPrivate::_q_updateCurrentItem(const QModelIndex &current, const QModelIndex &previous)
+{
+    Q_UNUSED(previous);
+
+    updateCurrentItem(current);
+}
+
 Qt::Orientation HgWidgetPrivate::scrollDirection() const
 {
     return mContainer->orientation();
@@ -704,7 +749,7 @@ Qt::Orientation HgWidgetPrivate::scrollDirection() const
 void HgWidgetPrivate::createScrollBar(Qt::Orientation orientation)
 {
     Q_Q(HgWidget);
-    
+
     delete mScrollBar;
     mScrollBar = 0;
     mScrollBar = new HbScrollBar(orientation,q);
@@ -712,7 +757,7 @@ void HgWidgetPrivate::createScrollBar(Qt::Orientation orientation)
         HbStyle::setItemName(mScrollBar, "scrollbar-vertical");
     }
     else {
-        HbStyle::setItemName(mScrollBar, "scrollbar-horizontal");    
+        HbStyle::setItemName(mScrollBar, "scrollbar-horizontal");
     }
 
     mScrollBar->setZValue(q->zValue() + 1);
@@ -730,6 +775,7 @@ QList<QModelIndex> HgWidgetPrivate::getVisibleItemIndices() const
 
 void HgWidgetPrivate::setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy)
 {
+    Q_UNUSED(policy)
 //    mIndexFeedback->setIndexFeedbackPolicy(policy);
 }
 
@@ -761,6 +807,15 @@ void HgWidgetPrivate::dataChanged(const QModelIndex &topLeft, const QModelIndex 
         }
     }
     mContainer->itemDataChanged(topLeft, bottomRight);
+
+    if (mContainer->selectionModel()) {
+        QModelIndex currentIndex = mContainer->selectionModel()->currentIndex();
+        if (currentIndex.isValid() &&
+            currentIndex.row() >= topLeft.row() &&
+            currentIndex.row() <= bottomRight.row()) {
+            updateCurrentItem(currentIndex);
+        }
+    }
 }
 
 void HgWidgetPrivate::setItemSizePolicy(HgWidget::ItemSizePolicy policy)

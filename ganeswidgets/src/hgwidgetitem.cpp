@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
+* Copyright (c) 2010 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of "Eclipse Public License v1.0"
@@ -11,9 +11,10 @@
 *
 * Contributors:
 *
-* Description: 
+* Description:
 *
 */
+
 #include "hgwidgetitem.h"
 #include "hgquadrenderer.h"
 #include "trace.h"
@@ -113,6 +114,12 @@ bool HgWidgetItem::updateItemData()
 {
     mValidData = false;
     if( mModelIndex.isValid() ){
+
+        if (!mHgImage)
+        {
+            mHgImage = mRenderer->createNativeImage();
+        }    
+    
         QVariant image = mModelIndex.data(Qt::DecorationRole);
         QVariant texts = mModelIndex.data(Qt::DisplayRole);
 
@@ -120,8 +127,9 @@ bool HgWidgetItem::updateItemData()
         if (vis.canConvert<bool>())
         {
             setVisibility(vis.toBool());
+        } else {
+            setVisibility(true);
         }
-        
                     
         // Convert data to correct format if possible.
         if (image.type() == QVariant::Pixmap)
@@ -145,11 +153,8 @@ bool HgWidgetItem::updateItemData()
                     if (size.width() != 0 && size.height() != 0 ){
                         QPixmap pixmap = qicon.pixmap(size);
                         if (!pixmap.isNull()){
-                            QImage tempImage = pixmap.toImage();
-                            if (!tempImage.isNull()) {
-                                setImage(tempImage);
-                                mValidData = true;        
-                            }
+                            setPixmap(pixmap);
+                            mValidData = true;        
                         }
                     break;
                     }
@@ -165,7 +170,7 @@ bool HgWidgetItem::updateItemData()
                 QPixmap pixmap = tempIcon.pixmap(tempIcon.actualSize(QSize(250, 250)));
                 if (!pixmap.isNull()){
                     INFO("Valid image found for" << mModelIndex);
-                    setImage(pixmap.toImage());
+                    setPixmap(pixmap);
                     mValidData = true;
                 }
             }
@@ -175,7 +180,7 @@ bool HgWidgetItem::updateItemData()
                     if (size.width() != 0 && size.height() != 0 ){
                         QPixmap pixmap = tempIcon.pixmap(size);
                         if (!pixmap.isNull()){
-                            setImage(pixmap.toImage());
+                            setPixmap(pixmap);
                             mValidData = true;
                         }
                     break;
@@ -185,10 +190,12 @@ bool HgWidgetItem::updateItemData()
         }
         if( texts.canConvert<QStringList>() ){
             QStringList list(texts.toStringList() );
-            if( list.count() >= 2 ){
-                setTitle(list.at(0));
-                setDescription(list.at(1));
+            if (list.count() >= 1) {
                 mValidData = true;
+                setTitle(list.at(0));
+            }
+            if (list.count() >= 2){
+                setDescription(list.at(1));
             }
         }
         

@@ -15,8 +15,8 @@
 *
 */
 
-#include "HgSpring.h"
-#include <qtimer>
+#include "hgspring.h"
+#include <QTimer>
 #include "trace.h"
 
 const int KTimeDelta(10);
@@ -83,10 +83,12 @@ void HgSpring::gotoPos(const QPointF& pos)
 
 void HgSpring::cancel()
 {
-    if (mTimer->isActive())
+    if (mTimer->isActive()) {
+        mEndPos = mPos;
+        emit ended();
         mTimer->stop(); 
+    }
     
-    mVelocity = QPointF(0,0);
 }
 
 const QPointF& HgSpring::startPos() const
@@ -164,5 +166,8 @@ bool HgSpring::updatePositionIfNeeded()
     return false;
 }
 
-
+void HgSpring::resetVelocity()
+{
+    mVelocity = QPointF(0,0);
+}
 

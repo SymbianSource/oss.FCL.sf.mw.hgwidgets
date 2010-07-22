@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 2 %
 */
 #ifndef BUFFERMANAGERHELPER_H
 #define BUFFERMANAGERHELPER_H
@@ -30,8 +30,11 @@ public:
     virtual void request(int start, int end, HgRequestOrder order = HgRequestOrderAscending);  
 
     bool isIntergal(int bufferSize);
-    void itemCountChanged( int aIndex, bool aRemoved, int aNewTotalCount );
+    int totalSize();
     void resizeCache(int newSize);
+
+    void remove(int pos);
+    void insert(int pos);
 
     
 private:    

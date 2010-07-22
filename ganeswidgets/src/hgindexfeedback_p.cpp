@@ -18,11 +18,11 @@
 #include "hgindexfeedback.h"
 #include "hgindexfeedback_p.h"
 
-#include <hbscrollbar.h>
-#include <hbstyle.h>
-#include <hbapplication.h>
-#include <hbeffect.h>
-#include <hbstyleoptionindexfeedback.h>
+#include <HbScrollbar>
+#include <HbStyle>
+#include <HbApplication>
+#include <HbEffect>
+#include <HbStyleOptionIndexFeedback>
 #include <hgwidgets/hgwidgets.h>
 
 #include <QTimer>

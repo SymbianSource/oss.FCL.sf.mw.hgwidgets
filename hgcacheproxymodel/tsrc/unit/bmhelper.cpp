@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 6 %
 */
 #include "bmhelper.h"
 #include <QDebug>
@@ -30,10 +30,24 @@ BMHelper::~BMHelper()
 
 void BMHelper::release(int start, int end)
 {
+    if ((start <0 && end <0) || (start >=mBuffer.size() && end >=mBuffer.size() ) )
+        return;
+    
     if ( start<0)
         start = 0;
-    if (end>mBuffer.size() - 1)
-        end = mBuffer.size() - 1;
+    if (end>mBuffer.size())
+        end = mBuffer.size();
+    
+    if ( start > end){
+        int t = start;
+        start = end;
+        end = t;
+    }
+    
+    if ( start<0)
+        start = 0;
+    if (end>=mBuffer.size())
+        end = mBuffer.size()-1;
     
     for ( int i = start; i <= end; i++){
         if (mBuffer.value(i) == true){
@@ -47,10 +61,25 @@ void BMHelper::release(int start, int end)
 void BMHelper::request(int start, int end, HgRequestOrder order)
 {
     Q_UNUSED(order);
+    
+    if ((start <0 && end <0) || (start >=mBuffer.size() && end >=mBuffer.size() ) )
+        return;
+    
     if ( start<0)
         start = 0;
-    if (end>mBuffer.size() - 1)
-        end = mBuffer.size() - 1;
+    if (end>=mBuffer.size())
+        end = mBuffer.size()-1;
+    
+    if ( start > end){
+        int t = start;
+        start = end;
+        end = t;
+    }
+    if ( start<0)
+        start = 0;
+    if (end>=mBuffer.size())
+        end = mBuffer.size()-1;
+    
     
     for ( int i = start; i <= end; i++){
         if (mBuffer.value(i) == false){
@@ -64,40 +93,63 @@ void BMHelper::request(int start, int end, HgRequestOrder order)
 bool BMHelper::isIntergal(int bufferSize)
 {
     int c = mBuffer.count(true);
-    bool res = (bufferSize == c);
+    bool res = (c == mBuffer.count())||(bufferSize == c);
+    
+    
     if (res){ ///check integrity ( if all items from first true, to size are true;
         int f = mBuffer.indexOf(true);
         for ( int i =0; i < mBuffer.count(); i++){
-            if (mBuffer[i] != (i>=f && i < f+bufferSize) ){
+            if (mBuffer[i] != (i>=f && i < f+c) ){
                 res = false;
                 break;
             }
         }
     } else {
-        qWarning()<<QString("isIntergal mBuffer.count(true)=%1 bufferSize=%2").arg(c).arg(bufferSize);
+        QString arr;
+        QString item = "%1,";        
+        for ( int i =0; i < mBuffer.count(); i++){
+            if(mBuffer[i]){
+                arr+=item.arg(i);
+            }
+        }
+        qWarning()<<QString("isIntergal mBuffer.count(true)=%1 bufferSize=%2 visible:%3").arg(c).arg(bufferSize).arg(arr);
     }
     
     return res;
 }
-
-void BMHelper::itemCountChanged( int aIndex, bool aRemoved, int aNewTotalCount )
+int BMHelper::totalSize()
 {
-    Q_UNUSED(aRemoved);
+    return mBuffer.count();
+}
+
+void BMHelper::resizeCache(int newSize)
+{
+    int diff = totalSize() - newSize;
     
-    if ( aIndex < 0)
-        aIndex = 0;
-    if ( aIndex > mBuffer.count())
-        aIndex = mBuffer.count()-1;
-    
-    if ((mBuffer.count() - aNewTotalCount)>0){
-        while (mBuffer.count()!=aNewTotalCount){
-            if (aIndex > mBuffer.count() )
-                aIndex = mBuffer.count() -1;
-            mBuffer.removeAt(aIndex);
-        }
-    } else if ((mBuffer.count() - aNewTotalCount)<0){
-        while (mBuffer.count()!=aNewTotalCount){
-            mBuffer.insert(aIndex, false);
+    while (diff != 0){
+        if (diff >0){
+            remove(mBuffer.count()-1);
+            diff--;
+        }else{
+            insert(mBuffer.count());
+            diff++;
         }
     }
+    
+}
+
+void BMHelper::remove(int pos)
+{
+    if ( pos <0 || pos > mBuffer.count()){
+        return;
+    }
+    mBuffer.removeAt(pos);    
+}
+
+void BMHelper::insert(int pos)
+{
+    if ( pos <0 || pos > mBuffer.count()){
+        return;
+    }    
+    mBuffer.insert(pos, false);
 }

@@ -18,7 +18,7 @@
 #ifndef HGTRANSFORMEDQUAD_H
 #define HGTRANSFORMEDQUAD_H
 
-#include <qvector2d>
+#include <QVector2D>
 
 class HgQuad;
 class QMatrix4x4;

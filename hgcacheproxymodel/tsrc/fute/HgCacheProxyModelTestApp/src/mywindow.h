@@ -13,26 +13,26 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 6 %
 */
 #ifndef CONTENTWIDGET_H
 #define CONTENTWIDGET_H
 
-#include <hbview.h>
+#include <HbView>
 #include <QGraphicsWidget>
 #include <QAbstractItemModel>
 #include <QtGui>
-#include <hbgridviewitem.h>
+#include <HbGridViewItem>
 
 #include <QtGui>
-#include <hbapplication.h>
-#include <hblistview.h>
-#include <hbicon.h>
-#include <hblabel.h>
-#include <hbgridview.h>
-#include <hbgridviewitem.h>
-#include <hbmainwindow.h>
-#include <hbmenu.h>
+#include <HbApplication>
+#include <HbListview>
+#include <HbIcon>
+#include <HbLabel>
+#include <HbGridView>
+#include <HbGridViewItem>
+#include <HbMainWindow>
+#include <HbMenu>
 #include <QDirModel>
 
 class QTimer;
@@ -55,22 +55,28 @@ public:
     ~MyWindow();
 
 private slots:
-    void processAction ( HbAction* action );
-    void setIndex(int index);
-    void timeout();
+    void processAction( HbAction* action );
+    void sortTestTimeout();
+    void filterTestTimeout();
     
 private:
     HbMenu *createMainMenu();
     
+    void addChangeViewMenu(HbMenu* parent);
+    void addCacheProxyModelMenu(HbMenu* parent);
+    void addDataProviderMenu(HbMenu* parent);
+    
 private:
-    HbAbstractItemView* mView;      
+    HbWidget* mView;      
     HgCacheProxyModel *mModel;
 	
 	MyDataProvider *mMyDataProvider;
     HbView* mMainView;	
-    int mTestVal;
-    QTimer *mTimer;
-
+    QTimer *mSortTestTimer;
+    int mSortTestVal;
+    
+    QTimer *mFilterTestTimer;
+    int mFilterTestVal;
 };
 
 #endif // CONTENTWIDGET_H

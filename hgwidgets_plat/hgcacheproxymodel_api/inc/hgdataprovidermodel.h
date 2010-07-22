@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 11 %
 */
 #ifndef HGDATAPROVIDERMODEL_H_
 #define HGDATAPROVIDERMODEL_H_
@@ -21,7 +21,7 @@
 #include <QObject>
 #include <QList>
 #include <QPair>
-#include <QPixmap.h>
+#include <QPixmap>
 #include <QMap>
 #include <QMutex>
 #include <QAbstractItemModel>
@@ -79,13 +79,14 @@ protected:
     void newItem(QPair< QVariant, int > item, bool silent = true);
     void insertItem(int pos, QList< QPair< QVariant, int > >* list = NULL, bool silent = true);
     void insertItem(int pos, QPair< QVariant, int > item, bool silent = true);
+    void clearItem(int pos, bool silent = false);
 
 private:
     void doInsertItem(int pos, QList< QPair< QVariant, int > >* list, bool silent);
 
 protected:
-    void removeItem(int pos);
-    void removeItems(int pos, int size);
+    void removeItem(int pos, bool silent = false);
+    void removeItems(int pos, int size, bool silent = false);
     
     virtual QVariant defaultIcon() const = 0;
     inline bool containsRole(int idx, int role) const;
@@ -93,9 +94,20 @@ protected:
 
 public:    
     void resetModel();
-
+    
+    enum HgDataProviderIconMode {
+        HgDataProviderIconHbIcon,
+        HgDataProviderIconQIcon,
+        HgDataProviderIconQImage,
+        HgDataProviderIconQPixmap
+    };
+    
+    void setIconMode(HgDataProviderIconMode mode);
+    HgDataProviderIconMode iconMode();
+    
 protected:    
     virtual void doResetModel() {};
+    virtual QVariant getData(int idx, int role) const {Q_UNUSED(idx); Q_UNUSED(role); return QVariant(); };
     
 // helpers fot emits
 protected:  
@@ -119,8 +131,10 @@ private:
     QList< QPixmap* > mFreePixmaps;
     QMap< int, QPixmap* > mUsedPixmaps;    
     int mUnallocatedPixmaps;
-//    QMutex mQPixmapsLock;
+    QMutex mQPixmapsLock;
+    QMutex mDataLock;    
     HgDataProviderModelObserver *mObserver;
+    HgDataProviderIconMode mIconMode;
 };
 
 inline bool HgDataProviderModel::isIndexValid(int idx) const
@@ -135,8 +149,5 @@ inline bool HgDataProviderModel::containsRole(int idx, int role) const
     return ( isIndexValid(idx) && 
              mCache->at(idx)->contains(role) ); 
 }
-
-
-
 
 #endif // HGDATAPROVIDERMODEL_H_

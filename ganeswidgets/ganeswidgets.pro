@@ -28,6 +28,9 @@ LIBS += -lestor.dll \
     -llibOpenVGU.dll
 symbian { 
     TARGET.EPOCALLOWDLLDATA = 1
+    
+    #the def files are located in the root of hgwidgets so this is needed
+    defFilePath=..
 }
 
 # Input
@@ -55,7 +58,8 @@ SOURCES += src/hgwidgets.cpp \
     src/hgmediawall_p.cpp \
     src/hgqtquadrenderer.cpp \
     src/hgtransformedquad.cpp \
-    src/hgtransformedquadrenderer.cpp
+    src/hgtransformedquadrenderer.cpp \
+    src/hgcenteritemarea.cpp
 HEADERS = inc/trace.h \
     ../hgwidgets_plat/ganeswidgets_api/inc/hgwidgets.h \
     ../hgwidgets_plat/ganeswidgets_api/inc/hggrid.h \
@@ -75,7 +79,8 @@ HEADERS = inc/trace.h \
 #    inc/hgindexfeedback.h \
     inc/hgqtquadrenderer.h \
     inc/hgtransformedquad.h \
-    inc/hgtransformedquadrenderer.h
+    inc/hgtransformedquadrenderer.h \
+    inc/hgcenteritemarea.h
 RESOURCES += data/ganeswidgets.qrc
 
 DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_WARNING_OUTPUT

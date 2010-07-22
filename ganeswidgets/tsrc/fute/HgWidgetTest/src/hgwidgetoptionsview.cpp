@@ -15,10 +15,10 @@
 *
 */
 
-#include <hbaction.h>
-#include <hbdataform.h>
-#include <hbdataformmodel.h>
-#include <hbabstractviewitem.h>
+#include <HbAction>
+#include <HbDataform>
+#include <HbDataformModel>
+#include <HbAbstractViewItem>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsSceneResizeEvent>
 #include <QSettings>
@@ -32,11 +32,10 @@ static const QString MODEL_IMAGE_TYPE = "Datamodel image type";
 static const QString WIDGET_HEIGHT = "Widget height";
 static const QString WIDGET_WIDTH = "Widget width";
 static const QString LOW_RES_IMAGES = "Use low res images";
-static const QString TITLE_POSITION = "Title position";
 static const QString TITLE_FONT = "Title font";
-static const QString DESCRIPTION_POSITION = "Description position";
 static const QString DESCRIPTION_FONT = "Description font";
 static const QString REFLECTIONS_ENABLED = "Reflections enabled";
+static const QString EFFECT3D_ENABLED = "Grid 3d effects enabled";
 static const QString ITEM_SIZE_POLICY = "Item size policy";
 
 enum DataFormItems {
@@ -47,11 +46,10 @@ enum DataFormItems {
     ItemWidgetHeight,
     ItemWidgetWidth,
     ItemLowResImages,
-    ItemTitlePosition,
     ItemTitleFont,
-    ItemDescriptionPosition,
     ItemDescriptionFont,
     ItemReflectionEnabled,
+    ItemEffect3dEnabled,
     ItemItemSizePolicy
 };
 
@@ -99,16 +97,8 @@ HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
     item->setContentWidgetData(QString("additionalText"), QString("yes"));
 
     item = mModel->appendDataFormItem(
-        HbDataFormModelItem::ComboBoxItem, TITLE_POSITION);
-    item->setContentWidgetData(QString("items"), QStringList("Hidden") << "Above" << "Below");
-
-    item = mModel->appendDataFormItem(
         HbDataFormModelItem::ComboBoxItem, TITLE_FONT);
     item->setContentWidgetData(QString("items"), QStringList("Primary") << "Secondary" << "Title" << "Primary small" << "Digital");
-
-    item = mModel->appendDataFormItem(
-        HbDataFormModelItem::ComboBoxItem, DESCRIPTION_POSITION);
-    item->setContentWidgetData(QString("items"), QStringList("Hidden") << "Above" << "Below");
 
     item = mModel->appendDataFormItem(
         HbDataFormModelItem::ComboBoxItem, DESCRIPTION_FONT);
@@ -119,6 +109,11 @@ HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
     item->setContentWidgetData(QString("text"), QString("no"));
     item->setContentWidgetData(QString("additionalText"), QString("yes"));
 
+    item = mModel->appendDataFormItem(
+        HbDataFormModelItem::ToggleValueItem, EFFECT3D_ENABLED);
+    item->setContentWidgetData(QString("text"), QString("no"));
+    item->setContentWidgetData(QString("additionalText"), QString("yes"));
+    
     item = mModel->appendDataFormItem(
         HbDataFormModelItem::ToggleValueItem, ITEM_SIZE_POLICY);
     item->setContentWidgetData(QString("text"), QString("User defined"));
@@ -236,25 +231,6 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
         settings.setValue(SETT_LOW_RES_IMAGES, value);
         emit lowResImageUseChanged(value);
     }
-    else if (item->data(HbDataFormModelItem::LabelRole).toString() == TITLE_POSITION) {
-        int index = item->contentWidgetData(QString("currentIndex")).toInt();
-        HgMediawall::LabelPosition position = HgMediawall::PositionNone;
-        switch (index) {
-            case 0:
-                position = HgMediawall::PositionNone;
-                break;
-            case 1:
-                position = HgMediawall::PositionAboveImage;
-                break;
-            case 2:
-                position = HgMediawall::PositionBelowImage;
-                break;
-            default: break;
-        }
-
-        settings.setValue(SETT_TITLE_POSITION, position);
-        emit titlePositionChanged(position);
-    }
     else if (item->data(HbDataFormModelItem::LabelRole).toString() == TITLE_FONT) {
         int index = item->contentWidgetData(QString("currentIndex")).toInt();
         HbFontSpec::Role role = HbFontSpec::Undefined;
@@ -278,25 +254,6 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
         }
         settings.setValue(SETT_TITLE_FONT, role);
         emit titleFontChanged(HbFontSpec(role));
-    }
-    else if (item->data(HbDataFormModelItem::LabelRole).toString() == DESCRIPTION_POSITION) {
-        int index = item->contentWidgetData(QString("currentIndex")).toInt();
-        HgMediawall::LabelPosition position = HgMediawall::PositionNone;
-        switch (index) {
-            case 0:
-                position = HgMediawall::PositionNone;
-                break;
-            case 1:
-                position = HgMediawall::PositionAboveImage;
-                break;
-            case 2:
-                position = HgMediawall::PositionBelowImage;
-                break;
-            default: break;
-        }
-
-        settings.setValue(SETT_DESCRIPTION_POSITION, position);
-        emit descriptionPositionChanged(position);
     }
     else if (item->data(HbDataFormModelItem::LabelRole).toString() == DESCRIPTION_FONT) {
         int index = item->contentWidgetData(QString("currentIndex")).toInt();
@@ -328,6 +285,12 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
         settings.setValue(SETT_REFLECTIONS_ENABLED, value);
         emit reflectionsEnabledChanged(value);
     }
+    else if (item->data(HbDataFormModelItem::LabelRole).toString() == EFFECT3D_ENABLED) {
+        QVariant data = item->contentWidgetData(QString("text"));
+        bool value = data.toString() == "yes";
+        settings.setValue(SETT_EFFECT3D_ENABLED, value);
+        emit effect3dEnabledChanged(value);
+    }
     else if (item->data(HbDataFormModelItem::LabelRole).toString() == ITEM_SIZE_POLICY) {
         QVariant data = item->contentWidgetData(QString("text"));
         HgWidget::ItemSizePolicy value = (data.toString() == "Automatic" ? HgWidget::ItemSizeAutomatic : HgWidget::ItemSizeUserDefined);
@@ -340,11 +303,7 @@ void HgWidgetOptionsView::setCoverflowEnabled(bool value)
 {
     HbAbstractViewItem *item = mForm->itemByIndex(mModel->index(ItemLowResImages, 0));
     if (item) item->setEnabled(value);
-    item = mForm->itemByIndex(mModel->index(ItemTitlePosition, 0));
-    if (item) item->setEnabled(value);
     item = mForm->itemByIndex(mModel->index(ItemTitleFont, 0));
-    if (item) item->setEnabled(value);
-    item = mForm->itemByIndex(mModel->index(ItemDescriptionPosition, 0));
     if (item) item->setEnabled(value);
     item = mForm->itemByIndex(mModel->index(ItemDescriptionFont, 0));
     if (item) item->setEnabled(value);
@@ -467,28 +426,6 @@ void HgWidgetOptionsView::setupData()
         item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
     }
 
-    item = mModel->itemFromIndex(mModel->index(ItemTitlePosition, 0));
-    value = settings.value(SETT_TITLE_POSITION);
-    if (item && value.isValid()) {
-        int index(0);
-        switch (value.toInt()) {
-            case HgMediawall::PositionNone:
-                index = 0;
-                break;
-            case HgMediawall::PositionAboveImage:
-                index = 1;
-                break;
-            case HgMediawall::PositionBelowImage:
-                index = 2;
-                break;
-            default: break;
-        }
-        item->setContentWidgetData(QString("currentIndex"), index);
-    }
-    else if (item) {
-        item->setContentWidgetData(QString("currentIndex"), 1);
-    }
-
     item = mModel->itemFromIndex(mModel->index(ItemTitleFont, 0));
     value = settings.value(SETT_TITLE_FONT);
     if (item && value.isValid()) {
@@ -508,25 +445,6 @@ void HgWidgetOptionsView::setupData()
                 break;
             case HbFontSpec::Digital:
                 index = 4;
-                break;
-            default: break;
-        }
-        item->setContentWidgetData(QString("currentIndex"), index);
-    }
-
-    item = mModel->itemFromIndex(mModel->index(ItemDescriptionPosition, 0));
-    value = settings.value(SETT_DESCRIPTION_POSITION);
-    if (item && value.isValid()) {
-        int index(0);
-        switch (value.toInt()) {
-            case HgMediawall::PositionNone:
-                index = 0;
-                break;
-            case HgMediawall::PositionAboveImage:
-                index = 1;
-                break;
-            case HgMediawall::PositionBelowImage:
-                index = 2;
                 break;
             default: break;
         }
@@ -565,6 +483,13 @@ void HgWidgetOptionsView::setupData()
         item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
     }
 
+    item = mModel->itemFromIndex(mModel->index(ItemEffect3dEnabled, 0));
+    value = settings.value(SETT_EFFECT3D_ENABLED);
+    if (item && value.isValid()) {
+        item->setContentWidgetData(QString("text"), value.toBool() ? "yes" : "no");
+        item->setContentWidgetData(QString("additionalText"), value.toBool() ? "no" : "yes");
+    }
+    
     item = mModel->itemFromIndex(mModel->index(ItemItemSizePolicy, 0));
     value = settings.value(SETT_ITEM_SIZE_POLICY);
     if (item && value.isValid()) {

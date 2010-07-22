@@ -18,7 +18,7 @@
 #ifndef HGWIDGETTESTVIEW_H_
 #define HGWIDGETTESTVIEW_H_
 
-#include <hbview.h>
+#include <HbView>
 #include <hgwidgets/hgmediawall.h>
 #include "hgtestdefs.h"
 
@@ -49,13 +49,12 @@ private slots:
     void changeScrollBarInteractivity(bool value);
     void changeModelImageType(HgTestImageType);
     void changeLowResImageUse(bool value);
-    void changeTitlePosition(HgMediawall::LabelPosition);
     void changeTitleFont(const HbFontSpec &);
-    void changeDescriptionPosition(HgMediawall::LabelPosition);
     void changeDescriptionFont(const HbFontSpec &);
     void changeWidgetHeight(int);
     void changeWidgetWidth(int);
     void changeReflectionsEnabled(bool);
+    void changeEffect3dEnabled(bool);
     void changeItemSizePolicy(HgWidget::ItemSizePolicy);
 
     void toggleScrollDirection();
@@ -71,7 +70,7 @@ private slots:
     void showOptions();
     void hideOptions();
     void orientationChanged(Qt::Orientation);
-    
+
     void startItemSizeChange();
     void itemSizeDialogClosed();
     void updateItemSizeAndSpacing();
@@ -79,12 +78,14 @@ private slots:
     void startItemPosChange();
     void updateItemPos();
     void itemPosDialogClosed();
-
+    void useCustomLayout();
+    
     void resetOptions();
     void resetModel();
     void activated(/*HbListWidgetItem *item*/);
     void animationFinished();
     void animationAboutToEnd(const QModelIndex& targetIndex);
+    void dialogFinished(HbAction* action);
     
 private:
 
@@ -100,22 +101,22 @@ private:
     
 private: // data
 
-    HgWidget*               mWidget;
-    QGraphicsLinearLayout*  mLayout;
-    HgWidgetTestDataModel*  mModel;
+    HgWidget                *mWidget;
+    QGraphicsLinearLayout   *mLayout;
+    HgWidgetTestDataModel   *mModel;
     HgTestWidgetType        mWidgetType;
-    HbListWidget*           mListWidget;
+    HbListWidget            *mListWidget;
     bool                    mToggleOrientation;
-    QItemSelectionModel*    mSelectionModel;
+    QItemSelectionModel     *mSelectionModel;
     HgFlipWidget*           mFlipWidget;
     QModelIndex             mFlippedIndex;
     HbLabel*                mFrontItem;
     HbView*                 mOptionsView;
-    HgItemSizeDialog*       mItemSizeDialog;
-    HgItemSizeDialog*       mItemPosDialog;
-    QParallelAnimationGroup* mAnimationGroup;
-    HbDialog*               mDialog;
-    HgCoverItem*            mCoverItem;
+    HgItemSizeDialog        *mItemSizeDialog;
+    HgItemSizeDialog        *mItemPosDialog;
+    QParallelAnimationGroup *mAnimationGroup;
+    HbDialog                *mDialog;
+    HgCoverItem             *mCoverItem;
 };
 
 

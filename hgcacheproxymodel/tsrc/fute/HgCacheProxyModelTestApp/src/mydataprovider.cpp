@@ -13,15 +13,12 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 7 %
 */
 #include <QList>
 #include "hglogger.h"
-#include <hbicon.h>
+#include <HbIcon>
 #include "mydataprovider.h"
-
-//#include "x:\sf\mw\qt\src\openvg\qpixmapdata_vg_p.h"
-//typedef VGImage (*pfnVgCreateEGLImageTargetKHR)(VGeglImageKHR);
 
 const int KItemIdRole = Qt::UserRole+1;
 
@@ -30,17 +27,19 @@ const int KThumbnailsPriority = EPriorityLess; //standard priority
 
 MyDataProvider::MyDataProvider(QObject *parent) :
 HgDataProviderModel(parent),
-mDefaultIcon(new HbIcon(QIcon(QPixmap(":/icons/default.png")))),
+mDefaultIcon(QIcon(QPixmap(":/icons/default.png"))),
 mScheduler(new CActiveSchedulerWait()),
 mWrapper( new ThumbnailManager() ),
 mThumbnailRequestPending(false),
 mThumbnailRequestIndex(-1),
 mThumbnailRequestID(-1),
 mThumbnailsize(ThumbnailManager::ThumbnailMedium),
-mMDSLoadInProgress(false)
+mMDSLoadInProgress(false),
+mMode(0)
 {
 //    TX_ENTRY
     Q_UNUSED(parent);
+    
     mWrapper->setThumbnailSize( mThumbnailsize );
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
 
@@ -53,7 +52,6 @@ mMDSLoadInProgress(false)
 MyDataProvider::~MyDataProvider()
 {
 //    TX_ENTRY
-    delete mDefaultIcon;
     delete mWrapper;
     delete mScheduler;
 //    TX_EXIT
@@ -66,6 +64,14 @@ void MyDataProvider::changeIconSize(ThumbnailManager::ThumbnailSize aThumbnailsi
 	mThumbnailsize = aThumbnailsize;
 	mWrapper->setThumbnailSize( mThumbnailsize );
 //    TX_EXIT
+}
+
+void MyDataProvider::changeMode(int mode)
+{
+    if(mMode!=mode){
+        mMode = mode;
+        resetModel();
+    }
 }
 
 void MyDataProvider::doRequestData(QList<int> list, bool silent)
@@ -156,7 +162,7 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
 
 QVariant MyDataProvider::defaultIcon() const
 {
-    return *mDefaultIcon;
+    return mDefaultIcon;
 }
 
 void MyDataProvider::HandleSessionOpened(CMdESession& aSession, TInt aError)
@@ -221,9 +227,15 @@ void MyDataProvider::doResetModel()
         
         CMdENamespaceDef& namespaceDef = session->GetDefaultNamespaceDefL();
                 
-        CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Image"));
-    
-        CMdEObjectQuery* imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        CMdEObjectQuery* imageQuery;
+        if ( mMode == 0){
+            CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Image"));
+            imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        } else {
+            CMdEObjectDef& objectDef = namespaceDef.GetObjectDefL(_L("Audio"));
+            imageQuery = session->NewObjectQueryL( namespaceDef, objectDef, this );
+        }   
+        
         CleanupStack::PushL( imageQuery );
         imageQuery->SetResultMode( EQueryResultModeId );
         imageQuery->FindL( );
@@ -234,5 +246,18 @@ void MyDataProvider::doResetModel()
     
     
     TX_EXIT    
+}
+void MyDataProvider::testRemoveItem(int pos)
+{
+    TX_ENTRY
+    removeItem(pos);
+    TX_EXIT  
+}
+
+void MyDataProvider::testInsertItem(int pos, QList< QPair< QVariant, int > >* data)
+{
+    TX_ENTRY
+    insertItem(pos, data, false);
+    TX_EXIT  
 }
 

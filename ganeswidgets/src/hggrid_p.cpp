@@ -42,4 +42,24 @@ void HgGridPrivate::init(Qt::Orientation scrollDirection)
     HgWidgetPrivate::init(container);
 }
 
+void HgGridPrivate::orientationChanged(Qt::Orientation orientation)
+{
+    Q_Q(HgGrid);
+
+    HgWidgetPrivate::orientationChanged(orientation);
+    q->repolish();
+}
+
+bool HgGridPrivate::effect3dEnabled() const
+{
+    HgGridContainer *container = qobject_cast<HgGridContainer*>(mContainer);
+    return container->effect3dEnabled();
+}
+
+void HgGridPrivate::setEffect3dEnabled(bool effect3dEnabled)
+{
+    HgGridContainer *container = qobject_cast<HgGridContainer*>(mContainer);
+    container->setEffect3dEnabled(effect3dEnabled);
+}
+
 // EOF

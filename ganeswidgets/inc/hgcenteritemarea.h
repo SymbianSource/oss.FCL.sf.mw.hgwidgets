@@ -11,33 +11,33 @@
 *
 * Contributors:
 *
-* Description:  Another view for test application.
+* Description:
 *
 */
-#ifndef HGTESTVIEW_H_
-#define HGTESTVIEW_H_
 
-#include <HbView>
+#ifndef HGCENTERICONAREA_H
+#define HGCENTERICONAREA_H
 
-class HbAction;
-class HbLabel;
+#include <HbWidget>
 
-class HgTestView : public HbView
+class HgCenterItemArea: public HbWidget
 {
-	Q_OBJECT
+    Q_OBJECT
+    Q_DISABLE_COPY(HgCenterItemArea)
 
 public:
-	HgTestView(const QString &title1, const QString &title2, const QPixmap &pixmap, QGraphicsItem *parent=0);
+    explicit HgCenterItemArea(QGraphicsItem* parent = 0);
+    virtual ~HgCenterItemArea();
 
 signals:
-    void closeRequested();
+    void geometryChanged();
 
 private:
     void resizeEvent(QGraphicsSceneResizeEvent *event);
+    void moveEvent(QGraphicsSceneMoveEvent *event);
+    
+private: // Data
 
-private:
-    HbLabel *mIconLabel;
-    QPixmap mPixmap;
 };
 
-#endif /* HGTESTVIEW_H_ */
+#endif

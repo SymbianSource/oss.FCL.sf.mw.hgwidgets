@@ -22,7 +22,7 @@
 #include <QItemSelection>
 #include <QStringList>
 #include <QFileInfoList>
-#include <hbicon>
+#include <HbIcon>
 #include <thumbnailmanager_qt.h>
 #include <QImage>
 #include <QList>
@@ -98,13 +98,13 @@ private:
     QPixmap                         mDefaultPixmap;
     bool                            mSilentDataFetch;
 
-    ThumbnailManager* mWrapper;
-    QStringList mWaitingThumbnails;
-    bool mThumbnailRequestPending;
-    int mThumbnailRequestIndex;
-    int mThumbnailRequestID;
+    ThumbnailManager*               mWrapper;
+    QStringList                     mWaitingThumbnails;
+    bool                            mThumbnailRequestPending;
+    int                             mThumbnailRequestIndex;
+    int                             mThumbnailRequestID;
 
-    QFileInfoList mFileInfoList;
+    QFileInfoList                   mFileInfoList;
 };
 
 #endif // HgWidgetTestDataModel_H

@@ -18,9 +18,9 @@
 #ifndef HGSPRING_H
 #define HGSPRING_H
 
-#include <qpoint>
-#include <qobject>
-#include <qtime>
+#include <QPoint>
+#include <QObject>
+#include <QTime>
 
 class QTimer;
 
@@ -42,6 +42,7 @@ public:
     void gotoPos(const QPointF& pos);
     void cancel();
     bool isActive() const;
+    void resetVelocity();
 
     const QPointF& startPos() const;
     const QPointF& pos() const;

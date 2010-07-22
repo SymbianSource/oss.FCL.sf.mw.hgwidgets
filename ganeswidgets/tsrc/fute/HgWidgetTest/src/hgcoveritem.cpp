@@ -23,6 +23,7 @@ HgCoverItem::HgCoverItem(QPixmap pixmap, QGraphicsItem *parent) : HbIconItem(par
 
 void HgCoverItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     {
+    Q_UNUSED(event);
     emit close();
     }
 
@@ -32,10 +33,10 @@ HgListWidget::HgListWidget(QGraphicsItem *parent) : HbListWidget(parent)
     setHorizontalScrollBarPolicy(HbScrollArea::ScrollBarAlwaysOff);
 }
 
-void HgListWidget::leftGesture(int value)
+/*void HgListWidget::leftGesture(int value)
 {
     if (value > 30) {
         emit close();
     }
 }
-
+*/

@@ -25,11 +25,15 @@ class HgGridPrivate;
 class HG_WIDGETS_EXPORT HgGrid : public HgWidget
 {
     Q_OBJECT
+    Q_PROPERTY(bool effect3dEnabled  READ effect3dEnabled  WRITE setEffect3dEnabled )
 public:
 
     explicit HgGrid(Qt::Orientation scrollDirection, QGraphicsItem *parent = 0 );
     virtual ~HgGrid();
 
+    bool effect3dEnabled() const;
+    void setEffect3dEnabled(bool effect3dEnabled);
+    
 protected:
     HgGrid(Qt::Orientation scrollDirection, HgGridPrivate &dd, QGraphicsItem *parent);
 

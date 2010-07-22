@@ -22,6 +22,9 @@
 #include "hgwidgets_p.h"
 
 class HgCoverflowContainer;
+class HgCenterItemArea;
+class HbIconItem;
+class HbTextItem;
 
 class HgMediawallPrivate : public HgWidgetPrivate
 {
@@ -34,18 +37,21 @@ public:
 
     void init(Qt::Orientation orientation);
 
-    void setTitlePosition(HgMediawall::LabelPosition position);
-    HgMediawall::LabelPosition titlePosition() const;
-    void setDescriptionPosition(HgMediawall::LabelPosition position);
-    HgMediawall::LabelPosition descriptionPosition() const;
     void setTitleFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec titleFontSpec() const;
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
 
-    
     HgCoverflowContainer *container();
     const HgCoverflowContainer *container() const;
+
+private: // From HgWidgetPrivate
+    void updateCurrentItem(const QModelIndex &currentItem);
+
+private:
+    HbTextItem *mTitleItem;
+    HbTextItem *mDescriptionItem;
+    HgCenterItemArea *mCenterItemArea; // Dummy item for calculating correct position for center item
 };
 
 #endif  //HGMEDIAWALL_P_H

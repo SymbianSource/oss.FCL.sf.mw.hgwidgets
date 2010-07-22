@@ -19,7 +19,7 @@
 #include <QColor>
 #include <QtCore>
 
-#include <hbicon.h>
+#include <HbIcon>
 #include <hbnamespace.h>
 #include <hgwidgets/hgwidgets.h>
 
@@ -57,12 +57,12 @@ HgWidgetTestDataModel::HgWidgetTestDataModel(QObject *parent)
       mImageType(ImageTypeNone),
 //      mDefaultIcon((":/images/default.svg")),
       mUseLowResImages(false),
+      mBufferManager(0),
+      mSilentDataFetch(false),
       mWrapper( new ThumbnailManager() ),
       mThumbnailRequestPending(false),
       mThumbnailRequestIndex(-1),
-      mThumbnailRequestID(-1),
-      mBufferManager(0),
-      mSilentDataFetch(false)
+      mThumbnailRequestID(-1)
 {
     FUNC_LOG;
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
@@ -101,6 +101,7 @@ void HgWidgetTestDataModel::timeOut()
             if (s.indexOf(QString(".jpg"),0,Qt::CaseInsensitive)>0){
                 mFiles.append(s);
                 mImages.append(QImage());
+                mPixmaps.append(QPixmap());
                 mVisibility.append(true);
             }
         }
@@ -269,7 +270,15 @@ QVariant HgWidgetTestDataModel::data(const QModelIndex &index, int role) const
                     break;
                     case ImageTypeHbIcon:
                     {
-                        returnValue = mHbIcon;
+                    QPixmap pixmap = mPixmaps.at(row);
+                    if (!pixmap.isNull()) {
+                        QIcon qicon(mPixmaps.at(row));
+                        if (!qicon.isNull()){
+                            returnValue = HbIcon(qicon);
+                        }else {
+                            returnValue = mHbIcon;
+                        }
+                    }
                     }
                     break;
                     case ImageTypeQIcon:
@@ -509,7 +518,7 @@ void HgWidgetTestDataModel::setBuffer(int buffer, int treshhold)
     delete mBufferManager;
     mBufferManager = 0;
     mBufferManager = new BufferManager(this, buffer, treshhold, 0, mFiles.count());
-    if (mImageType == ImageTypeQPixmap)
+    if (mImageType == ImageTypeQPixmap || mImageType == ImageTypeHbIcon)
     {
         for (int i = 0; i<mPixmaps.count();i++) {
             mPixmaps.replace(i, QPixmap());
@@ -587,9 +596,11 @@ void HgWidgetTestDataModel::request(int start, int end, requestsOrder order)
 
 void HgWidgetTestDataModel::thumbnailReady( QPixmap pixmap, void* data, int /*id*/, int error )
 {
+    Q_UNUSED(data);
+    
     if (!error && !pixmap.isNull() ){
 //        int idx = reinterpret_cast<int>(data);
-        if (mImageType == ImageTypeQPixmap)
+        if (mImageType == ImageTypeQPixmap || mImageType == ImageTypeHbIcon)
         {
             mPixmaps.replace(mThumbnailRequestIndex, pixmap);
         }

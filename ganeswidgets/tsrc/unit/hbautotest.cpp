@@ -16,8 +16,8 @@
 */
 
 #include "hbautotest.h"
-#include <hbmainwindow.h>
-#include <hbwidget.h>
+#include <HbMainWindow>
+#include <HbWidget>
 
 
 const qreal STEP = 10; //How many pixels to drag before sending an event

@@ -1,5 +1,10 @@
 <RCC>
-    <qresource prefix="/" >
+    <qresource prefix="/">
         <file>images/default.svg</file>
+    </qresource>
+    <qresource prefix="/test">
+        <file>hgmediawall.widgetml</file>
+        <file>hgmediawall.css</file>
+        <file>hgmediawall_color.css</file>
     </qresource>
 </RCC>

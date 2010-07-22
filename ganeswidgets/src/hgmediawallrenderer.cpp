@@ -14,27 +14,27 @@
 * Description:    
 *
 */
-#include "HgMediaWallRenderer.h"
+#include "hgmediawallrenderer.h"
 #include "hgmediawalldataprovider.h"
 #include "hgquadrenderer.h"
 #include "hgquad.h"
 #include "hgimage.h"
-#include "HgImageFader.h"
+#include "hgimagefader.h"
 #include "hgvgquadrenderer.h"
 #include "hgqtquadrenderer.h"
-#include <qvector3d>
-#include <qtimer>
-#include <qpropertyanimation>
-#include <qstate.h>
-#include <qabstracttransition>
-#include <qstatemachine>
-#include <qsignaltransition>
-#include <qsequentialanimationgroup>
-#include <qparallelanimationgroup>
-#include <qvariantanimation>
-#include <qpolygon>
-#include <qpainter>
-#include <qpaintengine>
+#include <QVector3D>
+#include <QTimer>
+#include <QPropertyAnimation>
+#include <QState>
+#include <QAbstractTransition>
+#include <QStateMachine>
+#include <QSignalTransition>
+#include <QSequentialAnimationGroup>
+#include <QParallelAnimationGroup>
+#include <QVariantAnimation>
+#include <QPolygon>
+#include <QPainter>
+#include <QPaintEngine>
 
 const qreal KPi = 3.1415926535897932384626433832795;
 
@@ -178,7 +178,7 @@ public:
             qreal posY = 0.5f - (rect.height() / rect.width() / 2.0 - stepY / 2.0);                
             tm.translate(-posY,0);
             rm.rotate(-90, QVector3D(0,0,1));
-            rot = QQuaternion::fromAxisAndAngle(QVector3D(0,0,1), -90);
+            rot = QQuaternion::fromAxisAndAngle(QVector3D(0,0,1), 90);
         }
         else if (mNextScrollDirection == Qt::Vertical)
         {
@@ -186,7 +186,6 @@ public:
             rm.rotate(90, QVector3D(0,0,1));
             rot = QQuaternion::fromAxisAndAngle(QVector3D(0,0,1), -90);                
         }
-        
         
     }
     
@@ -247,7 +246,7 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider,
     mFrontItemPosition(0,0)
 {
     createStateMachine();
-    mRenderer = new HgQtQuadRenderer(64);
+    mRenderer = new HgQtQuadRenderer(128);
     mRenderer->enableReflections(true);
     mRendererInitialized = true;
     if (mCoverflowMode) {
@@ -443,12 +442,18 @@ void HgMediaWallRenderer::setScrollDirection(Qt::Orientation scrollDirection, bo
         mStateMachine->setAnimated(animate);
         mNextScrollDirection = scrollDirection;
 
-        if (!animate)
+        if (!animate) {
             mScrollDirection = scrollDirection;
+        }
         else
         {
             //emit renderingNeeded();            
         }
+    } else if (!animate) {
+        // reset next scrolldirection just to be sure. In some cases
+        // when orientation changes couple of times and container visibility changes
+        // we might otherwise end up in wrong state.
+        mNextScrollDirection = scrollDirection;
     }
 }
 
@@ -719,6 +724,8 @@ void HgMediaWallRenderer::startScrollDirectionChangeAnimation(
     const QTransform& sceneTransform,
     const QRectF& rect)
 {
+    Q_UNUSED(sceneTransform)
+    Q_UNUSED(rect)
 
     // save state for current orientation
     setupRows(startPosition, position, targetPosition, springVelocity, painter);
@@ -757,6 +764,9 @@ void HgMediaWallRenderer::startRowCountChangeAnimation(
     const QTransform& sceneTransform,
     const QRectF& rect)
 {
+    Q_UNUSED(sceneTransform)
+    Q_UNUSED(rect)
+
     setupRows(startPosition, position, targetPosition, springVelocity, painter);
     recordState(mOldState);
     
@@ -975,8 +985,9 @@ void HgMediaWallRenderer::setupDefaultQuad(const QVector3D& pos, int itemIndex, 
 {
     HgQuad* quad = mRenderer->quad(quadIndex++);
     quad->setPosition(pos);
-    quad->setImage(mDataProvider->image(itemIndex));
-    quad->setVisible(true);
+    const HgImage* image = mDataProvider->image(itemIndex);
+    quad->setImage(image);
+    quad->setVisible(image && image->alpha() != 0);
     quad->setScale(QVector2D(mImageSize3D.width(),mImageSize3D.height()));
     quad->setPivot(QVector2D(0,0));
     quad->setUserData(QVariant(itemIndex));
@@ -992,7 +1003,7 @@ void HgMediaWallRenderer::setupDefaultQuad(const QVector3D& pos, int itemIndex, 
     {
         HgQuad* indicator = mRenderer->quad(quadIndex++);
         setupIndicator(quad, indicator, indicatorImage, 
-            itemIndex);
+            itemIndex+1000);
         indicator->enableMirrorImage(reflectionsEnabled);
     }
 

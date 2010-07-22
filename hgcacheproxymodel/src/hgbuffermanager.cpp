@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 6 %
 */
 #include "hgbuffermanager.h"
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -201,21 +201,88 @@ void HgBufferManager::resetBuffer( int aPosition, int aTotalCount)
         mBufferPosition = 0;
     }
     
-    //request new Buffer
-    mRequestStart = mBufferPosition;
-    mRequestCount = mBufferSize;
-    mResetOrdered = true;
-    calculate();
+    if (mBufferPosition>1){
+        mObserver->release(0, mBufferPosition-1);
+    }
+    
+    mObserver->request( mBufferPosition, 
+                        mBufferPosition + mBufferSize -1 );
+
+    if (mBufferPosition + mBufferSize < mTotalCount){
+        mObserver->release(mBufferPosition + mBufferSize, mTotalCount);
+    }
+    
+    mDiff = 0;
+    mResetOrdered = false;
+    mRequestStart = 0;
+    mRequestCount = 0;
+    mReleaseStart = 0;
+    mReleaseCount = 0;
+    
 }
 
-void HgBufferManager::itemCountChanged( int aIndex, 
-                                      bool aRemoved,
-                                      int aNewTotalCount )
-{    
-    Q_UNUSED(aIndex);    
-    Q_UNUSED(aRemoved);
-    //release all, to make sure that no old items are skipped
-    mObserver->release(0, aNewTotalCount);
-    resetBuffer(mBufferPosition + (mBufferSize / 2), aNewTotalCount);
+void HgBufferManager::aboutToRemoveItem(int pos)
+{
+    if(pos < 0 || pos >= mTotalCount ){
+        return;
+    }
+    
+    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
+        mObserver->release(pos, pos);
+    }
 }
+
+void HgBufferManager::removedItem(int pos)
+{
+    if(pos < 0 || pos >= mTotalCount ){
+        return;
+    }
+    
+    mTotalCount--;
+    if( mTotalCount >= mBufferSize ){
+        if (pos < mBufferPosition){ //before buffer pos is >=0
+            mBufferPosition--;
+        } else if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize){
+            if( mBufferPosition + mBufferSize <= mTotalCount ){
+                // Requested from the end
+                mObserver->request( mBufferPosition + mBufferSize - 1,
+                                    mBufferPosition + mBufferSize - 1 );
+            }else if( mBufferPosition > 0 ){
+                // Move buffer and request from the beginning 
+                mBufferPosition--;
+                mObserver->request( mBufferPosition, 
+                                    mBufferPosition );
+            }
+        }
+    }
+}
+
+void HgBufferManager::aboutToInsertItem(int pos)
+{
+    if(pos < 0 || pos > mTotalCount ){
+        return;
+    }
+
+    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
+        if( mBufferPosition + mBufferSize < mTotalCount ){
+            // Release from the end of the buffer
+            mObserver->release(mBufferPosition + mBufferSize - 1, mBufferPosition + mBufferSize - 1);
+        }
+    }
+}
+
+void HgBufferManager::insertedItem(int pos)
+{
+    if(pos < 0 || pos > mTotalCount ){
+        return;
+    }
+
+    mTotalCount++;
+    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
+        mObserver->request(pos, pos);
+    }else if (pos<mBufferPosition){ //if we have inserted item before buffer, we should move buffer.
+        mBufferPosition++;
+    }
+}
+
 //eof

@@ -1,0 +1,69 @@
+HgMediawall[scrollBarPolicy="ScrollBarAlwaysOff"]
+{
+    layout:layout-noscrollbar;
+    front-cover-elevation-factor:0.7;
+}
+
+HgMediawall[!scrollBarPolicy="ScrollBarAlwaysOff"]
+{
+    layout:layout-scrollbar;
+    front-cover-elevation-factor:0.7;
+}
+
+HgMediawall::title
+{
+	font-variant:primary;
+    text-align: center center;
+	left:-var(hb-param-margin-gene-screen);
+	right:var(hb-param-margin-gene-screen);
+	top:-var(hb-param-margin-gene-middle-vertical);
+	bottom:0un;
+	text-line-count-min:1;
+	text-line-count-max:1;
+	zvalue: 2;
+    size-policy: preferred preferred;
+}
+
+HgMediawall::description
+{
+	font-variant:primary-small;
+    text-align: center center;
+	left:-var(hb-param-margin-gene-screen);
+	right:var(hb-param-margin-gene-screen);
+	top:-var(hb-param-margin-gene-middle-vertical);
+	bottom:0un;
+	text-line-count-min:1;
+	text-line-count-max:1;
+	zvalue: 2;
+    size-policy: preferred preferred;
+}
+
+HgMediawall::scrollbar-horizontal
+{
+	left:0un;
+	right:var(hb-param-widget-scroll-bar-interactive-width);
+	top:0un;
+	bottom:0un;
+	zvalue: 2;
+    size-policy: preferred preferred;
+}
+
+HgMediawall::content
+{
+    size-policy: minimum-expanding minimum-expanding;
+	left:0un;
+	right:0un;
+	top:0un;
+	bottom:0un;
+	zvalue: 0;
+}
+
+HgMediawall::centeritem
+{
+    size-policy: minimum-expanding minimum-expanding;
+	left:-var(hb-param-touch-area-gene-primary-medium);
+	right:var(hb-param-touch-area-gene-primary-medium);
+	top:-3un;
+	bottom:6un;
+	zvalue: 2;
+}

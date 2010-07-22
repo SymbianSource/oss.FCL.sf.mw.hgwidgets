@@ -18,16 +18,16 @@
 #include <QGesture>
 #include <QPainter>
 #include <QTimer>
-#include <hblabel.h>
-#include <hbgridviewitem>
-#include <hbmainwindow>
+#include <HbLabel>
+#include <HbGridViewItem>
+#include <HbMainWindow>
 #include "hglongpressvisualizer.h"
 
 HgLongPressVisualizer::HgLongPressVisualizer(QGraphicsItem* parent) : HbWidget(parent),
     active(false),
     spanAngle(0)
 {
-
+    setFlag(QGraphicsItem::ItemHasNoContents, false);
 }
 
 HgLongPressVisualizer::~HgLongPressVisualizer()
@@ -42,10 +42,14 @@ void HgLongPressVisualizer::paint( QPainter *painter, const QStyleOptionGraphics
     Q_UNUSED(widget);
     
     if (active) {
+        QPen oldPen = painter->pen();
+        
         QPen pen( Qt::lightGray );
         pen.setWidth(5);
         painter->setPen(pen);
         painter->drawArc(rect, 90*16, -spanAngle*16);
+
+        painter->setPen(oldPen); //revert the painter to its old state
     }
 }
 

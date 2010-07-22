@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 5 %
+*  Version     : %version: 10 %
 */
 #include <QtTest/QtTest>
 #include <hgwidgets/hgcacheproxymodel.h>
@@ -25,6 +25,11 @@
 #include "dataproviderhelper.h"
 #include "cacheproxyhelper.h"
 #include <QtDebug>
+#include <HbIcon>
+#include <QIcon>
+#include <QImage>
+#include <QPixmap>
+
 
 // ======== MEMBER FUNCTIONS ========
 void TestCacheProxy::testQAbstractItemModel(QAbstractItemModel* model, int rows, int columns)
@@ -84,10 +89,7 @@ void TestCacheProxy::testQAbstractItemModel(QAbstractItemModel* model, int rows,
     QVERIFY(idx.isValid() == false);
     QVERIFY(model->columnCount() == columns);
     QVERIFY(model->rowCount() == rows);
-    
-//    QVERIFY(model->hasChildren() == false);
-//    QVERIFY(model->headerData(0, Qt::Horizontal).isValid == false);
-    
+        
 }
 
 void TestCacheProxy::initTestCase()
@@ -155,10 +157,22 @@ void TestCacheProxy::testBM_SetPosition()
     totalsize = 100;
     bufferSize = 200;
     bmh = new BMHelper(totalsize);
-    bm = new HgBufferManager(bmh, bufferSize, 40, -20, totalsize);
+    bm = new HgBufferManager(bmh, bufferSize, 40, 2*bufferSize, totalsize);    
+    bufferSize = 300;
+    bm->resizeCache(bufferSize, 20);
+    bm->setPosition(5);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    bm->setPosition(5000);
+    QVERIFY(bmh->isIntergal(bufferSize));
     delete bmh;
     delete bm;
 
+    bmh = new BMHelper(totalsize);
+    bm = new HgBufferManager(bmh, bufferSize, 40, -10, totalsize);
+    delete bmh;
+    delete bm;
+    
+    
     totalsize = 1000;
     bufferSize = 100;
     bmh = new BMHelper(totalsize);
@@ -294,111 +308,168 @@ void TestCacheProxy::testBM_ItemCountChanged()
     int bufferSize = 100;
     bmh = new BMHelper(totalsize);
     bm = new HgBufferManager(bmh, bufferSize, 40, 0, totalsize);    
-    totalsize--;
-    bmh->itemCountChanged(0, true, totalsize);    
-    bm->itemCountChanged(0, true, totalsize);
+    bm->aboutToRemoveItem(0);
+    bmh->remove(0);
+    bm->removedItem(0);
     QVERIFY(bmh->isIntergal(bufferSize));
-
     totalsize--;
-    bmh->itemCountChanged(150, true, totalsize);
-    bm->itemCountChanged(150, true, totalsize);
+    QCOMPARE(bmh->totalSize(), totalsize);
+
+    bm->aboutToRemoveItem(150);
+    bmh->remove(150);
+    bm->removedItem(150);
     QVERIFY(bmh->isIntergal(bufferSize));
-
     totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);
+
     bm->setPosition(100);
-    bmh->itemCountChanged(150, true, totalsize);
-    bm->itemCountChanged(150, true, totalsize);
+    bm->aboutToRemoveItem(150);
+    bmh->remove(150);
+    bm->removedItem(150);
     QVERIFY(bmh->isIntergal(bufferSize));
-
     totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);
+
     bm->setPosition(891);
-    bmh->itemCountChanged(150, true, totalsize);
-    bm->itemCountChanged(150, true, totalsize);
+    bm->aboutToRemoveItem(150);
+    bmh->remove(150);
+    bm->removedItem(150);
     QVERIFY(bmh->isIntergal(bufferSize));
-    
     totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->setPosition(0);
+    bm->aboutToRemoveItem(150);
+    bmh->remove(150);
+    bm->removedItem(150);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);    
+    
     bm->setPosition(900);
-    bmh->itemCountChanged(890, true, totalsize);
-    bm->itemCountChanged(890, true, totalsize);
+    bm->aboutToRemoveItem(890);
+    bmh->remove(890);
+    bm->removedItem(890);
     QVERIFY(bmh->isIntergal(bufferSize));
-    
     totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
     bm->setPosition(totalsize);
-    bmh->itemCountChanged(totalsize, true, totalsize);
-    bm->itemCountChanged(totalsize, true, totalsize);
+    bm->aboutToRemoveItem(totalsize);
+    bmh->remove(totalsize);
+    bm->removedItem(totalsize);
     QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize--;//no item remove since totalsize is outside
+    QCOMPARE(bmh->totalSize(), totalsize);
     
+    bm->setPosition(totalsize);
+    bm->aboutToRemoveItem(totalsize-1);
+    bmh->remove(totalsize-1);
+    bm->removedItem(totalsize-1);
+    QVERIFY(bmh->isIntergal(bufferSize));
     totalsize--;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
     bm->setPosition(totalsize+200);
-    bmh->itemCountChanged(totalsize+200, true, totalsize);
-    bm->itemCountChanged(totalsize+200, true, totalsize);
+    bm->aboutToRemoveItem(totalsize+200);
+    bmh->remove(totalsize+200);
+    bm->removedItem(totalsize+200);
     QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize--; //no item remove since totalsize+200 is outside
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->aboutToRemoveItem(-20);
+    bmh->remove(-20);
+    bm->removedItem(-20);
+    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize--; //no item remove since totalsize+200 is outside
+    QCOMPARE(bmh->totalSize(), totalsize);
     
     
-    totalsize= totalsize - 10;
-    bm->setPosition(0);
-    bmh->itemCountChanged(0, true, totalsize);
-    bm->itemCountChanged(0, true, totalsize);
+    bm->aboutToRemoveItem(totalsize+10);
+    bmh->remove(totalsize+10);
+    bm->removedItem(totalsize+10);
     QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize= totalsize - 10;
-    bm->setPosition(totalsize);
-    bmh->itemCountChanged(totalsize, true, totalsize);
-    bm->itemCountChanged(totalsize, true, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize= totalsize - 10;
-    bm->setPosition(totalsize/2);
-    bmh->itemCountChanged(totalsize/2, true, totalsize);
-    bm->itemCountChanged(totalsize/2, true, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize++;
-    bm->setPosition(0);
-    bmh->itemCountChanged(0, false, totalsize);
-    bm->itemCountChanged(0, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize++;    
-    bmh->itemCountChanged(50, false, totalsize);
-    bm->itemCountChanged(50, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize++;    
-    bm->setPosition(100);
-    bmh->itemCountChanged(80, false, totalsize);
-    bm->itemCountChanged(80, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize++;    
-    bm->setPosition(500);
-    bmh->itemCountChanged(480, false, totalsize);
-    bm->itemCountChanged(480, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize++;    
-    bm->setPosition(totalsize-20);
-    bmh->itemCountChanged(totalsize, false, totalsize);
-    bm->itemCountChanged(totalsize, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize=totalsize+10;
-    bm->setPosition(totalsize-20);
-    bmh->itemCountChanged(totalsize, false, totalsize);
-    bm->itemCountChanged(totalsize, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
-    
-    totalsize=totalsize+10;
-    bm->setPosition(20);
-    bmh->itemCountChanged(totalsize, false, totalsize);
-    bm->itemCountChanged(totalsize, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize--; //no item remove since totalsize+200 is outside
+    QCOMPARE(bmh->totalSize(), totalsize);
 
-    totalsize=totalsize+10;
-    bm->setPosition(totalsize/2-20);
-    bmh->itemCountChanged(totalsize, false, totalsize);
-    bm->itemCountChanged(totalsize, false, totalsize);
-    QVERIFY(bmh->isIntergal(bufferSize));   
+    
+    bm->resetBuffer(0, 10);
+    bmh->resizeCache(10);
+    bm->aboutToRemoveItem(1);
+    bmh->remove(1);
+    bm->removedItem(1);
+    QCOMPARE(bmh->totalSize(), 9);
+
+    bmh->resizeCache(totalsize);
+    bm->resetBuffer(0, totalsize);
+    
+    //insert
+    
+    bm->setPosition(0);
+    bm->aboutToInsertItem(0);
+    bmh->insert(0); 
+    bm->insertedItem(0);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->aboutToInsertItem(50);
+    bmh->insert(50);  
+    bm->insertedItem(50);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->setPosition(100);
+    bm->aboutToInsertItem(80);
+    bmh->insert(80);   
+    bm->insertedItem(80);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->setPosition(500);
+    bm->aboutToInsertItem(80);
+    bmh->insert(80);   
+    bm->insertedItem(80);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);    
+    
+    bm->setPosition(500);
+    bm->aboutToInsertItem(480);
+    bmh->insert(480); 
+    bm->insertedItem(480);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->setPosition(totalsize-20);
+    bm->aboutToInsertItem(totalsize);
+    bmh->insert(totalsize); 
+    bm->insertedItem(totalsize);
+    QVERIFY(bmh->isIntergal(bufferSize));
+    totalsize++;
+    QCOMPARE(bmh->totalSize(), totalsize);
+    
+    bm->setPosition(totalsize-20);
+    bm->aboutToInsertItem(totalsize+20);
+    bmh->insert(totalsize+20); 
+    bm->insertedItem(totalsize+20);
+    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize++; //no insert
+    QCOMPARE(bmh->totalSize(), totalsize);
+
+    bm->setPosition(2*totalsize);
+    bm->aboutToInsertItem(2*totalsize);
+    bmh->insert(2*totalsize); 
+    bm->insertedItem(2*totalsize);
+    QVERIFY(bmh->isIntergal(bufferSize));
+//    totalsize++; //no insert
+    QCOMPARE(bmh->totalSize(), totalsize);
+
+    
 }
 
 void TestCacheProxy::testBM_ResizeCache()
@@ -577,6 +648,23 @@ void TestCacheProxy::testDP_RequestReleaseAndData()
     res = dph->data(idx, Qt::DecorationRole);
     QVERIFY(res == dph->defaultIcon());    
     
+    dph->testClearItem(2, false);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 1); //1 update
+    QVERIFY(updates[0].first == 2); //for 2
+    QVERIFY(updates[0].second == 2); //for 2
+    QVERIFY(dph->itemData(idx).count() == 0 ); //for 2
+    
+    QVERIFY(dph->itemData( dph->testCreateIndex(999999, 0)).count() == 0 );
+
+    dph->testClearItem(2, true);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 0); //no updates
+    
+    dph->testClearItem(-10, true);
+    updates = dph->getSignalDataUpdated();
+    QVERIFY(updates.count() == 0); //no updates
+
     idx = dph->index(3, 0);
     res = dph->data(idx, Qt::DecorationRole);
     QVERIFY(res == dph->defaultIcon());    
@@ -623,11 +711,13 @@ void TestCacheProxy::testDP_CacheManagment()
     
     dph->testUpdate(0, &list, false); //update shouldn't change - no item
     dph->testUpdate(-1, &list, true); //update shouldn't change - no item
+    dph->testUpdate(-1, s, Qt::DisplayRole, true); //update shouldn't change - no item
+    dph->testUpdateIcon(-1, s);
     dph->testUpdate(120000, &list, false); //update shouldn't change - no item
     res = dph->data(idx, Qt::DisplayRole);
     QVERIFY(res.isValid() == false);
     QVERIFY(dph->getObserverDataUpdated().count() == 0);
-
+    
     dph->testNewItem(&list, false);
     QList< QPair< int, int > > resList = dph->getSignalRowsAboutToBeInserted();
     QVERIFY(resList.count() == 1);
@@ -637,6 +727,13 @@ void TestCacheProxy::testDP_CacheManagment()
     QVERIFY(resList.count() == 1);
     QVERIFY(resList[0].first == 0); //for item 0
     QVERIFY(resList[0].second == 0); //for item 0
+
+    dph->testUpdateIcon(0, s, false);
+    dph->testUpdateIcon(0, s, true);
+    res = dph->data(idx, Qt::DecorationRole);
+    QCOMPARE(res.isValid(), true);
+    QVERIFY(res == s);
+    QCOMPARE(dph->getSignalDataUpdated().count(), 1);
     
     QVERIFY(dph->rowCount() == 1);
     
@@ -743,22 +840,34 @@ void TestCacheProxy::testDP_CacheManagment()
     
     dph->getSignalRowsInserted();
     dph->getSignalRowsRemoved();
-    dph->testInsertItem(-10, QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert with -10 puts it at begining
+    dph->testInsertItem(0, QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert with 0 puts at begining
     resList = dph->getSignalRowsInserted();
-    QVERIFY(resList.count() == 1);
+    QVERIFY(resList.count() == 1);    
     QVERIFY(resList[0].first == 0);
     QVERIFY(resList[0].second == 0);
+    
+    dph->getSignalRowsInserted();
+    dph->getSignalRowsRemoved();
+    dph->testInsertItem(-10, QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert with -10 not adds to collection
+    resList = dph->getSignalRowsInserted();
+    QVERIFY(resList.count() == 0);
     dph->testRemoveItem(-10);
     resList = dph->getSignalRowsRemoved();
     QVERIFY(resList.count() == 0);
-
+    
     dph->getSignalRowsInserted();
     dph->getSignalRowsRemoved();
-    dph->testInsertItem(100000, QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert with beyond range puts it at end
+    dph->testInsertItem(dph->rowCount(), QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert at dph->rowCount() puts at end
     resList = dph->getSignalRowsInserted();
     QVERIFY(resList.count() == 1);
     QVERIFY(resList[0].first == dph->rowCount()-1);
-    QVERIFY(resList[0].second == dph->rowCount()-1);    
+    QVERIFY(resList[0].second == dph->rowCount()-1);
+    
+    dph->getSignalRowsInserted();
+    dph->getSignalRowsRemoved();
+    dph->testInsertItem(100000, QPair< QVariant, int >(QString(""), Qt::DisplayRole), false); //insert with beyond range not adds to collection
+    resList = dph->getSignalRowsInserted();
+    QVERIFY(resList.count() == 0);
     dph->testRemoveItem(100000);
     resList = dph->getSignalRowsRemoved();
     QVERIFY(resList.count() == 0);
@@ -769,10 +878,13 @@ void TestCacheProxy::testDP_CacheManagment()
     QCOMPARE(it.contains(Qt::DisplayRole), true);
     QVariant r2 = it[Qt::DisplayRole];
     QCOMPARE(r2.isValid(), true);
-    res = dph->data(idx, Qt::DisplayRole);
-    QCOMPARE(res.isValid(), true);
-    QCOMPARE(res.toString(), r2.toString());
+
+    idx = dph->index(-10,0);
+    it = dph->itemData(idx);
     
+    res = dph->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), false);
+
 }
 
 void TestCacheProxy::testDP_QPixmapPool()
@@ -819,6 +931,60 @@ void TestCacheProxy::testDP_QPixmapPool()
     dph->resizeQPixmapPool(1);
     res = dph->testCreateIcon(10, pix);
     QVERIFY(res.isValid() == false);    
+    
+    dph->resizeQPixmapPool(110);
+    for ( int i = 0; i < 100; i ++)
+        dph->testCreateIcon(i, pix);
+    
+    for ( int i = 20; i < 40; i ++)
+        dph->testReleasePixmap(i);
+    
+    dph->resizeQPixmapPool(50);
+    dph->testReleasePixmap(5);
+    
+    dph->resizeQPixmapPool(1);
+    dph->testReleasePixmap(0);
+    dph->testReleasePixmap(2);
+    dph->testReleasePixmap(1);
+    dph->resizeQPixmapPool(10);
+
+    
+    
+}
+
+void TestCacheProxy::testDP_IconMode()
+{
+    dph = new DataProviderHelper(100);
+    QCOMPARE( dph->testIconMode(), HgDataProviderModel::HgDataProviderIconHbIcon);
+    dph->resizeQPixmapPool(10);
+    QPixmap pix;
+    QVariant res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<HbIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconHbIcon);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<HbIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQIcon);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QIcon>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQImage);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QImage>());
+    
+    dph->testChangeIconMode(HgDataProviderModel::HgDataProviderIconQPixmap);
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == true);
+    QVERIFY(res.canConvert<QPixmap>());
+    
+    dph->testChangeIconMode( (HgDataProviderModel::HgDataProviderIconMode)10 );
+    res = dph->testCreateIcon(0, pix);
+    QVERIFY(res.isValid() == false);
 }
 
 void TestCacheProxy::testCP_QAbstractItemModel()
@@ -838,13 +1004,80 @@ void TestCacheProxy::testCP_QAbstractItemModel()
 
     cp->setDataProvider(dph);
     QVERIFY(cp->DataProvider() == dph);
+    
+    QList< QPair< QVariant, int > > list;
+    QString s = "NEWITEM";
+    list.append( QPair< QVariant, int >(s, Qt::DisplayRole) );
+    dph->testNewItem(&list, false);
+    
+    dph->testRemoveItems(0, 1);//should remove item
+
+    QModelIndex idx = cp->index(0,0);
+    QCOMPARE(cp->hasChildren(idx), true);
+    QSize s1 = cp->span(idx);
+    QSize s2 = cp->span(cp->index(1, 0));
+    QVERIFY(s1 == s2);
+    cp->submit();
+    cp->revert();
+    Qt::ItemFlags f1 = cp->flags(idx);
+    Qt::ItemFlags f2 = cp->flags(cp->index(1, 0));
+    QVERIFY(f1 == f2);
+    
+    QVariant res = cp->headerData(0, Qt::Horizontal, Qt::DecorationRole);
+    QCOMPARE(res.isValid(), false);
+    //default implementation ignores that
+    cp->setHeaderData(0, Qt::Horizontal, QString("headerdata"), Qt::DecorationRole);
+    res = cp->headerData(0, Qt::Horizontal, Qt::DecorationRole);
+    QCOMPARE(res.isValid(), false);
+    
+    QStringList li = cp->mimeTypes();
+    QCOMPARE(li.count(), 1);
+    
+    QModelIndexList li2;
+    li2<< idx;
+    QMimeData* md1 = cp->mimeData(li2);
+    QVERIFY(md1 != NULL);
+    QCOMPARE(cp->dropMimeData(NULL, Qt::MoveAction, 10, 0, QModelIndex() ), false);    
+    QCOMPARE(cp->supportedDragActions(), Qt::CopyAction);
+
+    QCOMPARE(cp->canFetchMore(idx), false);
+    cp->fetchMore(idx);
+    
+    QModelIndex idx2 = cp->buddy(idx);
+    QCOMPARE(idx2.row(), idx.row());
+    QCOMPARE(idx2.column(), idx.column());
+    
+    li2 = cp->match(idx, Qt::DisplayRole, QString("ITEM"), 1000, Qt::MatchContains);
+    QCOMPARE(li2.count(), dph->getCount());
+
+    
+    
+    cp->setDataProvider(NULL);
+    QVERIFY(cp->DataProvider() == NULL);
+    idx = cp->index(100,0);
+    res = dph->data(idx, Qt::DisplayRole);
+    QCOMPARE(res.isValid(), false);
+    
+    QCOMPARE(cp->insertRows(0, 10), false); //default implementation returns false
+    QCOMPARE(cp->removeRows(0, 10), false);//default implementation returns false
+
+    QCOMPARE(cp->insertRow(0), false); //default implementation returns false
+    QCOMPARE(cp->removeRow(0), false);//default implementation returns false
+    
+    QCOMPARE(cp->insertColumns(0, 10), false); //default implementation returns false
+    QCOMPARE(cp->removeColumns(0, 10), false);//default implementation returns false
+
+    QCOMPARE(cp->insertColumn(0), false); //default implementation returns false
+    QCOMPARE(cp->removeColumn(0), false);//default implementation returns false
+    
+    
 }
 
 void TestCacheProxy::testCP_SignalsForward()
 {
     cp = new HgCacheProxyModel();
     cph = new CacheProxyHelper(cp);
-    dph = new DataProviderHelper(200);    
+    dph = new DataProviderHelper(200);
     cp->setDataProvider(dph, 50, 20);
     
     QList< QPair< int, int > > resList = cph->getSignalDataChanged();
@@ -884,8 +1117,69 @@ void TestCacheProxy::testCP_SignalsForward()
     QVERIFY(cph->getSignalModelAboutToBeReset() == true);
     QVERIFY(cph->getSignalModelReset() == true);
     QVERIFY(cp->columnCount() == 1);
-    QVERIFY(cp->rowCount() == 1000);
+    QVERIFY(cp->rowCount() == 1000);    
+    
+    cph->getSignalDataChanged();
+    dph->testEmitDataChanged(dph->index(0,0), dph->index(10,0));
+    resList = cph->getSignalDataChanged();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
 
+    cph->getSignalColumnsAboutToBeInserted();
+    cph->getSignalColumnsInserted();
+    dph->testEmitColumnsInsert(dph->index(0,0),0, 10);
+    resList = cph->getSignalColumnsAboutToBeInserted();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    resList = cph->getSignalColumnsInserted();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+
+    cph->getSignalColumnsAboutToBeRemoved();
+    cph->getSignalColumnsRemoved();
+    dph->testEmitColumnsRemove(dph->index(0,0),0, 10);
+    resList = cph->getSignalColumnsAboutToBeRemoved();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    resList = cph->getSignalColumnsRemoved();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 10);
+    
+//    cph->getSignalColumnsAboutToBeMoved();
+//    cph->getSignalColumnsMoved();
+//    QCOMPARE(dph->testEmitColumnsAboutToBeMoved(0, 10), false);
+//    resList = cph->getSignalColumnsAboutToBeMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+//    dph->testEmitColumnsMoved(0, 10);
+//    resList = cph->getSignalColumnsMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+    
+//    cph->getSignalRowsAboutToBeMoved();
+//    cph->getSignalRowsMoved();
+//    QCOMPARE(dph->testEmitRowsAboutToBeMoved(0, 10), false);
+//    resList = cph->getSignalRowsAboutToBeMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+//    dph->testEmitRowsMoved(0, 10);
+//    resList = cph->getSignalRowsMoved();
+//    QCOMPARE(resList.count(), 0);
+    
+    
+    cph->getSignalHeaderDataChanged();
+    dph->testEmitHeaderDataChanged(Qt::Horizontal, 0, 0);
+    resList = cph->getSignalHeaderDataChanged();
+    QCOMPARE(resList.count(), 1);
+    QCOMPARE(resList[0].first, 0);
+    QCOMPARE(resList[0].second, 0);
+
+    
 }
 
 void TestCacheProxy::testCP_ResizeCache()
@@ -893,6 +1187,7 @@ void TestCacheProxy::testCP_ResizeCache()
     cp = new HgCacheProxyModel();
     cph = new CacheProxyHelper(cp);
     dph = new DataProviderHelper(200);
+    cp->resizeCache(100, 20);
     cp->setDataProvider(dph, 50, 20);
     dph->getLastRelease();
     dph->getLastRequest();
@@ -971,8 +1266,30 @@ void TestCacheProxy::testCP_Data()
     res = cp->data(idx, v);
     QCOMPARE(res.isValid(), true);
     QCOMPARE(res.toInt(), v);
-
+   
+    dph->getLastRelease();
+    dph->getLastRequest();
+    cp->release(0, 100);
+    QCOMPARE(dph->getLastRelease().count(), 101);
+    cp->release(-10, 0);
+    QCOMPARE(dph->getLastRelease().count(), 1);
+    cp->release(10, -10);
+    QCOMPARE(dph->getLastRelease().count(), 11);
+    cp->request(0, 100);
+    QCOMPARE(dph->getLastRequest().count(), 101);
+    cp->request(-10, 0);
+    QCOMPARE(dph->getLastRequest().count(), 1);
+    cp->request(-10, 10, HgBufferManagerObserver::HgRequestOrderDescending);
+    QCOMPARE(dph->getLastRequest().count(), 11);
     
+    cp->setDataProvider(NULL, 50, 20);
+    res = cp->data(idx, v);
+    QCOMPARE(res.isValid(), false);
+    cp->request(0, 100, HgBufferManagerObserver::HgRequestOrderAscending);   
+    QCOMPARE(dph->getLastRequest().count(), 0);    
+    cp->release(0, 100);
+    QCOMPARE(dph->getLastRelease().count(), 0);
+
 }
 
 void TestCacheProxy::testCP_Sort()
@@ -984,6 +1301,7 @@ void TestCacheProxy::testCP_Sort()
 
     cp->setSortRole(Qt::UserRole+2);
     QCOMPARE(cp->sortRole(), Qt::UserRole+2);
+    cp->setSortRole(Qt::UserRole+2);
     cp->sort(0, Qt::AscendingOrder);
     QCOMPARE(cp->sortColumn(), 0);
     QCOMPARE(cp->sortOrder(), Qt::AscendingOrder);
@@ -1007,6 +1325,9 @@ void TestCacheProxy::testCP_Sort()
     cp->setSortRole(Qt::DisplayRole);
     cp->setSortCaseSensitivity(Qt::CaseSensitive);
     QCOMPARE(cp->sortCaseSensitivity(), Qt::CaseSensitive);
+    cp->setSortCaseSensitivity(Qt::CaseSensitive);
+    cp->setSortCaseSensitivity(Qt::CaseInsensitive);
+    cp->setSortCaseSensitivity(Qt::CaseSensitive);
     cp->sort(0, Qt::AscendingOrder);
     
     idx = cp->index(10, 0);
@@ -1022,12 +1343,14 @@ void TestCacheProxy::testCP_Sort()
     
     cp->setSortLocaleAware(true);
     QCOMPARE(cp->isSortLocaleAware(), true);
+    cp->setSortLocaleAware(true);
     cp->setSortLocaleAware(false);
     QCOMPARE(cp->isSortLocaleAware(), false);
         
     QString s = QString("AAA");
     cp->setDynamicSortFilter(true);
     QCOMPARE(cp->dynamicSortFilter(), true);
+    cp->setDynamicSortFilter(true);
     cp->setSortRole(Qt::DisplayRole);
     cp->setSortCaseSensitivity(Qt::CaseSensitive);
     dph->testInsertItem(10, QPair< QVariant, int >(s, Qt::DisplayRole), false);
@@ -1055,8 +1378,12 @@ void TestCacheProxy::testCP_Filter()
     
     cp->setFilterRegExp(regexp);
     QVERIFY(cp->filterRegExp() == regexp);
+    cp->setFilterRegExp(regexp);
     cp->setFilterCaseSensitivity(Qt::CaseSensitive);
     QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseSensitive);   
+    cp->setFilterCaseSensitivity(Qt::CaseSensitive);
+    cp->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    cp->setFilterCaseSensitivity(Qt::CaseSensitive);
     
     idx = cp->index(1, 0);
     res = cp->data(idx, Qt::DisplayRole);
@@ -1065,10 +1392,12 @@ void TestCacheProxy::testCP_Filter()
     
     cp->setFilterKeyColumn(1);
     QCOMPARE(cp->filterKeyColumn (), 1);
+    cp->setFilterKeyColumn(1);
     cp->setFilterKeyColumn(0);
     
     cp->setFilterRole(Qt::UserRole+1);
     QCOMPARE(cp->filterRole(), Qt::UserRole+1);
+    cp->setFilterRole(Qt::UserRole+1);
     cp->setFilterRole(Qt::DisplayRole);     
     
     regexp = QRegExp("ITEM*", Qt::CaseInsensitive, QRegExp::Wildcard);
@@ -1076,6 +1405,7 @@ void TestCacheProxy::testCP_Filter()
     QVERIFY(cp->filterRegExp() == regexp);
     cp->setFilterCaseSensitivity(Qt::CaseInsensitive);
     QCOMPARE(cp->filterCaseSensitivity(), Qt::CaseInsensitive);   
+    cp->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
     idx = cp->index(1, 0);
     res = cp->data(idx, Qt::DisplayRole);

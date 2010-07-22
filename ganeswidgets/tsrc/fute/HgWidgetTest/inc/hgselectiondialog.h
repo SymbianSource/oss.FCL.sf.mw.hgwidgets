@@ -18,7 +18,7 @@
 #ifndef HGSELECTIONDIALOG_H
 #define HGSELECTIONDIALOG_H
 
-#include <hbdialog.h>
+#include <HbDialog>
 
 class HbPushButton;
 class HbLabel;
@@ -41,6 +41,7 @@ private:
     HgWidget *mHgWidget;
     HbPushButton *mSelectAll;
     HbLabel *mCountLabel;
+    HbAction* mPrimaryAction;
 };
 
 #endif  //HGSELECTIONDIALOG_H

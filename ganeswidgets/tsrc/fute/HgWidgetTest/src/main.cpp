@@ -15,8 +15,8 @@
 *
 */
 
-#include <hbapplication.h>
-#include <hbmainwindow.h>
+#include <HbApplication>
+#include <HbMainWindow>
 #include "hgwidgettestview.h"
 
 int main(int argc, char **argv)
@@ -25,10 +25,11 @@ int main(int argc, char **argv)
     app.setApplicationName("HgWidgetTest");
 
     HbMainWindow mainWindow;
- //   mainWindow.setOptimizationFlags( QGraphicsView::DontSavePainterState ); If this is used, menu is invisible
     mainWindow.viewport()->grabGesture(Qt::PanGesture);
     mainWindow.viewport()->grabGesture(Qt::TapGesture);
     mainWindow.viewport()->grabGesture(Qt::TapAndHoldGesture);
+    mainWindow.viewport()->grabGesture(Qt::PinchGesture);
+    mainWindow.viewport()->setAttribute(Qt::WA_AcceptTouchEvents,true); 
 
     HgWidgetTestView *view = new HgWidgetTestView;
     mainWindow.addView(view);

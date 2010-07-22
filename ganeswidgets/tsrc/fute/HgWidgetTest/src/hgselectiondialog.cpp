@@ -15,9 +15,9 @@
 *
 */
 
-#include <hbaction.h>
-#include <hblabel.h>
-#include <hbpushbutton.h>
+#include <HbAction>
+#include <HbLabel>
+#include <HbPushButton>
 #include <hgwidgets/hgwidgets.h>
 #include <QGraphicsLinearLayout>
 #include "hgselectiondialog.h"
@@ -36,9 +36,10 @@ HgSelectionDialog::HgSelectionDialog(
     setDismissPolicy(HbDialog::NoDismiss);
     setTimeout(HbDialog::NoTimeout);
     setHeadingWidget(new HbLabel(title, this));
-    setPrimaryAction(new HbAction(primaryText, this));
-    primaryAction()->setDisabled(true);
-    setSecondaryAction(new HbAction("Cancel", this));
+    mPrimaryAction = new HbAction(primaryText, this);
+    addAction(mPrimaryAction);
+    mPrimaryAction->setDisabled(true);
+    addAction(new HbAction("Cancel", this));
 
     connect(content->selectionModel(),
             SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
@@ -94,7 +95,7 @@ void HgSelectionDialog::updateItems()
         QItemSelectionModel *selectionModel = mHgWidget->selectionModel();
         QAbstractItemModel *model = mHgWidget->model();
         if (selectionModel && model) {
-            primaryAction()->setEnabled(selectionModel->hasSelection());
+            mPrimaryAction->setEnabled(selectionModel->hasSelection());
 
             int selectedCount = selectionModel->selectedIndexes().count();
             int itemCount = model->rowCount();
