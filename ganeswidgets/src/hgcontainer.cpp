@@ -96,6 +96,7 @@ void HgContainer::setItemCount(int itemCount)
     }
 }
 
+// TODO: This does exactly the same as HgContainer::imageCount(), should this be thus removed?
 int HgContainer::itemCount() const
 {
     return mItems.count();
@@ -393,6 +394,7 @@ void HgContainer::moveItems(int start, int end, int destination)
     scrollTo(mSelectionModel->currentIndex());
 }
 
+// TODO: This does exactly the same as HgContainer::itemCount(), should this be thus removed?
 int HgContainer::imageCount() const
 {
     return mItems.count();
@@ -611,14 +613,12 @@ void HgContainer::boundSpring()
     FUNC_LOG;
 
     qreal x = mSpring.endPos().x();
-    x = qBound(qreal(0), x, worldWidth());
     if (mRenderer->coverflowModeEnabled()) {
         qreal i = floorf(x);
         x = (x - i > 0.5f) ? ceilf(x) : i;
-        mSpring.animateToPos(QPointF(x, 0));
     }
 
-    mSpring.animateToPos(QPointF(x, 0));
+    mSpring.animateToPosAfterPanning(QPointF(x, 0), worldWidth());
 
 }
 
@@ -679,7 +679,9 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
         mDragged = false;
         qreal newPos(0);
         if (mDrag.finish(pos, mRenderer->coverflowModeEnabled(), newPos)) {
-            mSpring.animateToPos(QPointF(qBound(qreal(0), newPos, worldWidth()), 0));
+            
+            mSpring.animateToPosAfterPanning(QPointF(newPos, 0), worldWidth());
+            
             HgWidgetItem* item = itemByIndex(newPos);
             if (item && item->modelIndex() != mSelectionModel->currentIndex()) {
             //    mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
@@ -707,7 +709,7 @@ bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
     FUNC_LOG;
     
     bool handleGesture = false;
-
+    
     if (hasItemAt(pos)) {
         switch (state) 
             {
@@ -717,7 +719,29 @@ bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
                     mIgnoreGestureAction = false;
                     startLongPressWatcher(pos);
                 } else if(mSpring.isActive()) {
-                    mSpring.cancel();
+                    
+                    int rowCount = mRenderer->getRowCount();
+                    if(rowCount != 0)   //just in case, should not be zero 
+                    {
+                        qreal springPos = mSpring.pos().x();
+                        int gridTotalHeightInImages = ceilf( mItems.count() / rowCount );
+                        qreal currentViewHeightInImages;
+                        if (scrollDirection() == Qt::Horizontal ) {
+                            int rowHeight = mRenderer->getImageSize().width() + mRenderer->getSpacing().width();
+                            currentViewHeightInImages = rect().width() / rowHeight;
+                        } else {
+                            int rowHeight = mRenderer->getImageSize().height() + mRenderer->getSpacing().height();
+                            currentViewHeightInImages = rect().height() / rowHeight;
+                        }
+                        
+                        // If list does not currently fill the whole screen (some theme background behind the list
+                        // is visible), and list is moving, then do not react to tapping.
+                        if( springPos >= 0 
+                            && springPos <= (gridTotalHeightInImages - currentViewHeightInImages) )
+                        {
+                            mSpring.cancel();
+                        }
+                    }
                     mIgnoreGestureAction = true;
                 }
                 break;
@@ -733,7 +757,7 @@ bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
         
         handleGesture = true;
     } else {
-       mIgnoreGestureAction = true;
+        mIgnoreGestureAction = true;
     }    
     return handleGesture;
 }

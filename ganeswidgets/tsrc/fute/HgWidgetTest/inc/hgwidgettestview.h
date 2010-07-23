@@ -31,7 +31,6 @@ class HbLabel;
 class HbDialog;
 class QParallelAnimationGroup;
 class HgCoverItem;
-
 class HgItemSizeDialog;
 
 class HgWidgetTestView : public HbView
@@ -56,6 +55,7 @@ private slots:
     void changeReflectionsEnabled(bool);
     void changeEffect3dEnabled(bool);
     void changeItemSizePolicy(HgWidget::ItemSizePolicy);
+    void changeTitleAndDescrVisibility(HgMediawall::TitleAndDescrVisibility);
 
     void toggleScrollDirection();
     void openDialog(const QModelIndex &index);

@@ -47,5 +47,6 @@ static const QString SETT_DESCRIPTION_FONT = "DescriptionFont";
 static const QString SETT_REFLECTIONS_ENABLED = "Reflections enabled";
 static const QString SETT_EFFECT3D_ENABLED = "Effect3d enabled";
 static const QString SETT_ITEM_SIZE_POLICY = "ItemSizePolicy";
+static const QString SETT_TITLE_DESCR_VISIBILITY = "TitleDescrVisibility";
 
 #endif /* HGTESTDEFS_H_ */

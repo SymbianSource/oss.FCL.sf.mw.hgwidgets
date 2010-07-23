@@ -41,6 +41,9 @@ public:
     HbFontSpec titleFontSpec() const;
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
+    
+    void setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility);
+    HgMediawall::TitleAndDescrVisibility titleAndDescriptionVisibility() const;
 
     HgCoverflowContainer *container();
     const HgCoverflowContainer *container() const;
@@ -52,6 +55,8 @@ private:
     HbTextItem *mTitleItem;
     HbTextItem *mDescriptionItem;
     HgCenterItemArea *mCenterItemArea; // Dummy item for calculating correct position for center item
+    
+    HgMediawall::TitleAndDescrVisibility mTitleAndDescrVisibility;
 };
 
 #endif  //HGMEDIAWALL_P_H

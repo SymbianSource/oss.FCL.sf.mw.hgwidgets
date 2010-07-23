@@ -104,6 +104,24 @@ HbFontSpec HgMediawall::descriptionFontSpec() const
 }
 
 /*!
+    Sets visibility for title and description.
+*/
+void HgMediawall::setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility)
+{
+    Q_D(HgMediawall);
+    d->setTitleAndDescriptionVisibility( visibility );
+}
+
+/*!
+ * Gets current visibility for title and description.
+ */
+HgMediawall::TitleAndDescrVisibility HgMediawall::titleAndDescriptionVisibility() const
+{
+    Q_D(const HgMediawall);
+    return d->titleAndDescriptionVisibility();
+}
+
+/*!
  *  Sets front item delta from the center of the widget.
  */
 void HgMediawall::setFrontItemPositionDelta(const QPointF& position)

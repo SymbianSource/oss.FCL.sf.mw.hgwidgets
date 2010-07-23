@@ -25,7 +25,7 @@
 #include "hgwidgets_p.h"
 #include "hgcontainer.h"
 #include "hgwidgetitem.h"
-#include "hgscrollBufferManager.h"
+#include "hgscrollbuffermanager.h"
 #include "hggridcontainer.h"
 #include "trace.h"
 

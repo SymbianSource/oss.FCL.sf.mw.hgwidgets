@@ -100,6 +100,61 @@ HbFontSpec HgMediawallPrivate::descriptionFontSpec() const
     return HbFontSpec();
 }
 
+void HgMediawallPrivate::setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility)
+{
+    FUNC_LOG;
+    
+    mTitleAndDescrVisibility = visibility;
+    
+    switch (visibility) {
+        case HgMediawall::TitleVisibilityBothVisible:
+            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityBothVisible";
+            
+            if (mTitleItem) {
+                mTitleItem->setVisible(true);
+            }
+            if (mDescriptionItem) {
+                mDescriptionItem->setVisible(true);
+            }
+            break;
+        case HgMediawall::TitleVisibilityTitleVisible:
+            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityTitleVisible";
+            if (mTitleItem) {
+                mTitleItem->setVisible(true);
+            }
+            if (mDescriptionItem) {
+                mDescriptionItem->setVisible(false);
+            }
+            break;
+        case HgMediawall::TitleVisibilityDescriptionVisible:
+            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityDescriptionVisible";
+            
+            if (mTitleItem) {
+                mTitleItem->setVisible(false);
+            }
+            if (mDescriptionItem) {
+                mDescriptionItem->setVisible(true);
+            }
+            break;
+        case HgMediawall::TitleVisibilityBothInvisible:
+            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityBothInvisible";
+            
+            if (mTitleItem) {
+                mTitleItem->setVisible(false);
+            }
+            if (mDescriptionItem) {
+                mDescriptionItem->setVisible(false);
+            }
+            break;
+        default: break;
+    }
+}
+
+HgMediawall::TitleAndDescrVisibility HgMediawallPrivate::titleAndDescriptionVisibility() const
+{
+    return mTitleAndDescrVisibility;
+}
+
 HgCoverflowContainer *HgMediawallPrivate::container()
 {
     HANDLE_ERROR_NULL(mContainer);

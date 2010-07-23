@@ -21,7 +21,7 @@
 
 const int KTimeDelta(10);
 const qreal KTimeDeltaF(0.01f);
-//const qreal KVelocitySnap(0.05f);
+const qreal KVelocitySnap(0.06f);
 const qreal KPositionSnap(0.01f);
 const int KTimerInterval(10);
 
@@ -29,11 +29,13 @@ HgSpring::HgSpring() :
 mStartPos(QPointF(0,0)),
 mPos(QPointF(0,0)),
 mEndPos(QPointF(0,0)),
+mEndPosOverListBoundary(QPointF(0,0)),
 mVelocity(QPointF(0,0)),
 mK(30.1),
 mDamping(10.1),
 mAccumulator(0.0),
-mDoNotUpdate(false)
+mDoNotUpdate(false),
+mEndPosOverListEdge(false)
 {
     mTimer = new QTimer(this);
 
@@ -56,10 +58,54 @@ void HgSpring::setDamping(qreal damping)
     mDamping = damping;
 }
 
-void HgSpring::animateToPos(const QPointF& pos)
+qreal HgSpring::k() const
 {
+    return mK;
+}
+
+qreal HgSpring::damping() const
+{
+    return mDamping;
+}
+
+// TODO: Remove this function and use only the animateToPosAfterPanning version?
+void HgSpring::animateToPos(const QPointF& pos)
+{    
     mStartPos = mPos;
     mEndPos = pos;
+
+    emit started();
+
+    if (!mTimer->isActive())
+    {
+        mTimer->start(KTimerInterval);
+        mPrevTime.start();
+    }
+}
+
+void HgSpring::animateToPosAfterPanning(const QPointF& pos, qreal worldWidth)
+{    
+    mWorldWidth = worldWidth;
+    mStartPos = mPos;
+    
+    qreal xPos = pos.x();
+    if( xPos < 0.0 )
+    {
+        mEndPosOverListEdge = true;
+        mEndPosOverListBoundary = pos;
+        mEndPos = QPointF(0, 0);
+    }
+    else if( xPos > worldWidth )
+    {
+        mEndPosOverListEdge = true;
+        mEndPosOverListBoundary = pos;
+        mEndPos = QPointF(worldWidth, 0);
+    }
+    else
+    {
+        mEndPosOverListEdge = false;
+        mEndPos = pos;
+    }
 
     emit started();
 
@@ -122,12 +168,36 @@ void HgSpring::update()
     bool stopped = false;
     while (mAccumulator >= KTimeDelta)
     {
-        QPointF delta = mEndPos - mPos;
+        QPointF delta;
+        if(mEndPosOverListEdge)
+        {
+            delta = mEndPosOverListBoundary - mPos;
+            
+            if( mPos.x() < KPositionSnap || mPos.x() > mWorldWidth )
+            {
+                // When list's position goes past the world boundary
+                // we reset our mEndPosOverListEdge boolean flag
+                // -> the passed boundary will be used as end point,
+                // and the K value of this spring will be modified.
+                mEndPosOverListEdge = false; //reset
+                mEndPosOverListBoundary = QPointF(0,0); //reset
+                mWorldWidth = 0.0; //reset
+                mK = 60.0;
+            }
+            
+        }
+        else
+        {
+            delta = mEndPos - mPos;
+        }
+        
         QPointF force = delta * mK - mVelocity * mDamping;
         mVelocity += force * KTimeDeltaF;
         mPos += mVelocity * KTimeDeltaF;
+        
         if ( (qAbs(mPos.x() - mEndPos.x()) < KPositionSnap &&
-              qAbs(mPos.y() - mEndPos.y()) < KPositionSnap) )
+                  qAbs(mPos.y() - mEndPos.y()) < KPositionSnap)
+             && qAbs(mVelocity.x()) < KVelocitySnap )
         {
             mPos = mEndPos;
             mAccumulator = 0;
@@ -139,7 +209,7 @@ void HgSpring::update()
 
         mAccumulator -= KTimeDelta;
     }
-
+    
     if (!mDoNotUpdate)
         emit updated();
     

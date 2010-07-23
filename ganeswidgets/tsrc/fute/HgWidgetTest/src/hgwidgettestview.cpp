@@ -321,6 +321,15 @@ void HgWidgetTestView::changeItemSizePolicy(HgMediawall::ItemSizePolicy policy)
     }
 }
 
+void HgWidgetTestView::changeTitleAndDescrVisibility(HgMediawall::TitleAndDescrVisibility visibility)
+{    
+    HgMediawall* mediawall = qobject_cast<HgMediawall*>(mWidget);
+    if (mediawall && mediawall->titleAndDescriptionVisibility() != visibility)
+    {
+        mediawall->setTitleAndDescriptionVisibility(visibility);
+    }
+}
+
 void HgWidgetTestView::activated()
 {
     mAnimationGroup->setDirection(QAbstractAnimation::Backward);
@@ -668,12 +677,8 @@ void HgWidgetTestView::showOptions()
             connect(view, SIGNAL(lowResImageUseChanged(bool)), SLOT(changeLowResImageUse(bool)));
             connect(view, SIGNAL(widgetHeightChanged(int)), SLOT(changeWidgetHeight(int)));
             connect(view, SIGNAL(widgetWidthChanged(int)), SLOT(changeWidgetWidth(int)));
-            connect(view, SIGNAL(titlePositionChanged(HgMediawall::LabelPosition)),
-                SLOT(changeTitlePosition(HgMediawall::LabelPosition)));
             connect(view, SIGNAL(titleFontChanged(HbFontSpec)),
                 SLOT(changeTitleFont(HbFontSpec)));
-            connect(view, SIGNAL(descriptionPositionChanged(HgMediawall::LabelPosition)),
-                SLOT(changeDescriptionPosition(HgMediawall::LabelPosition)));
             connect(view, SIGNAL(descriptionFontChanged(HbFontSpec)),
                 SLOT(changeDescriptionFont(HbFontSpec)));
             connect(view, SIGNAL(reflectionsEnabledChanged(bool)), 
@@ -682,6 +687,8 @@ void HgWidgetTestView::showOptions()
                 SLOT(changeEffect3dEnabled(bool)));
             connect(view, SIGNAL(itemSizePolicyChanged(HgWidget::ItemSizePolicy)),
                 SLOT(changeItemSizePolicy(HgWidget::ItemSizePolicy)));
+            connect(view, SIGNAL(titleAndDescrVisibilityChanged(HgMediawall::TitleAndDescrVisibility)),
+                SLOT(changeTitleAndDescrVisibility(HgMediawall::TitleAndDescrVisibility)));
 
             mOptionsView = view;
             primaryWindow->addView(mOptionsView);
@@ -763,6 +770,11 @@ void HgWidgetTestView::setupWidgetOptions()
     value = settings.value(SETT_ITEM_SIZE_POLICY);
     if (value.isValid()) {
         changeItemSizePolicy(static_cast<HgMediawall::ItemSizePolicy>(value.toInt()));
+    }
+    
+    value = settings.value(SETT_TITLE_DESCR_VISIBILITY);
+    if (value.isValid()) {
+        changeTitleAndDescrVisibility(static_cast<HgMediawall::TitleAndDescrVisibility>(value.toInt()));
     }
 }
 
@@ -948,20 +960,22 @@ void HgWidgetTestView::orientationChanged(Qt::Orientation orientation)
     if (orientation == Qt::Horizontal && mWidgetType == HgWidgetCoverflow) {
         setItemVisible(Hb::AllItems, false);
     }
-    else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetGrid && mainWindow()->currentView() == this ) {
+    else if (orientation == Qt::Horizontal
+                && mWidgetType == HgWidgetGrid
+                && mainWindow()->currentView() == this ) {
         setItemVisible(Hb::AllItems, false);
-    }        
+    }
     else if (orientation == Qt::Horizontal && mWidgetType == HgWidgetTBone) {
         initWidget(HgWidgetCoverflow);
         setItemVisible(Hb::AllItems, false);
-    }            
+    }
     else if (orientation == Qt::Vertical && mWidgetType == HgWidgetCoverflow) {
         initWidget(HgWidgetTBone);
         setItemVisible(Hb::AllItems, true);
     }
     else if (orientation == Qt::Vertical && mWidgetType == HgWidgetGrid) {
         setItemVisible(Hb::AllItems, true);
-    }    
+    }
 }
 void HgWidgetTestView::resizeEvent(QGraphicsSceneResizeEvent *event)
 {

@@ -37,6 +37,7 @@ static const QString DESCRIPTION_FONT = "Description font";
 static const QString REFLECTIONS_ENABLED = "Reflections enabled";
 static const QString EFFECT3D_ENABLED = "Grid 3d effects enabled";
 static const QString ITEM_SIZE_POLICY = "Item size policy";
+static const QString TITLE_DESCR_VISIBILITY = "Title/description visibility";
 
 enum DataFormItems {
     ItemWidgetType = 0,
@@ -50,7 +51,8 @@ enum DataFormItems {
     ItemDescriptionFont,
     ItemReflectionEnabled,
     ItemEffect3dEnabled,
-    ItemItemSizePolicy
+    ItemItemSizePolicy,
+    ItemTitleDescrVisibility
 };
 
 HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
@@ -118,7 +120,11 @@ HgWidgetOptionsView::HgWidgetOptionsView(QGraphicsItem *parent) :
         HbDataFormModelItem::ToggleValueItem, ITEM_SIZE_POLICY);
     item->setContentWidgetData(QString("text"), QString("User defined"));
     item->setContentWidgetData(QString("additionalText"), QString("Automatic"));
-
+    
+    item = mModel->appendDataFormItem(
+        HbDataFormModelItem::ComboBoxItem, TITLE_DESCR_VISIBILITY);
+    item->setContentWidgetData(QString("items"), QStringList("Both visible") << "Title visible" << "Description visible" << "Both invisible");
+	
     connect(mModel, SIGNAL(dataChanged(QModelIndex, QModelIndex)), SLOT(updateData(QModelIndex, QModelIndex)));
     mForm->setModel(mModel);
 
@@ -143,6 +149,8 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
     QSettings settings(SETT_ORGANIZATION, SETT_APPLICATION);
 
     HbDataFormModelItem *item = mModel->itemFromIndex(startIn);
+    if( !item ) return;
+    
     if (item->data(HbDataFormModelItem::LabelRole).toString() == WIDGET_TYPE) {
         int index = item->contentWidgetData(QString("currentIndex")).toInt();
         HgTestWidgetType type = HgWidgetNone;
@@ -296,6 +304,28 @@ void HgWidgetOptionsView::updateData(QModelIndex startIn, QModelIndex endIn)
         HgWidget::ItemSizePolicy value = (data.toString() == "Automatic" ? HgWidget::ItemSizeAutomatic : HgWidget::ItemSizeUserDefined);
         settings.setValue(SETT_ITEM_SIZE_POLICY, value);
         emit itemSizePolicyChanged(value);
+    }
+    else if (item->data(HbDataFormModelItem::LabelRole).toString() == TITLE_DESCR_VISIBILITY) {
+                
+        int index = item->contentWidgetData(QString("currentIndex")).toInt();
+        HgMediawall::TitleAndDescrVisibility visibility = HgMediawall::TitleVisibilityBothVisible;
+        switch (index) {
+            case 0:
+                visibility = HgMediawall::TitleVisibilityBothVisible;
+                break;
+            case 1:
+                visibility = HgMediawall::TitleVisibilityTitleVisible;
+                break;
+            case 2:
+                visibility = HgMediawall::TitleVisibilityDescriptionVisible;
+                break;
+            case 3:
+                visibility = HgMediawall::TitleVisibilityBothInvisible;
+                break;
+            default: break;
+        }
+        settings.setValue(SETT_TITLE_DESCR_VISIBILITY, visibility);
+        emit titleAndDescrVisibilityChanged(visibility);
     }
 }
 
@@ -502,6 +532,32 @@ void HgWidgetOptionsView::setupData()
             item->setContentWidgetData(QString("additionalText"), "Automatic");
         }
     }
+    
+    item = mModel->itemFromIndex(mModel->index(ItemTitleDescrVisibility, 0));
+    value = settings.value(SETT_TITLE_DESCR_VISIBILITY);
+    if (item && value.isValid()) {
+        int index(0);
+        switch (value.toInt()) {
+            case HgMediawall::TitleVisibilityBothVisible:
+                qDebug() << "JARI_DEBUG, HgWidgetOptionsView::setupData(): SETT_TITLE_DESCR_VISIBILITY: TitleVisibilityBothVisible";
+                index = 0;
+                break;
+            case HgMediawall::TitleVisibilityTitleVisible:
+                qDebug() << "JARI_DEBUG, HgWidgetOptionsView::setupData(): SETT_TITLE_DESCR_VISIBILITY: TitleVisibilityTitleVisible";
+                index = 1;
+                break;
+            case HgMediawall::TitleVisibilityDescriptionVisible:
+                qDebug() << "JARI_DEBUG, HgWidgetOptionsView::setupData(): SETT_TITLE_DESCR_VISIBILITY: TitleVisibilityDescriptionVisible";
+                index = 2;
+                break;
+            case HgMediawall::TitleVisibilityBothInvisible:
+                qDebug() << "JARI_DEBUG, HgWidgetOptionsView::setupData(): SETT_TITLE_DESCR_VISIBILITY: TitleVisibilityBothInvisible";
+                index = 3;
+                break;
+            default: break;
+        }
+        item->setContentWidgetData(QString("currentIndex"), index);
+    }
 }
 
 void HgWidgetOptionsView::resizeEvent(QGraphicsSceneResizeEvent *event)
@@ -510,7 +566,7 @@ void HgWidgetOptionsView::resizeEvent(QGraphicsSceneResizeEvent *event)
 
     if (mUpdateWidgetSize) {
         mContentReady = false;
-        HbDataFormModelItem *item = item = mModel->itemFromIndex(mModel->index(ItemWidgetHeight, 0));
+        HbDataFormModelItem *item = mModel->itemFromIndex(mModel->index(ItemWidgetHeight, 0));
         if (item) {
             item->setContentWidgetData(QString("text"), event->newSize().height());
         }

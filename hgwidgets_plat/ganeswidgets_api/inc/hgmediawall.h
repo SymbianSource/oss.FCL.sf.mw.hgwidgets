@@ -29,9 +29,19 @@ class HG_WIDGETS_EXPORT HgMediawall : public HgWidget
     Q_PROPERTY(HbFontSpec descriptionFontSpec READ descriptionFontSpec WRITE setDescriptionFontSpec)
     Q_PROPERTY(QPointF frontItemPositionDelta READ frontItemPositionDelta WRITE setFrontItemPositionDelta)
     Q_PROPERTY(bool reflectionsEnabled READ reflectionsEnabled WRITE enableReflections)
-    Q_ENUMS(LabelPosition)
+    Q_PROPERTY(HgMediawall::TitleAndDescrVisibility titleAndDescriptionVisibility \
+                READ titleAndDescriptionVisibility \
+                WRITE setTitleAndDescriptionVisibility)
+    Q_ENUMS(TitleAndDescrVisibility)
 
 public:
+
+    enum TitleAndDescrVisibility {
+        TitleVisibilityBothVisible = 0,
+        TitleVisibilityTitleVisible,
+        TitleVisibilityDescriptionVisible,
+        TitleVisibilityBothInvisible
+    };
 
     explicit HgMediawall(QGraphicsItem *parent = 0 );
     virtual ~HgMediawall();
@@ -41,6 +51,9 @@ public:
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
 
+    void setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility);
+    HgMediawall::TitleAndDescrVisibility titleAndDescriptionVisibility() const;
+    
     void setFrontItemPositionDelta(const QPointF& position);
     QPointF frontItemPositionDelta() const;
 

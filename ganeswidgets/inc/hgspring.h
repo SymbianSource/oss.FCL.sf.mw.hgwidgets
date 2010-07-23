@@ -30,15 +30,21 @@ class QTimer;
 class HgSpring : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(qreal mDamping READ damping WRITE setDamping)
+    Q_PROPERTY(qreal mK READ k WRITE setK)
+    
 public:
 
     explicit HgSpring();    
     virtual ~HgSpring();
     
+    qreal k() const;
+    qreal damping() const;
     void setK(qreal K);
     void setDamping(qreal damping);
     
     void animateToPos(const QPointF& pos);
+    void animateToPosAfterPanning(const QPointF& pos, qreal worldWidth);
     void gotoPos(const QPointF& pos);
     void cancel();
     bool isActive() const;
@@ -63,6 +69,7 @@ private:
     QPointF mStartPos;
     QPointF mPos;
     QPointF mEndPos;
+    QPointF mEndPosOverListBoundary;
     QPointF mVelocity;
     qreal mK;
     qreal mDamping;
@@ -70,6 +77,9 @@ private:
     QTimer* mTimer;
     QTime mPrevTime;
     bool mDoNotUpdate;
+    
+    bool mEndPosOverListEdge;
+    qreal mWorldWidth;
 };
 
 #endif

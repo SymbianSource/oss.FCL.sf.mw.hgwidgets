@@ -661,23 +661,42 @@ bool HgMediaWallRenderer::reflectionsEnabled() const
 }
     
 qreal HgMediaWallRenderer::getWorldWidth() const
-{   
-    qreal width = ceil((qreal)mDataProvider->imageCount() / (qreal)mRowCount - 1.0f);
-    
+{
+    qreal worldWidth = ceil((qreal)mDataProvider->imageCount() / (qreal)mRowCount);
+    qreal worldWidthAsIndex = worldWidth - 1.0f;
+
     // if we are in vertical orientation we want last and first item
     // to place at the top and bottom of the screen instead of center
     if (mScrollDirection == Qt::Vertical)
     {
-        qreal step = mSpacing2D.height() + mImageSize2D.height(); 
-        width -= (mRect.height() / step - 1.0f);
+        qreal step = mSpacing2D.height() + mImageSize2D.height();
+        qreal screenWidth = mRect.height() / step;
+        if(worldWidth > screenWidth) //do the items take over one screenful?
+        {
+            worldWidthAsIndex -= (screenWidth - 1.0f);
+        }
+        else
+        {
+            // all items fit to one screenful
+            return 0;
+        }
     }
     else if (mScrollDirection == Qt::Horizontal && !mCoverflowMode)
     {
         qreal step = mSpacing2D.width() + mImageSize2D.width();
-        width -= (mRect.width() / step - 1.0f);
+        qreal screenWidth = mRect.width() / step;
+        if(worldWidth > screenWidth) //do the items take over one screenful?
+        {
+            worldWidthAsIndex -= (screenWidth - 1.0f);
+        }
+        else
+        {
+            // all items fit to one screenful
+            return 0;
+        }
     }
-       
-    return width;
+    
+    return worldWidthAsIndex;
 }
 
 

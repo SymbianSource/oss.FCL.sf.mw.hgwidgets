@@ -49,6 +49,7 @@ class HG_WIDGETS_EXPORT HgWidget : public HbWidget
     Q_ENUMS(SelectionMode)
     Q_ENUMS(IndexFeedbackPolicy)
     Q_ENUMS(ItemSizePolicy)
+
 public:
 
     enum HgDataRole
