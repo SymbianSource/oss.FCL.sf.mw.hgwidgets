@@ -75,6 +75,11 @@ public:
     void setItemSpacing(const QSizeF& size);
     QSizeF itemSpacing() const;
 
+    void setHandleLongPress(bool handleLongPress);
+    bool handleLongPress() const;
+    
+    virtual void handleThemeChanged();
+    
     HgWidget *q_ptr;
 
 private:
@@ -114,11 +119,12 @@ private:
     void _q_modelReset();
     void _q_groovePressed(qreal value, Qt::Orientation orientation);
     void _q_updateCurrentItem(const QModelIndex &current, const QModelIndex &previous);
-
+    void _q_themeChanged();
+    
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 
     void initBufferManager(int itemCount);
-
+    
 protected:
 
     HgContainer *mContainer;

@@ -436,7 +436,7 @@ void HgMediaWallRenderer::setScrollDirection(Qt::Orientation scrollDirection, bo
         mNextScrollDirection = mScrollDirection;
         return;
     }
-    
+        
     if (mScrollDirection != scrollDirection)
     {
         mStateMachine->setAnimated(animate);
@@ -449,7 +449,7 @@ void HgMediaWallRenderer::setScrollDirection(Qt::Orientation scrollDirection, bo
         {
             //emit renderingNeeded();            
         }
-    } else if (!animate) {
+    } else {
         // reset next scrolldirection just to be sure. In some cases
         // when orientation changes couple of times and container visibility changes
         // we might otherwise end up in wrong state.

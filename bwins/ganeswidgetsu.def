@@ -94,6 +94,4 @@ EXPORTS
 	?setEffect3dEnabled@HgGrid@@QAEX_N@Z @ 93 NONAME ; void HgGrid::setEffect3dEnabled(bool)
 	?effect3dEnabled@HgGrid@@QBE_NXZ @ 94 NONAME ; bool HgGrid::effect3dEnabled(void) const
 	?polish@HgMediawall@@MAEXAAVHbStyleParameters@@@Z @ 95 NONAME ; void HgMediawall::polish(class HbStyleParameters &)
-	?titleAndDescriptionVisibility@HgMediawall@@QBE?AW4TitleAndDescrVisibility@1@XZ @ 96 NONAME ; enum HgMediawall::TitleAndDescrVisibility HgMediawall::titleAndDescriptionVisibility(void) const
-	?setTitleAndDescriptionVisibility@HgMediawall@@QAEXW4TitleAndDescrVisibility@1@@Z @ 97 NONAME ; void HgMediawall::setTitleAndDescriptionVisibility(enum HgMediawall::TitleAndDescrVisibility)
 

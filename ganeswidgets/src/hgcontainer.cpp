@@ -63,7 +63,8 @@ HgContainer::HgContainer(QGraphicsItem* parent) :
     mItemSizePolicy(HgWidget::ItemSizeAutomatic),
     mOrientation(Qt::Vertical),
     mDelayedScrollToIndex(),
-    mIgnoreGestureAction(false)
+    mIgnoreGestureAction(false),
+    mHandleLongPress(false)
 {
     FUNC_LOG;
 
@@ -418,8 +419,13 @@ int HgContainer::flags(int index) const
     return 0;
 }
 
-const HgImage *HgContainer::indicator(int flags) const
+const HgImage *HgContainer::indicator(int flags)
 {
+    if (flags != 0 && (!mMarkImageOff || !mMarkImageOn)) {
+        // indicators haven't been loaded yet.
+        loadIndicatorGraphics();
+    }
+    
     if (flags & 1) {
         return mMarkImageOn;
     }
@@ -495,6 +501,10 @@ void HgContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
         // set scrollto index to invalid value.
         mDelayedScrollToIndex = QModelIndex();
     }
+    // Indicator size depends from the item size so
+    // indicators need to be updated. Indicators are created
+    // in runtime only for need so if they dont exists they aren't created.
+    loadIndicatorGraphics(true);
 }
 
 // this needs to be implemented for gesture framework to work
@@ -518,7 +528,7 @@ void HgContainer::gestureEvent(QGestureEvent *event)
     HbTapGesture *tap = 0;
     if (QGesture *gesture = event->gesture(Qt::TapGesture)) {
         tap = static_cast<HbTapGesture *>(event->gesture(Qt::TapGesture));
-        if (tap->tapStyleHint() == HbTapGesture::TapAndHold) {
+        if (mHandleLongPress && tap->tapStyleHint() == HbTapGesture::TapAndHold) {
             eventHandled = handleLongTap(tap->state(),
                     mapFromScene(event->mapToGraphicsScene(tap->hotSpot())));
         
@@ -548,35 +558,6 @@ void HgContainer::init(Qt::Orientation scrollDirection)
     mOrientation = scrollDirection;
 
     mQuadRenderer = mRenderer->getRenderer();
-
-    // Fetch icons for marking mode (on and off states).
-
-    mMarkImageOn = mQuadRenderer->createNativeImage();
-    HANDLE_ERROR_NULL(mMarkImageOn);
-    mMarkImageOff = mQuadRenderer->createNativeImage();
-    HANDLE_ERROR_NULL(mMarkImageOff);
-
-    // Since there is no way to create the icons directly currently
-    // lets create HbCheckBox and ask primitives from it.
-    HbCheckBox* checkBox = new HbCheckBox();
-    checkBox->setCheckState(Qt::Checked);
-    QGraphicsItem *icon = checkBox->HbWidget::primitive("icon");
-    HbIconItem *iconItem = 0;
-    if (icon) {
-        iconItem = static_cast<HbIconItem*>(icon);    
-        if (mMarkImageOn) {
-            mMarkImageOn->setPixmap(iconItem->icon().pixmap());
-        }
-    }
-    checkBox->setCheckState(Qt::Unchecked);
-    icon = checkBox->HbWidget::primitive("icon");    
-    if (icon) {
-        iconItem = static_cast<HbIconItem*>(icon);
-        if (mMarkImageOff) {
-            mMarkImageOff->setPixmap(iconItem->icon().pixmap());
-        }
-    }    
-    delete checkBox;
 
     connect(&mSpring, SIGNAL(updated()), SLOT(updateBySpringPosition()));
     connect(&mSpring, SIGNAL(started()), SIGNAL(scrollingStarted()));
@@ -717,7 +698,20 @@ bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
                 {
                 if (mRenderer->coverflowModeEnabled() || !mSpring.isActive()) {
                     mIgnoreGestureAction = false;
-                    startLongPressWatcher(pos);
+
+                    if (mHandleLongPress) {
+                        if (mRenderer->coverflowModeEnabled()) {
+                            // in coverflow mode we react to longtap only if animation is not on and
+                            // center item is tapped.
+                            int temp = 0;
+                            if (getItemAt(pos,temp)->modelIndex() == mSelectionModel->currentIndex() &&
+                                    !mSpring.isActive()) {
+                                startLongPressWatcher(pos);
+                            }
+                        } else {
+                            startLongPressWatcher(pos);
+                        }
+                    }
                 } else if(mSpring.isActive()) {
                     
                     int rowCount = mRenderer->getRowCount();
@@ -810,15 +804,24 @@ bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
         if (item && action != DoubleTap) {
             if (action == LongTap) {
                 INFO("Long tap:" << item->modelIndex().row());
+
+                bool currentPressed = item->modelIndex() == mSelectionModel->currentIndex();
                 
                 if (!mRenderer->coverflowModeEnabled()) {
                     selectItem(index);
                 } else {
                     mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+                    mSpring.animateToPos(QPointF(index, 0));
                 }
 
                 if (!mIgnoreGestureAction) {
-                    emit longPressed(item->modelIndex(), pos);
+                    if (mRenderer->coverflowModeEnabled() && mHandleLongPress) {
+                        if( currentPressed && !mSpring.isActive()) {
+                            emit longPressed(item->modelIndex(), pos);
+                        }
+                    } else if (mHandleLongPress){
+                        emit longPressed(item->modelIndex(), pos);
+                    }
                 } else {
                     mSpring.resetVelocity();
                     update();
@@ -1177,6 +1180,10 @@ void HgContainer::updateItemSizeAndSpacing()
         mRenderer->setImageSize(mUserItemSize);
         mRenderer->setSpacing(mUserItemSpacing);
     }
+    // Indicator size depends from the item size so
+    // indicators need to be updated. Indicators are created
+    // in runtime only for need so if they dont exists they aren't created.
+    loadIndicatorGraphics(true);
 }
 
 QSizeF HgContainer::getAutoItemSize() const
@@ -1199,4 +1206,47 @@ qreal HgContainer::scrollPosition() const
     return mSpring.pos().x();
 }
 
+void HgContainer::loadIndicatorGraphics(bool loadIfExists)
+{
+    if (loadIfExists && !mMarkImageOn && !mMarkImageOff) return;
+    
+    if (!mMarkImageOn) {
+        mMarkImageOn = mQuadRenderer->createNativeImage();
+    }        
+    HANDLE_ERROR_NULL(mMarkImageOn);
+    if (!mMarkImageOff) {
+        mMarkImageOff = mQuadRenderer->createNativeImage();
+    }
+    
+    const QSizeF newIndicatorSize = itemSize()/2;
+    
+    // Validate if loading marking icons is really needed by comparing the sizes.
+    // Both marking icons have the same size so its enough to check one.
+    if (mMarkImageOn && mMarkImageOn->width() == newIndicatorSize.width() &&
+            mMarkImageOn->height() == newIndicatorSize.height() ) return;
+    
+    HANDLE_ERROR_NULL(mMarkImageOff);    
+    HbIcon selectedIcon(QLatin1String("qtg_small_selected"));
+    HbIcon unselectedIcon(QLatin1String("qtg_small_unselected"));
+    selectedIcon.setSize(newIndicatorSize);
+    unselectedIcon.setSize(newIndicatorSize);
+
+    QPixmap selectedPixmap = selectedIcon.pixmap();
+    QPixmap unselectedPixmap = unselectedIcon.pixmap();
+
+    if (!selectedPixmap.isNull() && !unselectedPixmap.isNull()) {
+        if (mMarkImageOn) {
+            mMarkImageOn->setPixmap(selectedPixmap);
+        }
+        if (mMarkImageOff) {
+            mMarkImageOff->setPixmap(unselectedPixmap);
+        }
+    }    
+}
+
+void HgContainer::setHandleLongPress(bool handheLongPress)
+{
+    // this is just a flag that is used in gesturehandling logic.
+    mHandleLongPress = handheLongPress;
+}
 // EOF

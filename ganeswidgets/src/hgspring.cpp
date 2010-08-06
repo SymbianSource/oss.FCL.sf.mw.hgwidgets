@@ -71,6 +71,11 @@ qreal HgSpring::damping() const
 // TODO: Remove this function and use only the animateToPosAfterPanning version?
 void HgSpring::animateToPos(const QPointF& pos)
 {    
+    if (mPos == pos) {
+        // No need to animate, we are already in correct position.
+        return;
+    }
+            
     mStartPos = mPos;
     mEndPos = pos;
 

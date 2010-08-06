@@ -49,7 +49,7 @@ public:
      * @param flags.
      * @return pointer HgImage-object.
      */
-    virtual const HgImage* indicator(int flags) const=0;
+    virtual const HgImage* indicator(int flags)=0;
 };
 
 #endif

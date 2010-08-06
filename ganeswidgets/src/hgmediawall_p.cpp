@@ -16,6 +16,8 @@
 */
 
 #include <HbTextItem>
+#include <HbEvent>
+#include <QApplication>
 #include "hgmediawall_p.h"
 #include "hgwidgetitem.h"
 #include "hgcoverflowcontainer.h"
@@ -41,10 +43,12 @@ void HgMediawallPrivate::init(Qt::Orientation orientation)
 
     mTitleItem = new HbTextItem("", q);
     q->style()->setItemName(mTitleItem, "title");
+    mTitleItem->setElideMode(Qt::ElideRight);
 
     mDescriptionItem = new HbTextItem("", q);
     q->style()->setItemName(mDescriptionItem, "description");
-
+    mDescriptionItem->setElideMode(Qt::ElideRight);
+    
     mCenterItemArea = new HgCenterItemArea(q);
     q->style()->setItemName(mCenterItemArea, "centeritem");
 
@@ -100,61 +104,6 @@ HbFontSpec HgMediawallPrivate::descriptionFontSpec() const
     return HbFontSpec();
 }
 
-void HgMediawallPrivate::setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility)
-{
-    FUNC_LOG;
-    
-    mTitleAndDescrVisibility = visibility;
-    
-    switch (visibility) {
-        case HgMediawall::TitleVisibilityBothVisible:
-            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityBothVisible";
-            
-            if (mTitleItem) {
-                mTitleItem->setVisible(true);
-            }
-            if (mDescriptionItem) {
-                mDescriptionItem->setVisible(true);
-            }
-            break;
-        case HgMediawall::TitleVisibilityTitleVisible:
-            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityTitleVisible";
-            if (mTitleItem) {
-                mTitleItem->setVisible(true);
-            }
-            if (mDescriptionItem) {
-                mDescriptionItem->setVisible(false);
-            }
-            break;
-        case HgMediawall::TitleVisibilityDescriptionVisible:
-            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityDescriptionVisible";
-            
-            if (mTitleItem) {
-                mTitleItem->setVisible(false);
-            }
-            if (mDescriptionItem) {
-                mDescriptionItem->setVisible(true);
-            }
-            break;
-        case HgMediawall::TitleVisibilityBothInvisible:
-            qDebug() << "JARI_DEBUG, HgMediawallPrivate::setTitleAndDescriptionVisibility(): TitleVisibilityBothInvisible";
-            
-            if (mTitleItem) {
-                mTitleItem->setVisible(false);
-            }
-            if (mDescriptionItem) {
-                mDescriptionItem->setVisible(false);
-            }
-            break;
-        default: break;
-    }
-}
-
-HgMediawall::TitleAndDescrVisibility HgMediawallPrivate::titleAndDescriptionVisibility() const
-{
-    return mTitleAndDescrVisibility;
-}
-
 HgCoverflowContainer *HgMediawallPrivate::container()
 {
     HANDLE_ERROR_NULL(mContainer);
@@ -179,6 +128,19 @@ void HgMediawallPrivate::updateCurrentItem(const QModelIndex &currentItem)
     if (item) {
         mTitleItem->setText(item->title());
         mDescriptionItem->setText(item->description());
+    }
+}
+
+void HgMediawallPrivate::handleThemeChanged()
+{
+    HgWidgetPrivate::handleThemeChanged();
+    
+    if (mTitleItem || mDescriptionItem) {
+        Q_Q(HgMediawall);
+    
+        // this is needed to enforce color fetch from CSS
+        HbEvent themeEvent(HbEvent::ThemeChanged);
+        QApplication::sendEvent(q, &themeEvent);    
     }
 }
 

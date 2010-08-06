@@ -321,15 +321,6 @@ void HgWidgetTestView::changeItemSizePolicy(HgMediawall::ItemSizePolicy policy)
     }
 }
 
-void HgWidgetTestView::changeTitleAndDescrVisibility(HgMediawall::TitleAndDescrVisibility visibility)
-{    
-    HgMediawall* mediawall = qobject_cast<HgMediawall*>(mWidget);
-    if (mediawall && mediawall->titleAndDescriptionVisibility() != visibility)
-    {
-        mediawall->setTitleAndDescriptionVisibility(visibility);
-    }
-}
-
 void HgWidgetTestView::activated()
 {
     mAnimationGroup->setDirection(QAbstractAnimation::Backward);
@@ -687,8 +678,6 @@ void HgWidgetTestView::showOptions()
                 SLOT(changeEffect3dEnabled(bool)));
             connect(view, SIGNAL(itemSizePolicyChanged(HgWidget::ItemSizePolicy)),
                 SLOT(changeItemSizePolicy(HgWidget::ItemSizePolicy)));
-            connect(view, SIGNAL(titleAndDescrVisibilityChanged(HgMediawall::TitleAndDescrVisibility)),
-                SLOT(changeTitleAndDescrVisibility(HgMediawall::TitleAndDescrVisibility)));
 
             mOptionsView = view;
             primaryWindow->addView(mOptionsView);
@@ -770,11 +759,6 @@ void HgWidgetTestView::setupWidgetOptions()
     value = settings.value(SETT_ITEM_SIZE_POLICY);
     if (value.isValid()) {
         changeItemSizePolicy(static_cast<HgMediawall::ItemSizePolicy>(value.toInt()));
-    }
-    
-    value = settings.value(SETT_TITLE_DESCR_VISIBILITY);
-    if (value.isValid()) {
-        changeTitleAndDescrVisibility(static_cast<HgMediawall::TitleAndDescrVisibility>(value.toInt()));
     }
 }
 

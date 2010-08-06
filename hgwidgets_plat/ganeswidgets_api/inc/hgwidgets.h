@@ -49,7 +49,6 @@ class HG_WIDGETS_EXPORT HgWidget : public HbWidget
     Q_ENUMS(SelectionMode)
     Q_ENUMS(IndexFeedbackPolicy)
     Q_ENUMS(ItemSizePolicy)
-
 public:
 
     enum HgDataRole
@@ -166,6 +165,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_groovePressed(qreal, Qt::Orientation))
     Q_PRIVATE_SLOT(d_func(), void _q_modelReset())
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrentItem(const QModelIndex &current, const QModelIndex &previous))
+    Q_PRIVATE_SLOT(d_func(), void _q_themeChanged())
 };
 
 #endif  //HGWIDGET_H

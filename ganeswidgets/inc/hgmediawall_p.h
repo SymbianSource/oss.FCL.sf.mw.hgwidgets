@@ -23,7 +23,6 @@
 
 class HgCoverflowContainer;
 class HgCenterItemArea;
-class HbIconItem;
 class HbTextItem;
 
 class HgMediawallPrivate : public HgWidgetPrivate
@@ -41,22 +40,18 @@ public:
     HbFontSpec titleFontSpec() const;
     void setDescriptionFontSpec(const HbFontSpec &fontSpec);
     HbFontSpec descriptionFontSpec() const;
-    
-    void setTitleAndDescriptionVisibility(HgMediawall::TitleAndDescrVisibility visibility);
-    HgMediawall::TitleAndDescrVisibility titleAndDescriptionVisibility() const;
 
     HgCoverflowContainer *container();
     const HgCoverflowContainer *container() const;
 
 private: // From HgWidgetPrivate
     void updateCurrentItem(const QModelIndex &currentItem);
-
+    void handleThemeChanged();
+    
 private:
     HbTextItem *mTitleItem;
     HbTextItem *mDescriptionItem;
     HgCenterItemArea *mCenterItemArea; // Dummy item for calculating correct position for center item
-    
-    HgMediawall::TitleAndDescrVisibility mTitleAndDescrVisibility;
 };
 
 #endif  //HGMEDIAWALL_P_H

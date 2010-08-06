@@ -93,6 +93,8 @@ public:
     Qt::Orientation scrollDirection() const;
     qreal scrollPosition() const;
 
+    void setHandleLongPress(bool handleLongPress);
+        
 signals:
 
     // emit this signal when scrolling. for example scrollbar can be connected to this signal.
@@ -119,7 +121,7 @@ protected: // from HgMediaWallDataProvider
     int imageCount() const;
     const HgImage *image(int index) const;
     int flags(int index) const;
-    const HgImage *indicator(int flags) const;
+    const HgImage *indicator(int flags);
 
 protected: // events
 
@@ -139,7 +141,8 @@ protected:
     virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
-
+    virtual void loadIndicatorGraphics(bool loadIfExists = false);
+    
 protected:
 
     enum ItemActionType
@@ -222,6 +225,7 @@ protected: // data
     Qt::Orientation mOrientation;
     QModelIndex mDelayedScrollToIndex;
     bool mIgnoreGestureAction;
+    bool mHandleLongPress;
 };
 
 #endif

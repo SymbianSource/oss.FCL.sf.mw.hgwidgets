@@ -48,8 +48,6 @@ signals:
     void reflectionsEnabledChanged(bool);
     void effect3dEnabledChanged(bool);
     void itemSizePolicyChanged(HgWidget::ItemSizePolicy);
-    void titleAndDescrVisibilityChanged(HgMediawall::TitleAndDescrVisibility);
-
 private slots:
     void updateData(QModelIndex startIn, QModelIndex endIn);
 

@@ -17,6 +17,7 @@
 
 #include <QApplication>
 #include <HbScrollbar>
+#include <HbTheme>
 #include <hgwidgets/hgwidgets.h>
 
 #include "hgwidgets_p.h"
@@ -82,7 +83,10 @@ void HgWidgetPrivate::init(HgContainer *container)
     q->connect(mContainer, SIGNAL(scrollingStarted()), q, SIGNAL(scrollingStarted()));
     q->connect(mContainer, SIGNAL(scrollingEnded()), q, SIGNAL(scrollingEnded()));
     q->connect(mScrollBarHideTimer, SIGNAL(timeout()), q, SLOT(_q_hideScrollBars()));
-
+    q->connect( HbTheme::instance(), SIGNAL(changed()), q, SLOT(_q_themeChanged()));
+    
+    mContainer->setHandleLongPress(mHandleLongPress);
+    
 //    mIndexFeedback = new HgIndexFeedback(q);
 //    mIndexFeedback->setWidget(q);
 
@@ -676,27 +680,12 @@ void HgWidgetPrivate::adjustGeometry()
 
 void HgWidgetPrivate::lostForeground()
 {
-    if( !mForeground ) return;
-
     mForeground = false;
-    QList<HgWidgetItem*> list = mContainer->items();
-    foreach(HgWidgetItem* item, list){
-        item->releaseItemData();
-    }
 }
 
 void HgWidgetPrivate::gainedForeground()
 {
-    if( mForeground ) return;
-
     mForeground = true;
-    QList<HgWidgetItem*> list = mContainer->items();
-    int bufferStart = 0;
-    int bufferEnd = 0;
-    mBufferManager->currentBuffer(bufferStart,bufferEnd);
-    for(;bufferStart<=bufferEnd;bufferStart++){
-        list.at(bufferStart)->updateItemData();
-    }
 }
 
 void HgWidgetPrivate::updateCurrentItem(const QModelIndex &currentItem)
@@ -719,8 +708,8 @@ void HgWidgetPrivate::aboutToChangeOrientation()
 void HgWidgetPrivate::orientationChanged(Qt::Orientation orientation)
 {
     Q_Q(HgWidget);
-    if (mContainer->orientation() != orientation) {
-        mContainer->setOrientation(orientation, q->isVisible());
+    if (mContainer->orientation() != orientation) {    
+        mContainer->setOrientation(orientation, q->isVisible() && q->isActive());
         if (!mStaticScrollDirection) {
             createScrollBar(orientation);
         }
@@ -863,5 +852,29 @@ void HgWidgetPrivate::initBufferManager(int itemCount)
     q->connect( mBufferManager, SIGNAL(requestItems(int,int)), q, SLOT(_q_requestItems(int,int)));
     mBufferManager->resetBuffer(0, itemCount);
 }
+
+void HgWidgetPrivate::setHandleLongPress(bool handleLongPress)
+{
+    if (mHandleLongPress != handleLongPress) {
+        mHandleLongPress = handleLongPress;
+        mContainer->setHandleLongPress(mHandleLongPress);
+    }
+}
+
+bool HgWidgetPrivate::handleLongPress() const
+{
+    return mHandleLongPress;
+}
+
+void HgWidgetPrivate::_q_themeChanged()
+{
+    handleThemeChanged();
+}
+
+void HgWidgetPrivate::handleThemeChanged()
+{
+    // TODO, add graphics updates here if required.    
+}
+
 
 #include "moc_hgwidgets.cpp"

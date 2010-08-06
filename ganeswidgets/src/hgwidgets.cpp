@@ -148,13 +148,11 @@ void HgWidget::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottom
  * Returns true if the scroll area handles
  * long press gestures, false otherwise
  *
- * \sa HbScrollArea::setHandleLongPress()
  */
 bool HgWidget::longPressEnabled() const
 {
     Q_D( const HgWidget );
-
-    return d->mHandleLongPress;
+    return d->handleLongPress();
 }
 
 /*!
@@ -163,22 +161,11 @@ bool HgWidget::longPressEnabled() const
  *
  * The default value is false.
  *
- * \sa HbScrollArea::handleLongPress()
  */
 void HgWidget::setLongPressEnabled (bool value)
 {
     Q_D( HgWidget );
-
-    if (d->mHandleLongPress != value)
-    {
-        d->mHandleLongPress = value;
-    }
-
-    // TODO, should we do something like this?????
-//    if (isChanged) {
-//        d->updateGestures();
-//        emit gestureSceneFilterChanged( d->mGestureFilter );
-//    }
+    d->setHandleLongPress(value);
 }
 
 HgWidget::ScrollBarPolicy HgWidget::scrollBarPolicy() const
