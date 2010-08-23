@@ -221,27 +221,8 @@ void HgWidget::setScrollBar(HbScrollBar *scrollBar)
 
 bool HgWidget::eventFilter(QObject *obj,QEvent *event)
 {
-    Q_D(HgWidget);
-    switch (event->type() )
-        {
-        case QEvent::ApplicationActivate:
-            {
-//            d->gainedForeground();
-            break;
-            }
-        case QEvent::ApplicationDeactivate:
-            {
-//            d->lostForeground();
-            break;
-            }
-        case QEvent::GraphicsSceneResize:
-            {
-            d->adjustGeometry();
-            break;
-            }
-        default:
-            break;
-        }
+    // function is not used anymore, that is, event filter is not installed.
+    // Kept to keep the binary compability.
     return QObject::eventFilter(obj, event);
 }
 

@@ -456,7 +456,7 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-
+    
     // update spring position at paint if needed,
     // this is hack for scrollbar, since dragging it
     // causes also paint events in here
@@ -469,7 +469,6 @@ void HgContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *optio
 
     QPainter::RenderHints hints = painter->renderHints();
     painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-
 
     // interpolate spring velocity towards zero, this is done
     // so that spring velocity for rendering doesn't drop directly to
@@ -554,6 +553,8 @@ void HgContainer::init(Qt::Orientation scrollDirection)
 {
     FUNC_LOG;
 
+    setFlag( QGraphicsItem::ItemClipsToShape, true );    
+    
     mRenderer = createRenderer(scrollDirection);
     mOrientation = scrollDirection;
 
@@ -698,7 +699,7 @@ bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
                 {
                 if (mRenderer->coverflowModeEnabled() || !mSpring.isActive()) {
                     mIgnoreGestureAction = false;
-
+                    
                     if (mHandleLongPress) {
                         if (mRenderer->coverflowModeEnabled()) {
                             // in coverflow mode we react to longtap only if animation is not on and

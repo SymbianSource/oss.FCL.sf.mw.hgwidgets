@@ -49,16 +49,14 @@ public:
     void setWidget(HgWidget *itemView);
     HgWidget* widget() const;
 
-    virtual QGraphicsItem *primitive(HbStyle::Primitive primitive) const;
-
 protected:
     virtual void polish( HbStyleParameters& params);
     virtual bool sceneEventFilter(QGraphicsItem* watched, QEvent* event);
     virtual bool eventFilter(QObject *obj, QEvent *event);
-    void initStyleOption(HbStyleOptionIndexFeedback *option) const;
+    HgIndexFeedbackPrivate * const p_ptr;
 
 private:
-    Q_DECLARE_PRIVATE_D(d_ptr, HgIndexFeedback)
+    Q_DECLARE_PRIVATE_D(p_ptr, HgIndexFeedback)
     Q_DISABLE_COPY(HgIndexFeedback)
 
     Q_PRIVATE_SLOT(d_func(), void _q_scrollPositionChanged(qreal, Qt::Orientation))

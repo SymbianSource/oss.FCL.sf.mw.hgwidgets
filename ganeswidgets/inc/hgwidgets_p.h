@@ -141,7 +141,8 @@ protected:
     bool mHandleLongPress;
     bool mForeground;
     int mBufferSize;
-//    HgIndexFeedback *mIndexFeedback;
+    HgIndexFeedback *mIndexFeedback;
+    HgWidget::IndexFeedbackPolicy mIndexFeedbackPolicy;
     bool mStaticScrollDirection;
 };
 

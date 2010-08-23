@@ -22,7 +22,8 @@
 #include <HbStyle>
 #include <HbApplication>
 #include <HbEffect>
-#include <HbStyleOptionIndexFeedback>
+#include <HbFrameItem>
+#include <HbTextItem>
 #include <hgwidgets/hgwidgets.h>
 
 #include <QTimer>
@@ -329,13 +330,17 @@ void HgIndexFeedbackPrivate::updatePrimitives()
 {
     Q_Q( HgIndexFeedback );
 
-    HbStyleOptionIndexFeedback option;
-    q->initStyleOption(&option);
     if (mTextItem) {
-        q->style()->updatePrimitive(mTextItem, HbStyle::P_IndexFeedback_popup_text, &option);
+        if (HbTextItem* textItem = qgraphicsitem_cast<HbTextItem*>(mTextItem)) {
+            textItem->setFontSpec(FontSpec());
+            textItem->setGeometry(mPopupTextRect);
+            textItem->setText(mPopupContent);
+        }
     }
     if (mPopupItem) {
-        q->style()->updatePrimitive(mPopupItem, HbStyle::P_IndexFeedback_popup_background, &option);
+        if (HbFrameItem* frameItem = qgraphicsitem_cast<HbFrameItem*>(mPopupItem)) {
+            frameItem->setGeometry(mPopupBackgroundRect);
+        }
     }
 }
 
@@ -349,13 +354,26 @@ void HgIndexFeedbackPrivate::createPrimitives()
     mPopupItemList.clear();
 
     if (!mTextItem) {
-        mTextItem = q->style()->createPrimitive(HbStyle::P_IndexFeedback_popup_text, q);
+        HbTextItem *textItem = new HbTextItem(q);
+        textItem->setAlignment(Qt::AlignCenter);
+        textItem->setTextWrapping(Hb::TextNoWrap);
+        HbStyle::setItemName(textItem, QLatin1String("index-text"));
+        textItem->setZValue(q->zValue()+2);
+        mTextItem = textItem;
         mTextItem->hide();
         mPopupItemList.append(mTextItem);
     }
 
     if (!mPopupItem) {
-        mPopupItem = q->style()->createPrimitive(HbStyle::P_IndexFeedback_popup_background, q);
+        HbFrameItem *frame = new HbFrameItem(q);
+        frame->frameDrawer().setFrameGraphicsName("qtg_fr_popup_preview");
+        frame->frameDrawer().setFrameType(HbFrameDrawer::NinePieces);
+        qreal cornerPieceSize = 0;
+        q->style()->parameter(QLatin1String("hb-param-background-popup-preview"),cornerPieceSize);
+        frame->frameDrawer().setBorderWidths(cornerPieceSize, cornerPieceSize);
+        HbStyle::setItemName(frame, QLatin1String("index-background"));
+        frame->setZValue(q->zValue()+1);
+        mPopupItem = frame;
         mPopupItem->hide();
         mPopupItemList.append(mPopupItem);
     }
@@ -373,7 +391,8 @@ void HgIndexFeedbackPrivate::disconnectItemView()
         mWidget->disconnect(q);
         // uninstall the event filters;
         mWidget->scrollBar()->removeEventFilter(q);
-
+        mWidget->removeEventFilter(q);
+        
         mWidget->removeSceneEventFilter(q);
         if (mWidget->scene()) {
             mWidget->scene()->removeItem(q);
@@ -386,13 +405,18 @@ void HgIndexFeedbackPrivate::disconnectItemView()
 /*
     Hooks up the private slots & event filter to a scrollbar.
 */
-void HgIndexFeedbackPrivate::connectScrollBarToIndexFeedback(HbScrollBar* scrollBar)
+void HgIndexFeedbackPrivate::connectWidgetToIndexFeedback()
 {
     Q_Q( HgIndexFeedback );
 
+    if(!mWidget) return;
+
+    // Install event filter so we receive resize events from parent widget.
+    mWidget->installEventFilter(q);
+
+    // Install eventfilter to scrollbar so we can receive mousepress and released events
+    HbScrollBar *scrollBar = mWidget->scrollBar();    
     if (scrollBar) {
-        //q->connect(scrollBar, SIGNAL(valueChanged(qreal, Qt::Orientation)),
-          //  q, SLOT(_q_scrollPositionChanged(qreal, Qt::Orientation)));        
         scrollBar->installEventFilter(q);
     }
 }
@@ -410,7 +434,7 @@ void HgIndexFeedbackPrivate::calculatePopupRects()
         return;
     }
 
-    QRectF contentRect = mWidget->rect();
+    QRectF contentRect = mWidget->boundingRect();
     
     HbScrollBar *scrollBar = mWidget->scrollBar();
     if (scrollBar->isInteractive() && mWidget->scrollDirection() == Qt::Vertical) {
@@ -426,7 +450,7 @@ void HgIndexFeedbackPrivate::calculatePopupRects()
     if (contentRect == mItemViewContentsRect) {
         return;
     }
-
+        
     qreal margin = 0;
     q->style()->parameter(QLatin1String("hb-param-margin-gene-popup"), margin);
 
@@ -564,4 +588,32 @@ void HgIndexFeedbackPrivate::_q_currentModelIndexChanged(const QModelIndex& curr
         updateIndex();
 }
 
+HbFontSpec HgIndexFeedbackPrivate::FontSpec() const
+{
+    HbFontSpec fontSpec(HbFontSpec::Primary);
+    switch (mIndexFeedbackPolicy) {
+        case HgWidget::IndexFeedbackSingleCharacter:
+            {
+            fontSpec.setTextHeight(textHeight());
+            }
+            break;
+        case HgWidget::IndexFeedbackThreeCharacter:
+            {
+            fontSpec.setTextHeight(textHeight());
+            }
+            break;
+        case HgWidget::IndexFeedbackString:
+            {
+            qreal textPaneHeight = 0;
+            Q_Q(const HgIndexFeedback);
+            q->style()->parameter(QLatin1String("hb-param-text-height-primary"), textPaneHeight);
+            fontSpec.setTextHeight( textPaneHeight );
+            }
+            break;
+        case HgWidget::IndexFeedbackNone:
+        default:
+            break;
+    }
+    return fontSpec;
+}
 

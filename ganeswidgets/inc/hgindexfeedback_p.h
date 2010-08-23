@@ -19,7 +19,7 @@
 #define HGINDEXFEEDBACKPRIVATE_H
 
 #include "hgindexfeedback.h"
-#include <hbwidget_p.h>
+#include <HbFontSpec>
 
 #define HB_INDEXFEEDBACK_TYPE "indexfeedback"
 #define EFFECT_IFAPPEAR "appear"
@@ -32,7 +32,7 @@ class QRectF;
 class QItemSelectionModel;
 QT_END_NAMESPACE
 
-class HgIndexFeedbackPrivate: public HbWidgetPrivate
+class HgIndexFeedbackPrivate
 {
     Q_DECLARE_PUBLIC( HgIndexFeedback )
 
@@ -47,7 +47,7 @@ public:
     void scrollBarPressed();
     void scrollBarReleased();
 
-    void connectScrollBarToIndexFeedback(HbScrollBar* scrollBar);
+    void connectWidgetToIndexFeedback();
     void disconnectItemView();
     void connectModelToIndexFeedback(QItemSelectionModel* model);
 
@@ -65,6 +65,10 @@ public:
     qreal textWidth() const;
 
     QString displayText(const QVariant &data) const;
+
+    HbFontSpec FontSpec() const;
+    
+    HgIndexFeedback *q_ptr;
 
 public:
     int mIndexFeedbackPressTimeout;

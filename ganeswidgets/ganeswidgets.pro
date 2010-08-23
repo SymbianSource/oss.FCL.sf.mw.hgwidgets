@@ -49,8 +49,8 @@ SOURCES += src/hgwidgets.cpp \
     src/hglongpressvisualizer.cpp \
     src/hgcoverflowcontainer.cpp \
     src/hggridcontainer.cpp \
-#    src/hgindexfeedback.cpp \
-#    src/hgindexfeedback_p.cpp \
+    src/hgindexfeedback.cpp \
+    src/hgindexfeedback_p.cpp \
     src/hggrid.cpp \
     src/hggrid_p.cpp \
     src/hgmediawall.cpp \
@@ -75,7 +75,7 @@ HEADERS = inc/trace.h \
     inc/hglongpressvisualizer.h \
     inc/hgcoverflowcontainer.h \
     inc/hggridcontainer.h \
-#    inc/hgindexfeedback.h \
+    inc/hgindexfeedback.h \
     inc/hgqtquadrenderer.h \
     inc/hgtransformedquad.h \
     inc/hgtransformedquadrenderer.h \

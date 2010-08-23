@@ -26,7 +26,7 @@
 #include "hgscrollbuffermanager.h"
 #include "hgwidgetitem.h"
 #include "trace.h"
-//#include "hgindexfeedback.h"
+#include "hgindexfeedback.h"
 
 static const int INITIAL_SCROLLBAR_HIDE_TIMEOUT(4000);
 static const int DEFAULT_BUFFER_SIZE(25);
@@ -40,7 +40,9 @@ HgWidgetPrivate::HgWidgetPrivate() :
     mAbleToScroll(false),
     mHandleLongPress(false),
     mBufferSize(DEFAULT_BUFFER_SIZE),
-    mStaticScrollDirection(false)
+    mStaticScrollDirection(false),
+    mIndexFeedback(0),
+    mIndexFeedbackPolicy(HgWidget::IndexFeedbackNone)
 {
     FUNC_LOG;
 }
@@ -63,7 +65,6 @@ void HgWidgetPrivate::init(HgContainer *container)
     mScrollBarHideTimer->setSingleShot(true);
 
     q->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    q->setFlag( QGraphicsItem::ItemClipsChildrenToShape, true );
     q->setFocusPolicy(Qt::StrongFocus);
 
     createScrollBar(container->scrollDirection());
@@ -86,10 +87,6 @@ void HgWidgetPrivate::init(HgContainer *container)
     q->connect( HbTheme::instance(), SIGNAL(changed()), q, SLOT(_q_themeChanged()));
     
     mContainer->setHandleLongPress(mHandleLongPress);
-    
-//    mIndexFeedback = new HgIndexFeedback(q);
-//    mIndexFeedback->setWidget(q);
-
 }
 
 void HgWidgetPrivate::setModel( QAbstractItemModel *model )
@@ -143,13 +140,16 @@ void HgWidgetPrivate::setSelectionModel(QItemSelectionModel *selectionModel)
         }
 
         if (mContainer->selectionModel()) {
-//            if (mIndexFeedback) {
-//                delete mIndexFeedback;
-//                mIndexFeedback = 0;
-//            }
-//            mIndexFeedback = new HgIndexFeedback(q);
-//            mIndexFeedback->setWidget(q);
-
+            // TODO, optimize this, do we really need to destroy the instance.
+            if (mIndexFeedback) {
+                delete mIndexFeedback;
+                mIndexFeedback = 0;
+            }
+            if (mIndexFeedbackPolicy != HgWidget::IndexFeedbackNone) {
+                mIndexFeedback = new HgIndexFeedback(q);
+                mIndexFeedback->setWidget(q);
+                mIndexFeedback->setIndexFeedbackPolicy(mIndexFeedbackPolicy);
+            }
         }
     }
 }
@@ -673,7 +673,7 @@ void HgWidgetPrivate::adjustGeometry()
         return;
 
     mContainer->resize(scrollAreaBoundingRect.size());
-
+    
     updateScrollMetrics(mContainer->scrollPosition());
 }
 
@@ -765,13 +765,25 @@ QList<QModelIndex> HgWidgetPrivate::getVisibleItemIndices() const
 void HgWidgetPrivate::setIndexFeedbackPolicy( HgWidget::IndexFeedbackPolicy policy)
 {
     Q_UNUSED(policy)
-//    mIndexFeedback->setIndexFeedbackPolicy(policy);
+    Q_Q(HgWidget);
+    mIndexFeedbackPolicy = policy;
+    if (!mIndexFeedback && policy != HgWidget::IndexFeedbackNone) {
+        mIndexFeedback = new HgIndexFeedback(q);
+        mIndexFeedback->setWidget(q);
+    } else if (mIndexFeedback && policy == HgWidget::IndexFeedbackNone) {
+        delete mIndexFeedback;
+        mIndexFeedback = 0;
+    }
+    
+    if (mIndexFeedback && policy != HgWidget::IndexFeedbackNone) {
+        mIndexFeedback->setIndexFeedbackPolicy(policy);
+    }
 }
 
 HgWidget::IndexFeedbackPolicy HgWidgetPrivate::indexFeedbackPolicy() const
-{
-//    return mIndexFeedback->indexFeedbackPolicy();
-    return HgWidget::IndexFeedbackNone;
+{    
+    return mIndexFeedback ? mIndexFeedback->indexFeedbackPolicy() :
+        HgWidget::IndexFeedbackNone;
 }
 
 void HgWidgetPrivate::setDefaultImage(QImage defaultImage)

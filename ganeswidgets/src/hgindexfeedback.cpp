@@ -19,7 +19,6 @@
 #include "hgindexfeedback_p.h"
 
 #include <HbScrollbar>
-#include <HbStyleOptionIndexFeedback>
 #include <HbStyleParameters>
 #include <HbStyle>
 #include <HbDeviceProfile>
@@ -29,7 +28,6 @@
 #include <QEvent>
 #include <QObject>
 #include <QGraphicsScene>
-
 
 /* rather than magic numbers, let's define some constants. */
 namespace {
@@ -58,7 +56,7 @@ static const QString STRING_OFFSET = QLatin1String("string-offset");
     Constructs a new HgIndexFeedback with a parent.
 */
 HgIndexFeedback::HgIndexFeedback(QGraphicsItem *parent)
-    : HbWidget( *new HgIndexFeedbackPrivate, parent, 0)
+    : HbWidget(parent), p_ptr(new HgIndexFeedbackPrivate)
 
 {
     Q_D( HgIndexFeedback );
@@ -75,6 +73,7 @@ HgIndexFeedback::HgIndexFeedback(QGraphicsItem *parent)
 HgIndexFeedback::~HgIndexFeedback()
 {
     HbStyleLoader::unregisterFilePath(":/hgindexfeedback.css");
+    delete p_ptr;
 }
 
 /*!
@@ -135,7 +134,7 @@ void HgIndexFeedback::setWidget(HgWidget *widget)
 
     d->connectModelToIndexFeedback(d->mWidget->selectionModel());
 
-    d->connectScrollBarToIndexFeedback(d->mWidget->scrollBar());
+    d->connectWidgetToIndexFeedback();
 
     connect(d->mWidget, SIGNAL(destroyed(QObject*)),
         this, SLOT(_q_itemViewDestroyed()));
@@ -161,37 +160,6 @@ HgWidget* HgIndexFeedback::widget() const
     return d->mWidget;
 }
 
-/*!
-    Returns the primitives used in HgIndexFeedback.
-
-    \param primitive The primitive type requested.
-
-    \return A pointer for the primitive requested.
-*/
-QGraphicsItem* HgIndexFeedback::primitive(HbStyle::Primitive primitive) const
-{
-    Q_D( const HgIndexFeedback );
-
-    QGraphicsItem* retVal = HbWidget::primitive(primitive);
-
-    switch (primitive) {
-        case HbStyle::P_IndexFeedback_popup_text:
-            retVal = d->mTextItem;
-            break;
-
-        case HbStyle::P_IndexFeedback_popup_background:
-            retVal = d->mPopupItem;
-            break;
-
-        default:
-            qt_noop();
-            break;
-    }
-
-    return retVal;
-}
-
-
 /*
     A scene event filter.  It's purpose is to call calculatePopupRects on
     a resize event for the item view.
@@ -202,6 +170,7 @@ bool HgIndexFeedback::sceneEventFilter(QGraphicsItem *watched, QEvent *ev)
 
     if (ev->type() == QEvent::GraphicsSceneResize) {
         d->calculatePopupRects();
+        d->updatePrimitives();
     }
 
     return QGraphicsItem::sceneEventFilter(watched, ev);
@@ -217,94 +186,40 @@ bool HgIndexFeedback::sceneEventFilter(QGraphicsItem *watched, QEvent *ev)
 bool HgIndexFeedback::eventFilter(QObject *obj, QEvent *ev)
 {
     Q_D( HgIndexFeedback );
-    HbScrollBar* scrollBar = qobject_cast<HbScrollBar*>(obj);
-
-    if (d->mIndexFeedbackPolicy != HgWidget::IndexFeedbackNone
-        && scrollBar) {
-        switch (ev->type()) {
-            case QEvent::GraphicsSceneMousePress:
-            case QEvent::MouseButtonPress:
-                if (scrollBar->isInteractive()) {
-                    d->scrollBarPressed();
-                }
-                break;
-
-            case QEvent::GraphicsSceneMouseRelease:
-            case QEvent::MouseButtonRelease:
-                if (scrollBar->isInteractive()) {
-                    d->scrollBarReleased();
-                }
-                break;
-
-            case QEvent::GraphicsSceneResize:
-            case QEvent::Resize:
-                    d->_q_hideIndexFeedbackNow();
-                    d->calculatePopupRects();
-                    d->updatePrimitives();
-                break;
-
-            default:
-                // do nothing, ignore other events.
-                break;
+    HbScrollBar *scrollBar = qobject_cast<HbScrollBar*>(obj);
+    HgWidget *widget = qobject_cast<HgWidget*>(obj);
+    
+    if (d->mIndexFeedbackPolicy != HgWidget::IndexFeedbackNone) {
+        if (scrollBar) {
+            switch (ev->type()) {
+                case QEvent::GraphicsSceneMousePress:
+                case QEvent::MouseButtonPress:
+                    if (scrollBar->isInteractive()) {
+                        d->scrollBarPressed();
+                    }
+                    break;
+    
+                case QEvent::GraphicsSceneMouseRelease:
+                case QEvent::MouseButtonRelease:
+                    if (scrollBar->isInteractive()) {
+                        d->scrollBarReleased();
+                    }
+                    break;
+                default:
+                    // do nothing, ignore other events.
+                    break;
+            }
+        }
+        if (widget && (ev->type() == QEvent::GraphicsSceneResize || ev->type() == QEvent::Resize)) {
+            // widget size has changed and size of the popup letter box depends from it
+            // so recalculate the popup rects
+            d->_q_hideIndexFeedbackNow();
+            d->calculatePopupRects();
+            d->updatePrimitives();
         }
     }
 
     return QObject::eventFilter(obj, ev);
-}
-
-/*
-    For use with HbStyle.
-
-    Provide the correct data to use in the 'model.'
-*/
-void HgIndexFeedback::initStyleOption(HbStyleOptionIndexFeedback *option) const
-{
-    Q_D( const HgIndexFeedback );
-
-    HbWidget::initStyleOption(option);
-
-    if (!d->mWidget) {
-        return;
-    }
-
-    HbFontSpec fontSpec;
-    qreal margin = 0;
-
-    style()->parameter(QLatin1String("hb-param-margin-gene-popup"), margin);
-
-    switch (d->mIndexFeedbackPolicy) {
-        case HgWidget::IndexFeedbackSingleCharacter:
-            {
-                fontSpec = HbFontSpec(HbFontSpec::Primary);
-                fontSpec.setTextHeight(d->textHeight());
-            }
-            break;
-
-        case HgWidget::IndexFeedbackThreeCharacter:
-            {
-                fontSpec = HbFontSpec(HbFontSpec::Primary);
-                fontSpec.setTextHeight(d->textHeight());
-            }
-            break;
-
-        case HgWidget::IndexFeedbackString:
-            {
-                fontSpec = HbFontSpec(HbFontSpec::Primary);
-                qreal textPaneHeight = 0;
-                style()->parameter(QLatin1String("hb-param-text-height-primary"), textPaneHeight);
-                fontSpec.setTextHeight( textPaneHeight );
-            }
-            break;
-
-        case HgWidget::IndexFeedbackNone:
-            // leave the HbStyleOption uninitialized
-            return;
-    }
-
-    option->text = d->mPopupContent;
-    option->fontSpec = fontSpec;
-    option->textRect = d->mPopupTextRect;
-    option->popupRect = d->mPopupBackgroundRect;
 }
 
 void HgIndexFeedback::polish(HbStyleParameters& params)
@@ -324,6 +239,7 @@ void HgIndexFeedback::polish(HbStyleParameters& params)
     d->mStringOffset = params.value( STRING_OFFSET ).toDouble();
 
     d->calculatePopupRects();
+    d->updatePrimitives();
 }
 
 #include "moc_hgindexfeedback.cpp"
