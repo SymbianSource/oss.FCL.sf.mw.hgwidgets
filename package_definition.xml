@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SystemDefinition schema="3.0.0" xmlns:qt="http://www.nokia.com/qt">
+  <package id="hgwidgets" name="Multimedia Widgets" levels="framework service api">
+    <collection id="hgwidgets_plat" name="Multimedia Widgets Platform Interfaces" level="api">
+     <component id="ganeswidgets_api" name="Ganes Widgets API" class="api" introduced="^4" filter="s60">
+      <unit bldFile="hgwidgets_plat/ganeswidgets_api"/>
+	 </component>
+     <component id="hgcacheproxymodel_api" name="Hg Cache Proxy Model API" class="api" introduced="^4" filter="s60">
+      <unit bldFile="hgwidgets_plat/hgcacheproxymodel_api"/>
+	 </component>
+    </collection>
+    <collection id="ganeswidgets" name="Ganes Widgets" level="service">
+		<!-- really a component, should move down a dir level and have a unit -->
+      <component id="ganeswidgets_build" name="Ganes Widgets Build" introduced="^4" filter="s60,build_as_app">
+        <unit bldFile="ganeswidgets" qt:proFile="ganeswidgets.pro"/>
+	 </component>
+    </collection>	 
+    <collection id="hgcacheproxymodel" name="Hurriganes Cache Proxy Model" level="framework">
+		<!-- really a component, should move down a dir level and have a unit -->
+      <component id="hgcacheproxymodel_build" name="Hurriganes Cache Proxy Model Build" introduced="^4" filter="s60,build_as_app">
+        <unit bldFile="hgcacheproxymodel" qt:proFile="hgcacheproxymodel.pro"/>
+	 </component>
+      <component id="hgcacheproxymodel_unittest" name="Hurriganes Cache Proxy Model Unit Tests" introduced="^4" filter="s60,unit_test" purpose="development">
+        <unit bldFile="hgcacheproxymodel/tsrc/unit" qt:proFile="unittest_hgcacheproxymodel.pro"/>
+	 </component>
+    </collection>
+  </package>
+</SystemDefinition>
+
