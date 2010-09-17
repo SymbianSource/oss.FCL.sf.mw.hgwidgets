@@ -19,10 +19,12 @@
 #define HGGRIDCONTAINER_H
 
 #include "hgcontainer.h"
+#include <QPropertyAnimation>
+#include <QQueue>
 
-class HbLabel;
 class HgWidgetItem;
 class HgMediaWallRenderer;
+class HbPinchGesture;
 
 class HgGridContainer : public HgContainer
 {
@@ -37,6 +39,18 @@ public:
     void setEffect3dEnabled(bool effect3dEnabled);
     bool effect3dEnabled() const;
     
+    void setPinchEnabled(bool pinchEnabled);
+    bool pinchEnabled() const;
+    void setPinchLevels(QPair<int,int> levels, Qt::Orientation scrollDirection);
+    QPair<int,int> pinchLevels(Qt::Orientation scrollDirection) const;
+    
+    void setRowCount(int count, Qt::Orientation scrollDirection = Qt::Horizontal);
+    int rowCount(Qt::Orientation scrollDirection) const;
+
+signals:
+
+    void emptySpacePressed();
+    
 protected:
 
     // events
@@ -46,13 +60,43 @@ protected:
     virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection);
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
-    virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
-    virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemindex);
+    virtual bool handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
+    virtual bool handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemindex);
     virtual void onScrollPositionChanged(qreal pos);
+    virtual bool handleTap(Qt::GestureState state, const QPointF &pos);
+    virtual bool handleLongTap(Qt::GestureState state, const QPointF &pos);
+    virtual void setOrientation(Qt::Orientation orientation, bool animate=true);
 
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void gestureEvent(QGestureEvent* event);
+    bool event(QEvent *e);
+    
+    void handlePinchEnd();
+    void handlePinchUpdate(HbPinchGesture* pinch);    
+
+public slots:
+    
+    void effectFinished();
+    
 private:    
     
     bool mEffect3dEnabled;
+    bool mPinchEnabled;
+    bool mPinchingOngoing;
+    int mTempImageHeightForLineGrid;    //this is changed during pinching
+    int mTempImageHeightFinal;          //this is changed during pinching
+    int mTempRowCount;                  //this is changed during pinching
+    int mTargetRowCount;
+    QQueue<qreal> iTargetRowCountList;
+    QSizeF mTargetImageSize;
+    bool mPinchEndAlreadyHandled;
+    bool mReactToOnlyPanGestures;
+    QPropertyAnimation iFadeAnimation;
+    int mHorizontalRowCount;
+    int mVerticalColumnCount;
+    QPair<int,int> mHorizontalPinchLevels;
+    QPair<int,int> mVerticalPinchLevels;
 };
 
 #endif

@@ -7,7 +7,11 @@
     <meshitem src="scrollbar-horizontal" srcEdge="BOTTOM" dst="content" dstEdge="BOTTOM" />
 	<meshitem src="scrollbar-horizontal" srcEdge="RIGHT" dst="content" dstEdge="RIGHT" />
     <meshitem src="scrollbar-horizontal" srcEdge="LEFT" dst="content" dstEdge="LEFT" />
-    <meshitem src="description" srcEdge="BOTTOM" dst="scrollbar-horizontal" dstEdge="TOP" />
+    <!-- Description is connected to the bottom of the content instead of the bottom of the scrollbar, -->
+    <!-- because scrollbar does not get polished properly if it is hidden. Thus, description's location -->
+    <!-- would change depending on whether scrollbar is hidden or not. Resolution is to connect description -->
+    <!-- to the bottom of the content. -->
+    <meshitem src="description" srcEdge="BOTTOM" dst="" dstEdge="BOTTOM" />
     <meshitem src="description" srcEdge="LEFT" dst="content" dstEdge="LEFT" />
     <meshitem src="description" srcEdge="RIGHT" dst="content" dstEdge="RIGHT" />
     <meshitem src="title" srcEdge="BOTTOM" dst="description" dstEdge="TOP" />

@@ -40,12 +40,9 @@ SOURCES += src/hgwidgets.cpp \
     src/hgscrollbuffermanager.cpp \
     src/hgquad.cpp \
     src/hgquadrenderer.cpp \
-    src/hgvgquadrenderer.cpp \
-    src/hgvgimage.cpp \
     src/hgmediawallrenderer.cpp \
     src/hgspring.cpp \
     src/hgdrag.cpp \
-    src/hgimagefader.cpp \
     src/hglongpressvisualizer.cpp \
     src/hgcoverflowcontainer.cpp \
     src/hggridcontainer.cpp \
@@ -71,7 +68,6 @@ HEADERS = inc/trace.h \
     inc/hgspring.h \
     inc/hgdrag.h \
     inc/hgscrollbuffermanager.h \
-    inc/hgimagefader.h \
     inc/hglongpressvisualizer.h \
     inc/hgcoverflowcontainer.h \
     inc/hggridcontainer.h \

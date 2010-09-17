@@ -59,7 +59,6 @@ private:
     Q_DECLARE_PRIVATE_D(p_ptr, HgIndexFeedback)
     Q_DISABLE_COPY(HgIndexFeedback)
 
-    Q_PRIVATE_SLOT(d_func(), void _q_scrollPositionChanged(qreal, Qt::Orientation))
     Q_PRIVATE_SLOT(d_func(), void _q_hideIndexFeedback())
     Q_PRIVATE_SLOT(d_func(), void _q_itemViewDestroyed())
     Q_PRIVATE_SLOT(d_func(), void _q_hideIndexFeedbackNow())

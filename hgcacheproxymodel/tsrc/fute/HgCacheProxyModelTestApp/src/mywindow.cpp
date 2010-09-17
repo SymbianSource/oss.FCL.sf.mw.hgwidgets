@@ -20,6 +20,7 @@
 #include <HbAction>
 #include <HbMainWindow>
 #include <HbSlider>
+#include <HbScrollBar>
 #include <QTimer>
 #include <QtGui>
 #include <QDebug>
@@ -42,6 +43,10 @@ const int KGridViewCommand = 1;
 const int KListViewCommand = 2;
 const int KMediaWallViewCommand = 3;
 const int KHgGridViewCommand = 4;
+const int KScrollTo0 = 5;
+const int KScrollTo546 = 6;
+const int KScrollTo875 = 7;
+const int KScrollToEnd = 8;
 
 const int KSort1Command = 1101;
 const int KSort2Command = 1102;
@@ -77,22 +82,29 @@ const int KHbIconModeCommand = 2400;
 const int KQIconModeCommand = 2401;
 const int KQImageModeCommand = 2402;
 const int KQPixmapModeCommand = 2403;
+const int KTogleResetTestCommand = 2500;
 
 const int KResetCommand = 10000;
 
 MyWindow::MyWindow()
     : HbMainWindow(), 
-    mView(0),
+    mCurrentWidget(0),
+    mGridWidget(0),
+    mListWidget(0),
+    mMediaWallWidget(0),
+    mHgGridWidget(),
     mModel(0),
     mMyDataProvider(0),
     mSortTestTimer(new QTimer(this)),
     mSortTestVal(-1),
     mFilterTestTimer(new QTimer(this)),
-    mFilterTestVal(-1)
+    mFilterTestVal(-1),
+    mResetTestTimer(new QTimer(this)),
+    mResetTestVal(-1)
 {
     mMainView = new HbView();
-    addView( mMainView );
-
+    addView( mMainView ); 
+    
     mMainView->setMenu( createMainMenu() ); 
     
     mMyDataProvider = new MyDataProvider(this);
@@ -101,15 +113,26 @@ MyWindow::MyWindow()
 
     connect(mSortTestTimer, SIGNAL(timeout()), this, SLOT(sortTestTimeout()));
     connect(mSortTestTimer, SIGNAL(timeout()), this, SLOT(filterTestTimeout()));
+    connect(mResetTestTimer, SIGNAL(timeout()), this, SLOT(resetTestTimeout()));
     
     HbAction action;
-	action.setData ( QVariant(KGridViewCommand) );	//select Grid
+	action.setData ( QVariant(KListViewCommand) );	//select Grid
 	processAction(&action);
 }
 
 MyWindow::~MyWindow()
 {
-//	delete mMyDataProvider;
+    delete mMainView;
+    
+    delete mGridWidget;
+    delete mListWidget;
+    delete mMediaWallWidget;
+    delete mHgGridWidget;
+    
+    delete mModel;
+	delete mMyDataProvider;
+	delete mSortTestTimer;
+	delete mFilterTestTimer;
 }
 
 HbMenu *MyWindow::createMainMenu()
@@ -139,6 +162,14 @@ void MyWindow::addChangeViewMenu(HbMenu* parent)
     action = viewSubMenu->addAction("Hg Grid");
     action->setData(QVariant(KHgGridViewCommand));
     
+    action = viewSubMenu->addAction("Scroll to top");
+    action->setData(QVariant(KScrollTo0));
+    action = viewSubMenu->addAction("Scroll to 546");
+    action->setData(QVariant(KScrollTo546));
+    action = viewSubMenu->addAction("Scroll to 875");
+    action->setData(QVariant(KScrollTo875));
+    action = viewSubMenu->addAction("Scroll to bottom");
+    action->setData(QVariant(KScrollToEnd));
     
 }
 
@@ -234,9 +265,10 @@ void MyWindow::addDataProviderMenu(HbMenu* parent)
     action = dpSubMenu->addAction("QPixmap Mode");
     action->setData(QVariant(KQPixmapModeCommand));
     
+    action = dpSubMenu->addAction("Start Reset Test");
+    action->setData(QVariant(KTogleResetTestCommand));
+
 }
-
-
 
 void MyWindow::processAction( HbAction* action )
 {
@@ -244,43 +276,71 @@ void MyWindow::processAction( HbAction* action )
     
     switch (command){
         case KGridViewCommand : {
-            HbGridView* view = new HbGridView();
+            mMainView->setWidget( NULL ); //this will delete old Widget
+            mGridWidget = new HbGridView();
             if ( orientation() == Qt::Horizontal ) {
-                view->setColumnCount( 5 );
-                view->setRowCount( 3 );
+                mGridWidget->setColumnCount( 5 );
+                mGridWidget->setRowCount( 3 );
             }else {
-                view->setColumnCount( 3 );
-                view->setRowCount( 5 );         
+                mGridWidget->setColumnCount( 3 );
+                mGridWidget->setRowCount( 5 );         
             }
-    //        view->setTextVisible(false);
-            view->setUniformItemSizes( true );
-            view->setItemRecycling( true );
-            view->setModel(mModel);
-            mMainView->setWidget( view );
-            mView = view;
+            mGridWidget->setUniformItemSizes( true );
+            mGridWidget->setItemRecycling( true );
+            mGridWidget->verticalScrollBar()->setInteractive(true);
+            mGridWidget->verticalScrollBar()->setVisible(true);
+            mMainView->setWidget( mGridWidget );
+            mGridWidget->setModel(mModel);
+            mCurrentWidget = mGridWidget;
             break;
         }
         case KListViewCommand : {
-            HbListView* view = new HbListView();
-            view->setUniformItemSizes( true );
-            view->setItemRecycling( true );
-            view->setModel(mModel);
-            mMainView->setWidget( view );
-            mView = view;            
+            mMainView->setWidget( NULL ); //this will delete old Widget
+            mListWidget = new HbListView();
+            mListWidget->setUniformItemSizes( true );
+            mListWidget->setItemRecycling( true );
+            mListWidget->verticalScrollBar()->setInteractive(true);
+            mListWidget->verticalScrollBar()->setVisible(true);
+            mMainView->setWidget( mListWidget );
+            mListWidget->setModel(mModel);            
+            mCurrentWidget = mListWidget;
             break;
         }
         case KMediaWallViewCommand : {
-            HgMediawall * view = new HgMediawall();
-            view->setModel(mModel);
-            mMainView->setWidget( view );
-            mView = view;
+            mMainView->setWidget( NULL ); //this will delete old Widget
+            mMediaWallWidget = new HgMediawall();
+            mMediaWallWidget->scrollBar()->setInteractive(true);
+            mMediaWallWidget->scrollBar()->setVisible(true);            
+            mMainView->setWidget( mMediaWallWidget );
+            mMediaWallWidget->setModel(mModel);
+            mCurrentWidget = mMediaWallWidget;
             break;
         }
         case KHgGridViewCommand : {
-        HgGrid * view = new HgGrid(Qt::Vertical);
-            view->setModel(mModel);
-            mMainView->setWidget( view );
-            mView = view;
+            mMainView->setWidget( NULL ); //this will delete old Widget
+            mHgGridWidget = new HgGrid(orientation());
+            connect(this, SIGNAL(orientationChanged(Qt::Orientation)), mHgGridWidget, SLOT(orientationChanged(Qt::Orientation)));
+            mHgGridWidget->scrollBar()->setInteractive(true);
+            mHgGridWidget->scrollBar()->setVisible(true);
+            mMainView->setWidget( mHgGridWidget );
+            mHgGridWidget->setModel(mModel);
+            mCurrentWidget = mHgGridWidget;
+            break;
+        }
+        case KScrollTo0 : {
+            scrollTo(0);
+            break;
+        }
+        case KScrollTo546 : {
+            scrollTo(546);
+            break;
+        }
+        case KScrollTo875 : {
+            scrollTo(875);
+            break;
+        }
+        case KScrollToEnd : {
+            scrollTo(mMyDataProvider->rowCount()-1);
             break;
         }
         case KSort1Command : {
@@ -477,6 +537,17 @@ void MyWindow::processAction( HbAction* action )
             mMyDataProvider->setIconMode(HgDataProviderModel::HgDataProviderIconQPixmap);
             break;
         }
+        case KTogleResetTestCommand : {
+            if (mResetTestVal == -1){
+                mResetTestVal = 500;
+                action->setText("Stop Reset Test");            
+                resetTestTimeout();
+            }else{
+                mResetTestVal = -1;
+                action->setText("Start Reset Test");            
+            }
+            break;
+        }
         case KResetCommand : {
             mMyDataProvider->resetModel();
             break;
@@ -513,6 +584,35 @@ void MyWindow::filterTestTimeout()
         }
         mFilterTestTimer->start(2000);
     }
+}                
+
+void MyWindow::resetTestTimeout()
+{
+    if (mResetTestVal>0){
+        HbAction action;
+        action.setData ( QVariant(KResetCommand ) );
+        processAction(&action);
+        mResetTestVal--;
+        if (mResetTestVal==0){
+            mResetTestVal = 500;
+        }
+        mResetTestTimer->start(2000);
+    }
+}  
+
+void MyWindow::scrollTo(int pos)
+{
+    if ( mCurrentWidget == mGridWidget){
+        mGridWidget->scrollTo( mModel->index(pos, 0) );
+    } else if ( mCurrentWidget == mListWidget){
+        mListWidget->scrollTo( mModel->index(pos, 0) );
+    }  else if ( mCurrentWidget == mMediaWallWidget){
+        mMediaWallWidget->scrollTo( mModel->index(pos, 0) );
+    }  else if ( mCurrentWidget == mHgGridWidget){
+        mHgGridWidget->scrollTo( mModel->index(pos, 0) );
+    } 
 }
+
+
 
 //eof

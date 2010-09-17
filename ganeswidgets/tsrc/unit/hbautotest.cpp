@@ -171,6 +171,12 @@ void HbAutoTest::mouseClick (HbAutoTestMainWindow *window, const HbWidget *widge
     qApp->notify((window->viewport()), &me2);
     QCoreApplication::sendPostedEvents();
 
+    if (delay!=-1) {
+        QTest::qWait(delay);
+    }
+    if (delay!=-1) {
+        QTest::qWait(delay);
+    }
     QTest::qWait(1);
     QTest::qWait(1);
 }   

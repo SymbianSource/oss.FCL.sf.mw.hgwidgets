@@ -21,6 +21,8 @@
 #include <hgwidgets/hggrid.h>
 #include "hgwidgets_p.h"
 
+class HgGridContainer;
+
 class HgGridPrivate : public HgWidgetPrivate
 {
     Q_DECLARE_PUBLIC(HgGrid)
@@ -31,8 +33,9 @@ public:
     virtual ~HgGridPrivate();
 
     void init(Qt::Orientation scrollDirection);
-    bool effect3dEnabled() const;
-    void setEffect3dEnabled(bool effect3dEnabled);
+    
+    HgGridContainer* container();
+    const HgGridContainer* container() const;
     
 private: // From HgWidgetPrivate
     void orientationChanged(Qt::Orientation orientation);

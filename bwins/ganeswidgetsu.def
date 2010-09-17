@@ -94,4 +94,11 @@ EXPORTS
 	?setEffect3dEnabled@HgGrid@@QAEX_N@Z @ 93 NONAME ; void HgGrid::setEffect3dEnabled(bool)
 	?effect3dEnabled@HgGrid@@QBE_NXZ @ 94 NONAME ; bool HgGrid::effect3dEnabled(void) const
 	?polish@HgMediawall@@MAEXAAVHbStyleParameters@@@Z @ 95 NONAME ; void HgMediawall::polish(class HbStyleParameters &)
+	?setPinchEnabled@HgGrid@@QAEX_N@Z @ 96 NONAME ; void HgGrid::setPinchEnabled(bool)
+	?pinchEnabled@HgGrid@@QBE_NXZ @ 97 NONAME ; bool HgGrid::pinchEnabled(void) const
+	?setRowCount@HgGrid@@QAEXHW4Orientation@Qt@@@Z @ 98 NONAME ; void HgGrid::setRowCount(int, enum Qt::Orientation)
+	?setPinchLevels@HgGrid@@QAEXU?$QPair@HH@@W4Orientation@Qt@@@Z @ 99 NONAME ; void HgGrid::setPinchLevels(struct QPair<int, int>, enum Qt::Orientation)
+	?emptySpacePressed@HgGrid@@IAEXXZ @ 100 NONAME ; void HgGrid::emptySpacePressed(void)
+	?pinchLevels@HgGrid@@QBE?AU?$QPair@HH@@W4Orientation@Qt@@@Z @ 101 NONAME ; struct QPair<int, int> HgGrid::pinchLevels(enum Qt::Orientation) const
+	?rowCount@HgGrid@@QBEHW4Orientation@Qt@@@Z @ 102 NONAME ; int HgGrid::rowCount(enum Qt::Orientation) const
 

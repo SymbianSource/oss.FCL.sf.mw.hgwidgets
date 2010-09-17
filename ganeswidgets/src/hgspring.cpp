@@ -79,10 +79,10 @@ void HgSpring::animateToPos(const QPointF& pos)
     mStartPos = mPos;
     mEndPos = pos;
 
-    emit started();
 
     if (!mTimer->isActive())
     {
+        emit started();
         mTimer->start(KTimerInterval);
         mPrevTime.start();
     }
@@ -135,6 +135,7 @@ void HgSpring::gotoPos(const QPointF& pos)
 void HgSpring::cancel()
 {
     if (mTimer->isActive()) {
+        mEndPosOverListEdge = false;
         mEndPos = mPos;
         emit ended();
         mTimer->stop(); 

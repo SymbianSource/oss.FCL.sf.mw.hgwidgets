@@ -17,7 +17,6 @@
 */
 #include <QList>
 #include "hglogger.h"
-#include <HbIcon>
 #include "mydataprovider.h"
 
 const int KItemIdRole = Qt::UserRole+1;
@@ -35,7 +34,8 @@ mThumbnailRequestIndex(-1),
 mThumbnailRequestID(-1),
 mThumbnailsize(ThumbnailManager::ThumbnailMedium),
 mMDSLoadInProgress(false),
-mMode(0)
+mMode(0),
+mNoIcon(QIcon(QPixmap(":/icons/noIcon.png")))
 {
 //    TX_ENTRY
     Q_UNUSED(parent);
@@ -76,35 +76,40 @@ void MyDataProvider::changeMode(int mode)
 
 void MyDataProvider::doRequestData(QList<int> list, bool silent)
 {
-    TX_ENTRY
+//    TX_ENTRY
 	Q_UNUSED(silent);
-    QString items = "Requested items:";
+//    QString items = "Requested items:";
     int i = 0;
+    
 	for (int idx=0; idx<list.count(); idx++){
         i = list[idx];
 		if (containsRole(i, KItemIdRole) ) {
-            items += QString("%0 ").arg(i);
+//            items += QString("%0 ").arg(i);
 			mWaitingThumbnails.append(i);
 		}
 	}
-	TX_LOG_ARGS(items);
+//	TX_LOG_ARGS(items);
+	TX_LOG_ARGS( QString("[TEST] Requested items: %0-%1").arg(list[0]).arg(list[list.count()-1]) );
     getNextThumbnail();
-    TX_EXIT
+//    TX_EXIT
 }
 
 void MyDataProvider::getNextThumbnail()
 {
 //    TX_ENTRY
     if ( !mThumbnailRequestPending && mWaitingThumbnails.count()){
-            int i = mWaitingThumbnails.takeFirst();
-            if (i >=0 && i < count() && containsRole(i, KItemIdRole)) {
-                int id = (data(i, KItemIdRole)).toInt();
-                unsigned long int uId = (unsigned long int)id;
-                TX_LOG_ARGS(QString("getThumbnail for index:%0 uID:%1").arg(i).arg(uId));
-                void *clientData = reinterpret_cast<void *>(i);
-                mThumbnailRequestID = mWrapper->getThumbnail(uId, clientData, KThumbnailsPriority);
-                mThumbnailRequestIndex = i;
-                mThumbnailRequestPending = true;            
+        int i = mWaitingThumbnails.takeFirst();
+        if (i >=0 && i < count() && containsRole(i, KItemIdRole)) {
+            int id = (data(i, KItemIdRole)).toInt();
+            unsigned long int uId = (unsigned long int)id;
+            TX_LOG_ARGS(QString("getThumbnail for index:%0 uID:%1").arg(i).arg(uId));
+            void *clientData = reinterpret_cast<void *>(i);
+            mThumbnailRequestID = mWrapper->getThumbnail(uId, clientData, KThumbnailsPriority);
+            mThumbnailRequestIndex = i;
+            mThumbnailRequestPending = true;            
+        } else {
+            updateIcon(i, mNoIcon, true);
+            getNextThumbnail();
         }
     }
 //    TX_EXIT    
@@ -140,7 +145,7 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
     TX_ENTRY    
     Q_UNUSED(silent);
     int i = 0;
-    QString items = "Released items:";
+//    QString items = "Released items:";
     for (int idx=0;idx<list.count(); idx++){
         i = list[idx];
         if (mThumbnailRequestPending && mThumbnailRequestIndex==i ){
@@ -150,11 +155,11 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
             mThumbnailRequestID = -1;
             mThumbnailRequestPending = false;
         }
-        items += QString("%0 ").arg(i);
+//        items += QString("%0 ").arg(i);
         mWaitingThumbnails.removeAll(i);
         releasePixmap(i);
     }
-    TX_LOG_ARGS(items);
+//    TX_LOG_ARGS(items);
 
     getNextThumbnail();
     TX_EXIT        
@@ -244,7 +249,19 @@ void MyDataProvider::doResetModel()
         delete session;        
     );    
     
-    
+    if ( count() == 0){ //add 2000 items if no media data avilable
+        for(int i = 0; i < 2000 ; i++){
+            QList< QPair< QVariant, int > > list;
+            QString s = QString("ITEM%1").arg(i);
+            if (i%2){
+                s = s.toLower();
+            }
+            list.append( QPair< QVariant, int >(s, Qt::DisplayRole) );
+            list.append( QPair< QVariant, int >(QVariant(i), Qt::UserRole+2) );        
+            newItem(&list);
+            newItem();
+        }
+    }
     TX_EXIT    
 }
 void MyDataProvider::testRemoveItem(int pos)
@@ -260,4 +277,3 @@ void MyDataProvider::testInsertItem(int pos, QList< QPair< QVariant, int > >* da
     insertItem(pos, data, false);
     TX_EXIT  
 }
-

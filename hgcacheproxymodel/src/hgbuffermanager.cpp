@@ -13,9 +13,10 @@
 *
 * Description:
 *
-*  Version     : %version: 7 %
+*  Version     : %version: 10 %
 */
 #include "hgbuffermanager.h"
+#include "hglogger.h"
 #include <hgwidgets/hgcacheproxymodel.h>
 
 
@@ -24,28 +25,28 @@ HgBufferManager::HgBufferManager(
 	int aBufferSize,
 	int aBufferTreshold,
 	int aInitialPosition,
-	int aTotalCount )
+	int aTotalCount)
 :
 mObserver(aObserver),
-mBufferSize( aBufferSize ),
-mBufferTreshold( aBufferTreshold ),
-mBufferPosition( aInitialPosition ),
+mBufferSize(aBufferSize),
+mBufferTreshold(aBufferTreshold),
+mBufferPosition(aInitialPosition),
 mDiff(0),
-mTotalCount( aTotalCount ),
+mTotalCount(aTotalCount),
 mResetOrdered(false),
 mRequestStart(0),
 mRequestCount(0),
 mReleaseStart(0),
 mReleaseCount(0)
 {
-    ASSERT( mObserver != 0 );
-    mBufferPosition -= (mBufferSize / 2);
+    ASSERT(mObserver != 0);
+    mBufferPosition -= (mBufferSize/2);
     
-    if( mBufferPosition + mBufferSize > mTotalCount - 1 ){
+    if (mBufferPosition + mBufferSize > mTotalCount - 1 ) {
         mBufferPosition = (mTotalCount - 1) - mBufferSize;
     }
     
-    if(mBufferPosition < 0 ){
+    if (mBufferPosition < 0 ) {
         mBufferPosition = 0;
     }
     
@@ -68,25 +69,23 @@ void HgBufferManager::resizeCache(int newSize, int newTreshold)
         mBufferTreshold = newTreshold;
     }
     
-    if (newSize!=mBufferSize){
-//        int pos = mBufferPosition + (mBufferSize / 2);
-        
+    if (newSize!=mBufferSize) {
         int a = Max(0, mBufferPosition + mBufferSize/2 - newSize/2);
         int b = Min(a + newSize, mTotalCount);
-        if ( b == mTotalCount){
+        if (b == mTotalCount) {
             a = mTotalCount - newSize;
         }
         
         int c = Max(0, mBufferPosition);
         int d = Min(c + mBufferSize, mTotalCount);
-        if ( d == mTotalCount){
+        if (d == mTotalCount) {
             c = mTotalCount - mBufferSize;
         }
         
-        if ( newSize>mBufferSize){
+        if (newSize>mBufferSize) {
             mObserver->request(a, c-1, HgCacheProxyModel::HgRequestOrderAscending);
             mObserver->request(d, b-1, HgCacheProxyModel::HgRequestOrderAscending);
-        }else if ( newSize<mBufferSize){
+        }else if (newSize<mBufferSize) {
             mObserver->release(c, a-1);
             mObserver->release(b, d);
         }
@@ -99,10 +98,10 @@ void HgBufferManager::calculate()
 {  
     HgCacheProxyModel::HgRequestOrder direction = HgCacheProxyModel::HgRequestOrderAscending;
     
-    if(mResetOrdered){
+    if (mResetOrdered) {
         mResetOrdered = false;
     } else {
-        if(mDiff < 0){
+        if (mDiff < 0) {
             mReleaseStart = mBufferPosition;
             mRequestStart = mBufferPosition + mBufferSize;
             direction = HgCacheProxyModel::HgRequestOrderAscending; 
@@ -114,21 +113,21 @@ void HgBufferManager::calculate()
     }
     
     // Release 
-    int end = mReleaseStart + mReleaseCount < mTotalCount ?
-        mReleaseStart + mReleaseCount: mTotalCount; 
+    int end = (mReleaseStart + mReleaseCount < mTotalCount)?
+        (mReleaseStart + mReleaseCount): mTotalCount; 
     end--;
-    if(end >= mReleaseStart ){
+    if (end >= mReleaseStart) {
         mObserver->release(mReleaseStart, end);
     }
     
     mReleaseCount = 0;
     
     // Request
-    end = mRequestStart + mRequestCount < mTotalCount ? 
-        mRequestStart + mRequestCount : mTotalCount;
+    end = (mRequestStart + mRequestCount < mTotalCount)? 
+        (mRequestStart + mRequestCount): mTotalCount;
     
     end--;
-    if(end >= mRequestStart ){
+    if (end >= mRequestStart) {
         mObserver->request(mRequestStart, end, direction);
 	}
       
@@ -147,34 +146,34 @@ void HgBufferManager::calculate()
 void HgBufferManager::setPosition( int aIndex )
 {
     // If all the items fit in the buffer no need to move the buffer
-    if(mTotalCount <= mBufferSize)
+    if (mTotalCount <= mBufferSize)
         return;
 	
 	bool forceUpdate = false;
-    aIndex -= mBufferSize / 2; // normalize index to Buffer start
+	int idx = aIndex - mBufferSize / 2; // normalize index to Buffer start
     
-    if(aIndex < 0){
-        aIndex = 0;
+    if (idx < 0) {
+        idx = 0;
         forceUpdate = true;
-    }else if( aIndex > mTotalCount - mBufferSize ){
-        aIndex = mTotalCount - mBufferSize;
+    }else if (idx > mTotalCount - mBufferSize) {
+        idx = mTotalCount - mBufferSize;
         forceUpdate = true;
     }
 
-    mDiff = mBufferPosition - aIndex; 
+    mDiff = mBufferPosition - idx; 
 
     // Too large change reset whole buffer
-    if( mDiff >= mBufferSize || -mDiff >= mBufferSize || mResetOrdered ) {
-        resetBuffer(aIndex + (mBufferSize/2), mTotalCount);
-    } else if( mDiff >= mBufferTreshold ) { // Move Up
+    if (mDiff >= mBufferSize || -mDiff >= mBufferSize || mResetOrdered) {
+        resetBuffer(aIndex, mTotalCount);
+    } else if (mDiff >= mBufferTreshold) { // Move Up
         mRequestCount = mDiff;
         mReleaseCount = mDiff;
         calculate();
-    } else if ( -mDiff >= mBufferTreshold ) {// Move Down
+    } else if (-mDiff >= mBufferTreshold) {// Move Down
         mRequestCount = -mDiff;
         mReleaseCount = -mDiff;
         calculate();
-    } else if( forceUpdate && mDiff ) { // Top or bottom has been reached
+    } else if (forceUpdate && mDiff) { // Top or bottom has been reached
         int diff = mDiff < 0 ? -mDiff : mDiff;
         mRequestCount = diff;
         mReleaseCount = diff;
@@ -186,36 +185,64 @@ void HgBufferManager::setPosition( int aIndex )
 // BufferManager::ResetBuffer()
 // -----------------------------------------------------------------------------
 //
-void HgBufferManager::resetBuffer( int aPosition, int aTotalCount)
+void HgBufferManager::resetBuffer(int aPosition, int aTotalCount)
 {
-    if( !mResetOrdered ){
+    int oldPos = mBufferPosition;
+    if (!mResetOrdered) {
         // release Old buffer
         mReleaseStart = mBufferPosition;
         mReleaseCount = mBufferSize;
     }
-    
-    // set position and count
-    mBufferPosition = aPosition - (mBufferSize / 2);
+
     mTotalCount = aTotalCount;
     mDiff = 0;
     
-    if( mBufferPosition + mBufferSize > mTotalCount - 1 ){
-        mBufferPosition = mTotalCount - mBufferSize;
+    // set position and count
+    mBufferPosition = aPosition - (mBufferSize / 2);
+
+    if (aPosition < 0) {
+        aPosition = 0;
+    } else if (aPosition >= mTotalCount) {
+        aPosition = mTotalCount - 1;    
     }
     
-    if(mBufferPosition < 0 ){
+    if (mBufferPosition + mBufferSize > mTotalCount - 1) {
+        mBufferPosition = mTotalCount - mBufferSize;
+    }
+    if (mBufferPosition < 0) {
         mBufferPosition = 0;
     }
     
-    if (mBufferPosition>1){
-        mObserver->release(0, mBufferPosition-1);
-    }
+    mObserver->release(0, mTotalCount);
     
-    mObserver->request( mBufferPosition, 
-                        mBufferPosition + mBufferSize -1 );
-
-    if (mBufferPosition + mBufferSize < mTotalCount){
-        mObserver->release(mBufferPosition + mBufferSize, mTotalCount);
+//                  size      size       size   
+//  -------------|---------|---------|---------|------------------
+//             begin    middle1   middle2     end                          
+    int size = mBufferSize/3;
+    int begin = mBufferPosition;
+    int middle1 = begin + size;
+    int middle2 = middle1 + size;
+    int end = mBufferPosition + mBufferSize -1;  //Can not be middle2 + size, mBufferSize/3 can be not equal size
+    
+    TX_LOG_ARGS(QString("aPosition:%0 begin:%1 middle1:%2 c:%3 end:%4").arg(aPosition).arg(begin).arg(middle1).arg(c).arg(end) );
+    
+    if (aPosition >=begin && aPosition < middle1) { //aPosition is in begining, let's load from top
+        mObserver->request(begin, end, HgBufferManagerObserver::HgRequestOrderAscending);
+    } else if (aPosition >= middle1 && aPosition < middle2) {//aPosition is in the middle, let's load from middle
+        HgBufferManagerObserver::HgRequestOrder order = HgBufferManagerObserver::HgRequestOrderAscending;
+        if (oldPos > mBufferPosition) {
+            order = HgBufferManagerObserver::HgRequestOrderDescending;
+        }
+        mObserver->request(middle1, middle2, order);
+        if (order == HgBufferManagerObserver::HgRequestOrderAscending) {
+            mObserver->request(middle2, end, order);
+            mObserver->request(begin, middle1 -1, order);
+        } else {
+            mObserver->request(begin, middle1 -1, order);
+            mObserver->request(middle2, end, order);
+        }
+    } else if (aPosition >= middle2 && aPosition <= end) { //aPosition is in end, let's load from bottom
+        mObserver->request(begin, end, HgBufferManagerObserver::HgRequestOrderDescending);    
     }
     
     mDiff = 0;
@@ -229,35 +256,34 @@ void HgBufferManager::resetBuffer( int aPosition, int aTotalCount)
 
 void HgBufferManager::aboutToRemoveItem(int pos)
 {
-    if(pos < 0 || pos >= mTotalCount ){
+    if (pos < 0 || pos >= mTotalCount) {
         return;
     }
     
-    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
+    if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize) {
         mObserver->release(pos, pos);
     }
 }
 
 void HgBufferManager::removedItem(int pos)
 {
-    if(pos < 0 || pos >= mTotalCount ){
+    if (pos < 0 || pos >= mTotalCount) {
         return;
     }
     
     mTotalCount--;
-    if( mTotalCount >= mBufferSize ){
-        if (pos < mBufferPosition){ //before buffer pos is >=0
+    if (mTotalCount >= mBufferSize) {
+        if (pos < mBufferPosition) { //before buffer pos is >=0
             mBufferPosition--;
-        } else if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize){
-            if( mBufferPosition + mBufferSize <= mTotalCount ){
+        } else if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize) {
+            if (mBufferPosition + mBufferSize <= mTotalCount) {
                 // Requested from the end
-                mObserver->request( mBufferPosition + mBufferSize - 1,
-                                    mBufferPosition + mBufferSize - 1 );
-            }else if( mBufferPosition > 0 ){
+                mObserver->request(mBufferPosition + mBufferSize - 1,
+                                   mBufferPosition + mBufferSize - 1);
+            }else if (mBufferPosition > 0) {
                 // Move buffer and request from the beginning 
                 mBufferPosition--;
-                mObserver->request( mBufferPosition, 
-                                    mBufferPosition );
+                mObserver->request(mBufferPosition, mBufferPosition);
             }
         }
     }
@@ -265,12 +291,12 @@ void HgBufferManager::removedItem(int pos)
 
 void HgBufferManager::aboutToInsertItem(int pos)
 {
-    if(pos < 0 || pos > mTotalCount ){
+    if (pos < 0 || pos > mTotalCount) {
         return;
     }
 
-    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
-        if( mBufferPosition + mBufferSize < mTotalCount ){
+    if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize) {
+        if (mBufferPosition + mBufferSize < mTotalCount) {
             // Release from the end of the buffer
             mObserver->release(mBufferPosition + mBufferSize - 1, mBufferPosition + mBufferSize - 1);
         }
@@ -279,14 +305,14 @@ void HgBufferManager::aboutToInsertItem(int pos)
 
 void HgBufferManager::insertedItem(int pos)
 {
-    if(pos < 0 || pos > mTotalCount ){
+    if ( pos < 0 || pos > mTotalCount) {
         return;
     }
 
     mTotalCount++;
-    if ( pos >= mBufferPosition && pos < mBufferPosition + mBufferSize ){
+    if (pos >= mBufferPosition && pos < mBufferPosition + mBufferSize) {
         mObserver->request(pos, pos);
-    }else if (pos<mBufferPosition){ //if we have inserted item before buffer, we should move buffer.
+    }else if (pos<mBufferPosition) { //if we have inserted item before buffer, we should move buffer.
         mBufferPosition++;
     }
 }

@@ -21,7 +21,7 @@
 #include <hgwidgets/hgwidgets.h>
 #include <QStringList>
 #include <HbIcon>
-#include "hgvgimage.h"
+#include "hgimage.h"
 
 HgWidgetItem::HgWidgetItem(HgQuadRenderer* renderer):
 mTitle(""),

@@ -119,11 +119,11 @@ QList<HgQuad*> HgTransformedQuadRenderer::getVisibleQuads(const QRectF& rect) co
     return result;    
 }
 
-void HgTransformedQuadRenderer::drawTransformedQuads(QPainter* painter, const QRectF& rect)
+void HgTransformedQuadRenderer::drawTransformedQuads(QPainter* painter, const QRectF& rect, const QTransform& transform)
 {
-    // draw quads
+    // draw quads    
     for (int i = 0; i < mSortedQuads.size(); i++)
     {
-        mSortedQuads[i]->draw(painter, rect);
+        mSortedQuads[i]->draw(painter, rect, transform);
     }    
 }

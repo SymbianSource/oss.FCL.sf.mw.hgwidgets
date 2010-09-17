@@ -28,8 +28,8 @@ DEFINES += BUILD_CACHEPROXYMODEL
 INCLUDEPATH += /sf/mw/qt/src/gui/image/
 
 #DEFINES += ENABLETRACE
-#if TRACE_FILENAME not set, then RDebug is used
-DEFINES += TRACE_FILE
+#if TRACE_FILE not set, then RDebug is used
+#DEFINES += TRACE_FILE
 
 # Input
 HEADERS +=  \

@@ -48,7 +48,7 @@ public:
     
     HgQuad* quad() const;
 
-    virtual void draw(QPainter* painter, const QRectF& rect)=0;
+    virtual void draw(QPainter* painter, const QRectF& rect, const QTransform& transform)=0;
 
     static bool quadSorter(HgTransformedQuad* a, HgTransformedQuad* b);
     

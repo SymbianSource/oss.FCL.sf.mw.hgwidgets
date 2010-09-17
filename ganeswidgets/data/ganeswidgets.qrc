@@ -7,5 +7,8 @@
         <file>hgmediawall_color.css</file>
         <file>hgmediawall.widgetml</file>
         <file>hgindexfeedback.css</file>
+        <file>fadein.fxml</file>
+        <file>fadeout.fxml</file>
+        <file>fadeoutin.fxml</file>
     </qresource>
 </RCC>

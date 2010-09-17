@@ -35,8 +35,8 @@ INCLUDEPATH += $$MW_LAYER_SYSTEMINCLUDE $$APP_LAYER_SYSTEMINCLUDE
 INCLUDEPATH += ../../../inc
 
 #DEFINES += ENABLETRACE
-#if TRACE_FILENAME not set, then RDebug is used
-DEFINES += TRACE_FILE
+#if TRACE_FILE not set, then RDebug is used
+#DEFINES += TRACE_FILE
 
 
 HEADERS += src\mywindow.h \

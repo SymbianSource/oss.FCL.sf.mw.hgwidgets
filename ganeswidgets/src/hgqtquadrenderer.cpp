@@ -156,7 +156,7 @@ public:
         
     }
 
-    void draw(QPainter* painter, const QRectF& rect)    
+    void draw(QPainter* painter, const QRectF& rect, const QTransform& transform)    
     {
         if (!quad()->visible())
             return;
@@ -171,7 +171,7 @@ public:
         if (image->pixmap().isNull())
             image = mRenderer->defaultImage();
         
-        drawImage(painter, image, rect);                      
+        drawImage(painter, image, rect, transform);                      
     }
 
     
@@ -196,7 +196,7 @@ private:
         QTransform::quadToQuad(img, poly, tm);
     }
     
-    void drawImage(QPainter* painter, HgQtImage* image, const QRectF& rect)
+    void drawImage(QPainter* painter, HgQtImage* image, const QRectF& rect, const QTransform& transform)
     {
         const QPixmap& pixmap = image->pixmap();
         
@@ -219,10 +219,8 @@ private:
         
         computeWarpMatrix(mTransform, image->width(), image->height(), points);
         
-        QTransform base = painter->transform(); 
-        painter->setTransform(mTransform * base);    
+        painter->setTransform(mTransform * transform);    
         painter->drawPixmap(QPointF(0,0), pixmap);
-        painter->setTransform(base);
     }
 
     HgQtQuadRenderer* mRenderer;
@@ -267,14 +265,15 @@ void HgQtQuadRenderer::drawQuads(QPainter* painter, const QRectF& rect,
     {
         mIsReflection = true;
 
-        drawTransformedQuads(painter, rect);
-    
+        drawTransformedQuads(painter, rect, temp);    
+
+        painter->setTransform(temp);        
         drawFloor(painter, rect);
     }
     
     mIsReflection = false;
     
-    drawTransformedQuads(painter, rect);
+    drawTransformedQuads(painter, rect, temp);
         
     painter->setTransform(temp);
     

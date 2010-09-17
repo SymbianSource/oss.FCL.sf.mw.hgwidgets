@@ -40,6 +40,10 @@ void HgGridPrivate::init(Qt::Orientation scrollDirection)
     mBufferSize = BUFFERSIZE;
 
     HgWidgetPrivate::init(container);
+    q->setPinchEnabled(false);
+    
+    q->connect(mContainer, SIGNAL(emptySpacePressed()),
+               q, SIGNAL(emptySpacePressed()));    
 }
 
 void HgGridPrivate::orientationChanged(Qt::Orientation orientation)
@@ -50,16 +54,15 @@ void HgGridPrivate::orientationChanged(Qt::Orientation orientation)
     q->repolish();
 }
 
-bool HgGridPrivate::effect3dEnabled() const
+HgGridContainer* HgGridPrivate::container()
 {
-    HgGridContainer *container = qobject_cast<HgGridContainer*>(mContainer);
-    return container->effect3dEnabled();
+    return qobject_cast<HgGridContainer*>(mContainer);
 }
 
-void HgGridPrivate::setEffect3dEnabled(bool effect3dEnabled)
+const HgGridContainer* HgGridPrivate::container() const
 {
-    HgGridContainer *container = qobject_cast<HgGridContainer*>(mContainer);
-    container->setEffect3dEnabled(effect3dEnabled);
+    return qobject_cast<const HgGridContainer*>(mContainer);
 }
+
 
 // EOF

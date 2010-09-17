@@ -18,7 +18,6 @@
 #include <QGesture>
 #include <QGraphicsSceneResizeEvent>
 #include <QPainter>
-#include <HbLabel>
 #include "hgcoverflowcontainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgwidgetitem.h"
@@ -75,25 +74,40 @@ qreal HgCoverflowContainer::getCameraRotationY(qreal springVelocity)
     return qBound(-KCameraMaxYAngle, springVelocity * KSpringVelocityToCameraYAngleFactor, KCameraMaxYAngle);
 }
 
-void HgCoverflowContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
+bool HgCoverflowContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
 {
     Q_UNUSED(pos)
 
-    if (qAbs(qreal(hitItemIndex) - mSpring.pos().x()) < 0.01f)
-    {
-        emit activated(hitItem->modelIndex());
+    INFO("Tap:" << hitItem->modelIndex().row());
+
+    if (mSelectionMode != HgWidget::NoSelection) {
+        return handleItemSelection(hitItem);
     }
-    else
-    {
+
+    if (qAbs(qreal(hitItemIndex) - mSpring.pos().x()) < 0.01f) {
+        mSelectionModel->setCurrentIndex(hitItem->modelIndex(), QItemSelectionModel::Current);
+        emit activated(hitItem->modelIndex());
+    } else {
         mSpring.animateToPos(QPointF(hitItemIndex, 0));
     }
+    
+    return true;
 }
 
-void HgCoverflowContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
+bool HgCoverflowContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
 {
     Q_UNUSED(hitItemIndex)
-
-    emit longPressed(hitItem->modelIndex(), pos);
+    INFO("Long tap:" << hitItem->modelIndex().row());
+    
+    bool currentPressed = hitItem->modelIndex() == mSelectionModel->currentIndex();
+    
+    mSelectionModel->setCurrentIndex(hitItem->modelIndex(), QItemSelectionModel::Current);
+    mSpring.animateToPos(QPointF(hitItemIndex, 0));
+    
+    if (mHandleLongPress && currentPressed && !mSpring.isActive()) {
+        emit longPressed(hitItem->modelIndex(), pos);
+    }
+    return true;
 }
 
 void HgCoverflowContainer::onScrollPositionChanged(qreal pos)
@@ -239,6 +253,69 @@ void HgCoverflowContainer::resizeEvent(QGraphicsSceneResizeEvent *event)
 {
     HgContainer::resizeEvent(event);
     updateItemSize();
+}
+
+bool HgCoverflowContainer::handleTap(Qt::GestureState state, const QPointF &pos)
+{
+    FUNC_LOG;
+    
+    bool handleGesture = false;
+    
+    if (hasItemAt(pos)) {
+        int hitItemIndex = -1;
+        // hititem will be valid since hasItemAt returned true.
+        HgWidgetItem* hitItem = getItemAt(pos,hitItemIndex);
+        switch (state) 
+            {
+            case Qt::GestureStarted:
+                {
+                mIgnoreGestureAction = false;
+                
+                if (mHandleLongPress && !mSpring.isActive()) {
+                    // in coverflow mode we react to longtap only if animation is not on and
+                    // center item is tapped.
+                    if (hitItem->modelIndex() == mSelectionModel->currentIndex()) {
+                        startLongPressWatcher(pos);
+                    }
+                }
+                mSpring.cancel();
+                break;
+                }
+            case Qt::GestureFinished:
+                handleGesture = handleTapAction(pos,hitItem,hitItemIndex);
+            case Qt::GestureUpdated:
+            case Qt::GestureCanceled:
+            default:
+                stopLongPressWatcher();
+                break;
+            }
+        
+        handleGesture = true;
+    } else {
+        // User has tapped outside any item.
+        if (state == Qt::GestureStarted) {
+            // Stop scrolling.
+            mSpring.cancel();            
+        } else if ( state == Qt::GestureFinished) {
+            // Tap finished and outside any item is pressed.
+            // Lets do focus animation to current item.
+            scrollToPosition(mSpring.pos(), true);
+        }
+        
+        mIgnoreGestureAction = true;
+    }    
+    return handleGesture;
+}
+
+bool HgCoverflowContainer::handleLongTap(Qt::GestureState state, const QPointF &pos)
+{
+    // base class handles long tap if item is hitted.
+    if (state == Qt::GestureUpdated && !HgContainer::handleLongTap(state, pos)) {
+        // empty area pressed. Animate current item to front.
+        scrollToPosition(mSpring.pos(), true);
+    }
+    
+    return true;
 }
 
 // EOF

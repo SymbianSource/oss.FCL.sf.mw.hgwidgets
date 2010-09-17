@@ -31,7 +31,7 @@ HgMediawall::description
 	left:-var(hb-param-margin-gene-screen);
 	right:var(hb-param-margin-gene-screen);
 	top:-var(hb-param-margin-gene-middle-vertical);
-	bottom:0un;
+	bottom:6un;          /* This should be overridden by the applications which use HgMediawall */
 	text-line-count-min:1;
 	text-line-count-max:1;
 	zvalue: 2;

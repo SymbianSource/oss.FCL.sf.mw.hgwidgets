@@ -40,9 +40,9 @@ HgWidgetPrivate::HgWidgetPrivate() :
     mAbleToScroll(false),
     mHandleLongPress(false),
     mBufferSize(DEFAULT_BUFFER_SIZE),
-    mStaticScrollDirection(false),
     mIndexFeedback(0),
-    mIndexFeedbackPolicy(HgWidget::IndexFeedbackNone)
+    mIndexFeedbackPolicy(HgWidget::IndexFeedbackNone),
+    mStaticScrollDirection(false)
 {
     FUNC_LOG;
 }
@@ -370,7 +370,7 @@ void HgWidgetPrivate::_q_requestItems(int requestStart, int requestEnd)
 void HgWidgetPrivate::_q_scrollPositionChanged(qreal index,bool scrollBarAnimation)
 {
     int newPos = index;
-    newPos *= mContainer->rowCount();
+    newPos *= mContainer->currentRowCount();
     if (mBufferManager) {
         mBufferManager->scrollPositionChanged(newPos);
     }
@@ -738,7 +738,7 @@ Qt::Orientation HgWidgetPrivate::scrollDirection() const
 void HgWidgetPrivate::createScrollBar(Qt::Orientation orientation)
 {
     Q_Q(HgWidget);
-
+    
     delete mScrollBar;
     mScrollBar = 0;
     mScrollBar = new HbScrollBar(orientation,q);
@@ -859,7 +859,7 @@ void HgWidgetPrivate::initBufferManager(int itemCount)
         mBufferManager = 0;
     }
 
-    mBufferManager = new HgScrollBufferManager(mBufferSize,qMax(mContainer->rowCount()*2,3),0,itemCount);
+    mBufferManager = new HgScrollBufferManager(mBufferSize,qMax(mContainer->currentRowCount()*2,3),0,itemCount);
     q->connect( mBufferManager, SIGNAL(releaseItems(int,int)), q, SLOT(_q_releaseItems(int,int)));
     q->connect( mBufferManager, SIGNAL(requestItems(int,int)), q, SLOT(_q_requestItems(int,int)));
     mBufferManager->resetBuffer(0, itemCount);

@@ -19,8 +19,6 @@
 #include "hgquadrenderer.h"
 #include "hgquad.h"
 #include "hgimage.h"
-#include "hgimagefader.h"
-#include "hgvgquadrenderer.h"
 #include "hgqtquadrenderer.h"
 #include <QVector3D>
 #include <QTimer>
@@ -246,7 +244,7 @@ HgMediaWallRenderer::HgMediaWallRenderer(HgMediaWallDataProvider* provider,
     mFrontItemPosition(0,0)
 {
     createStateMachine();
-    mRenderer = new HgQtQuadRenderer(128);
+    mRenderer = new HgQtQuadRenderer(coverflowMode ? 16 : 128);
     mRenderer->enableReflections(true);
     mRendererInitialized = true;
     if (mCoverflowMode) {
@@ -1033,7 +1031,7 @@ void HgMediaWallRenderer::setupIndicator(HgQuad* parent,
     HgQuad* indicator, const HgImage* indicatorImage, int itemIndex)
 {
     indicator->setPosition(parent->position()+
-        QVector3D(0.25*mImageSize3D.width(), -0.25*mImageSize3D.height(), 0.0001f));
+        QVector3D(0.375*mImageSize3D.width(), 0.375*mImageSize3D.height(), 0.0001f));
     indicator->setImage(indicatorImage);
     indicator->setVisible(true);
     indicator->setScale(QVector2D(0.25f*mImageSize3D.width(), 0.25f*mImageSize3D.height()));

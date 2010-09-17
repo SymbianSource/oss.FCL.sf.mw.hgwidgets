@@ -103,4 +103,11 @@ EXPORTS
 	_ZN6HgGrid18setEffect3dEnabledEb @ 102 NONAME
 	_ZNK6HgGrid15effect3dEnabledEv @ 103 NONAME
 	_ZN11HgMediawall6polishER17HbStyleParameters @ 104 NONAME
+	_ZN6HgGrid11setRowCountEiN2Qt11OrientationE @ 105 NONAME
+	_ZN6HgGrid14setPinchLevelsE5QPairIiiEN2Qt11OrientationE @ 106 NONAME
+	_ZN6HgGrid15setPinchEnabledEb @ 107 NONAME
+	_ZN6HgGrid17emptySpacePressedEv @ 108 NONAME
+	_ZNK6HgGrid11pinchLevelsEN2Qt11OrientationE @ 109 NONAME
+	_ZNK6HgGrid12pinchEnabledEv @ 110 NONAME
+	_ZNK6HgGrid8rowCountEN2Qt11OrientationE @ 111 NONAME
 

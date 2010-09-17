@@ -51,7 +51,7 @@ protected:
     virtual void transformQuads(const QMatrix4x4& view, const QMatrix4x4& proj, 
         const QPointF& center, const QSizeF& windowSize);
 
-    virtual void drawTransformedQuads(QPainter* painter, const QRectF& rect);
+    virtual void drawTransformedQuads(QPainter* painter, const QRectF& rect, const QTransform& transform);
     
     virtual HgTransformedQuad* createNativeQuad()=0;
         

@@ -39,15 +39,17 @@ public:
     virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection);
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
-    virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
-    virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
+    virtual bool handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
+    virtual bool handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
     virtual void scrollToPosition(const QPointF& pos, bool animate);
 
     virtual QSizeF getAutoItemSize() const;
     virtual QSizeF getAutoItemSpacing() const;
     virtual void updateItemSizeAndSpacing();
-
+    virtual bool handleTap(Qt::GestureState state, const QPointF &pos);
+    virtual bool handleLongTap(Qt::GestureState state, const QPointF &pos);
+    
     void setFrontItemPositionDelta(const QPointF& position);
     QPointF frontItemPositionDelta() const;
 

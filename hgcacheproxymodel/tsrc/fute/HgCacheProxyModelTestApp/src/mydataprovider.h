@@ -22,13 +22,13 @@
 
 #include <thumbnailmanager_qt.h>
 #include <hgwidgets/hgdataprovidermodel.h>
+#include <HbIcon>
 #include <QList>
 #include <QPair>
 #include <mdesession.h>
 #include <mdequery.h>
 #include "flogger.h"
 
-class HbIcon;
 class CMdESession;
 class CActiveSchedulerWait;
 class QEventLoop;
@@ -42,7 +42,7 @@ public:
     ~MyDataProvider();
     void changeIconSize(ThumbnailManager::ThumbnailSize aThumbnailsize);
     void changeMode(int mode); // 0 for Images, 1 for Audio
-	
+    
 //from MMdESessionObserver and MMdEQueryObserver
     virtual void HandleSessionOpened(CMdESession& aSession, TInt aError);
     virtual void HandleSessionError(CMdESession& , TInt ){};
@@ -79,6 +79,7 @@ private:
 	ThumbnailManager::ThumbnailSize mThumbnailsize;
 	bool mMDSLoadInProgress;
 	int mMode;
+	HbIcon mNoIcon;
 };
 
 #endif // MYDATAPROVIDER2_H

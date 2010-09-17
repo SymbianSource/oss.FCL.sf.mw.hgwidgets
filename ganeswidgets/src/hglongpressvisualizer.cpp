@@ -18,7 +18,6 @@
 #include <QGesture>
 #include <QPainter>
 #include <QTimer>
-#include <HbLabel>
 #include <HbGridViewItem>
 #include <HbMainWindow>
 #include "hglongpressvisualizer.h"

@@ -51,7 +51,6 @@ public:
     void disconnectItemView();
     void connectModelToIndexFeedback(QItemSelectionModel* model);
 
-    void _q_scrollPositionChanged(qreal value, Qt::Orientation orientation);
     void _q_hideIndexFeedback();
     void _q_itemViewDestroyed();
     void _q_hideIndexFeedbackNow();

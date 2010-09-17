@@ -259,29 +259,6 @@ void HgIndexFeedbackPrivate::scrollBarReleased()
 }
 
 /*
-    Handle the case of the scrollbar being moved.
-
-    This is to stop any existing timers (only if the scrollbar actually moved),
-    and start a timer with the dwell timeout.
-
-    NOTE:: this should be much simpler once the valueChanged signal from hbscrollbar
-    is emitted at the correct times.
-*/
-void HgIndexFeedbackPrivate::_q_scrollPositionChanged(qreal value, Qt::Orientation orientation )
-{
-    // using 3 timers.  If the press timer is active, stop it, assuming the value actually changed.
-
-    // TODO::The value check here is a work around for a bug in hbscrollbar.
-    // the bug is that the value changed signal is emitted when the thumb
-    // is pressed, and again when it is released, regaurdless of if there was a value change.
-    // once that bug is fixed, This should be just setting the dwell interval,
-    // starting the timer, and showing the index feedback.
-    if (value != mScrollBarValue && orientation == mWidget->scrollDirection()) {
-        showIndexFeedback();
-    }
-}
-
-/*
     The private slot for hiding the index feedback.
 
     If effects are active, use the disappear effect to hide the index feedback's

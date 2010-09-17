@@ -45,13 +45,50 @@ HgGrid::~HgGrid()
 bool HgGrid::effect3dEnabled() const
 {
     Q_D( const HgGrid );
-    return d->effect3dEnabled();
+    return d->container()->effect3dEnabled();
 }
 
 void HgGrid::setEffect3dEnabled(bool effect3dEnabled)
 {
     Q_D( HgGrid );
-    d->setEffect3dEnabled(effect3dEnabled);
+    d->container()->setEffect3dEnabled(effect3dEnabled);
 }
+
+bool HgGrid::pinchEnabled() const
+{
+    Q_D( const HgGrid );
+    return d->container()->pinchEnabled();
+}
+
+void HgGrid::setPinchEnabled(bool pinchEnabled)
+{
+    Q_D( HgGrid );
+    d->container()->setPinchEnabled(pinchEnabled);
+}
+
+void HgGrid::setRowCount(int count, Qt::Orientation scrollDirection)
+{
+    Q_D( HgGrid );
+    d->container()->setRowCount(count, scrollDirection);
+}
+
+int HgGrid::rowCount(Qt::Orientation scrollDirection) const
+{
+    Q_D( const HgGrid );
+    return d->container()->rowCount(scrollDirection);
+}
+
+void HgGrid::setPinchLevels(QPair<int,int> levels, Qt::Orientation scrollDirection)
+{
+    Q_D( HgGrid );
+    d->container()->setPinchLevels(levels, scrollDirection);
+}
+
+QPair<int,int> HgGrid::pinchLevels(Qt::Orientation scrollDirection) const
+{
+    Q_D( const HgGrid );
+    return d->container()->pinchLevels(scrollDirection);    
+}
+
 
 // EOF

@@ -22,7 +22,6 @@
 #include <QPixmap>
 #include <QModelIndex>
 #include <QObject>
-#include "hgvgimage.h"
 
 class HgQuadRenderer;
 class HgImage;

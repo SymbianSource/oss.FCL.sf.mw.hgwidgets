@@ -45,8 +45,8 @@ public:
 
     void setItemCount(int count);
     int itemCount() const;
-    int rowCount() const;
-
+    int currentRowCount() const;
+    
     QList<HgWidgetItem*> items() const;
     HgWidgetItem* itemByIndex(const QModelIndex &index) const;
     HgWidgetItem* itemByIndex(const int &index) const;
@@ -58,7 +58,7 @@ public:
 
     void dimensions(qreal &screenSize, qreal &worldSize);
     Qt::Orientation orientation() const;
-    void setOrientation(Qt::Orientation orientation, bool animate=true);
+    virtual void setOrientation(Qt::Orientation orientation, bool animate=true);
 
     // new size for the widget. calls resize.
     void scrollToPosition(qreal value, bool animate = false);
@@ -138,10 +138,12 @@ protected:
     virtual HgMediaWallRenderer* createRenderer(Qt::Orientation scrollDirection)=0;
     virtual qreal getCameraDistance(qreal springVelocity);
     virtual qreal getCameraRotationY(qreal springVelocity);
-    virtual void handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
-    virtual void handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
+    virtual bool handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
+    virtual bool handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex);
     virtual void onScrollPositionChanged(qreal pos);
     virtual void loadIndicatorGraphics(bool loadIfExists = false);
+    virtual bool handleTap(Qt::GestureState state, const QPointF &pos) = 0;
+    virtual bool handleLongTap(Qt::GestureState state, const QPointF &pos);
     
 protected:
 
@@ -159,9 +161,6 @@ protected:
     void initSpringForScrolling();
     void boundSpring();
     bool handlePanning(QPanGesture *gesture);
-    bool handleTap(Qt::GestureState state, const QPointF &pos);
-    bool handleLongTap(Qt::GestureState state, const QPointF &pos);
-    bool handleItemAction(const QPointF &pos, ItemActionType action);
 
     void selectItem(int index);
     void updateSelectedItem();
@@ -171,8 +170,7 @@ protected:
     HgWidgetItem* getItemAt(const QPointF& pos, int& index);
     void startLongPressWatcher(const QPointF& pos);
     void stopLongPressWatcher();
-    bool updateSelectionModel(HgWidgetItem* item);
-
+    bool handleItemSelection(HgWidgetItem* item);
 
     virtual void updateItemSizeAndSpacing();
     virtual QSizeF getAutoItemSize() const;
@@ -226,6 +224,7 @@ protected: // data
     QModelIndex mDelayedScrollToIndex;
     bool mIgnoreGestureAction;
     bool mHandleLongPress;
+    bool mEmitScrollingEnded;
 };
 
 #endif

@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 6 %
+*  Version     : %version: 8 %
 */
 #ifndef CONTENTWIDGET_H
 #define CONTENTWIDGET_H
@@ -28,7 +28,6 @@
 #include <HbApplication>
 #include <HbListview>
 #include <HbIcon>
-#include <HbLabel>
 #include <HbGridView>
 #include <HbGridViewItem>
 #include <HbMainWindow>
@@ -37,8 +36,8 @@
 
 class QTimer;
 class HbMenu;
-class HbMainWindow;
-class HbGridView;
+class HgGrid;
+class HgMediawall;
 class HbAction;
 class HbMenuItem;
 class QFileSystemWatcher;
@@ -58,6 +57,7 @@ private slots:
     void processAction( HbAction* action );
     void sortTestTimeout();
     void filterTestTimeout();
+    void resetTestTimeout();
     
 private:
     HbMenu *createMainMenu();
@@ -65,18 +65,29 @@ private:
     void addChangeViewMenu(HbMenu* parent);
     void addCacheProxyModelMenu(HbMenu* parent);
     void addDataProviderMenu(HbMenu* parent);
+    void scrollTo(int pos);
     
-private:
-    HbWidget* mView;      
+private:   
+    HbWidget* mCurrentWidget;
+    HbGridView* mGridWidget;
+    HbListView* mListWidget;    
+    HgMediawall * mMediaWallWidget;
+    HgGrid * mHgGridWidget;
+    
     HgCacheProxyModel *mModel;
 	
 	MyDataProvider *mMyDataProvider;
     HbView* mMainView;	
+    
     QTimer *mSortTestTimer;
     int mSortTestVal;
     
     QTimer *mFilterTestTimer;
     int mFilterTestVal;
+
+    QTimer *mResetTestTimer;
+    int mResetTestVal;
+
 };
 
 #endif // CONTENTWIDGET_H

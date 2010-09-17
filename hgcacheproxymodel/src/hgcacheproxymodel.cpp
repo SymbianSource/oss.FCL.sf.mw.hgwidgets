@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 11 %
+*  Version     : %version: 14 %
 */
 #include <QList>
 #include <QAbstractItemModel>
@@ -33,8 +33,7 @@ HgCacheProxyModel::HgCacheProxyModel(QObject *parent):
     mSortFilterProxyModel(new QSortFilterProxyModel(this)),
     mDataProviderModel(0),
     mSupressBM(false),
-    mCurrentPos(0)//,
-//    mSortParameterChanged(true)
+    mCurrentPos(0)
 {
     TX_ENTRY
     connect(mSortFilterProxyModel, SIGNAL(columnsAboutToBeInserted(const QModelIndex&, int, int)),
@@ -90,14 +89,14 @@ void HgCacheProxyModel::setDataProvider(HgDataProviderModel *dataProvider, int c
     TX_ENTRY
     mDataProviderModel = dataProvider;
     mSortFilterProxyModel->setSourceModel(mDataProviderModel);
-    if (mDataProviderModel){
+    if (mDataProviderModel) {
         mDataProviderModel->registerObserver(this);
 
         mSupressBM = true;
         resizeCache(cacheSize, cacheTreshold);
         mSupressBM = false;
 
-        if (mBufferManager == NULL){
+        if (mBufferManager == NULL) {
             mBufferManager = new HgBufferManager(this, cacheSize, cacheTreshold, 0, count() );
         } else {
             mBufferManager->resetBuffer(0, count());
@@ -126,10 +125,10 @@ void HgCacheProxyModel::resizeCache(int newSize, int newTreshold)
 QModelIndex HgCacheProxyModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    if (  row >= rowCount() ){
+    if (row >= rowCount()) {
         row = -1;
     }
-    if (  column >= columnCount() ){
+    if (column >= columnCount()) {
         column = -1;
     }
     
@@ -197,7 +196,7 @@ QStringList HgCacheProxyModel::mimeTypes() const
 QMimeData *HgCacheProxyModel::mimeData(const QModelIndexList &indexes) const
 {
     QModelIndexList list;
-    for ( int i=0; i < indexes.count(); i++){
+    for (int i=0; i < indexes.count(); i++) {
         list.append(mapToSource(indexes[i]));
     }
     return mSortFilterProxyModel->mimeData(list);
@@ -280,7 +279,7 @@ Qt::CaseSensitivity HgCacheProxyModel::sortCaseSensitivity() const
 
 void HgCacheProxyModel::setSortCaseSensitivity(Qt::CaseSensitivity cs)
 {
-    if (sortCaseSensitivity() != cs){
+    if (sortCaseSensitivity() != cs) {
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortCaseSensitivity(cs);
@@ -295,7 +294,7 @@ bool HgCacheProxyModel::isSortLocaleAware() const
 
 void HgCacheProxyModel::setSortLocaleAware(bool on)
 {
-    if (isSortLocaleAware() != on){
+    if (isSortLocaleAware() != on) {
         mSupressBM = true;    
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortLocaleAware(on);
@@ -320,7 +319,7 @@ bool HgCacheProxyModel::dynamicSortFilter() const
 
 void HgCacheProxyModel::setDynamicSortFilter(bool enable)
 {
-    if (dynamicSortFilter() != enable){
+    if (dynamicSortFilter() != enable) {
         mSupressBM = true;   
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setDynamicSortFilter(enable);
@@ -335,7 +334,7 @@ int HgCacheProxyModel::sortRole() const
 
 void HgCacheProxyModel::setSortRole(int role)
 {
-    if (sortRole() != role){
+    if (sortRole() != role) {
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setSortRole(role);
@@ -350,7 +349,7 @@ QRegExp HgCacheProxyModel::filterRegExp() const
 
 void HgCacheProxyModel::setFilterRegExp(const QRegExp &regExp)
 {
-    if (filterRegExp() != regExp){
+    if (filterRegExp() != regExp) {
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterRegExp(regExp);
@@ -365,7 +364,7 @@ int HgCacheProxyModel::filterKeyColumn() const
 
 void HgCacheProxyModel::setFilterKeyColumn(int column)
 {
-    if (filterKeyColumn() != column){   
+    if (filterKeyColumn() != column) {
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterKeyColumn(column);
@@ -380,7 +379,7 @@ Qt::CaseSensitivity HgCacheProxyModel::filterCaseSensitivity() const
 
 void HgCacheProxyModel::setFilterCaseSensitivity(Qt::CaseSensitivity cs)
 {
-    if ( filterCaseSensitivity() != cs){   
+    if (filterCaseSensitivity() != cs) {   
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterCaseSensitivity(cs);
@@ -395,7 +394,7 @@ int HgCacheProxyModel::filterRole() const
 
 void HgCacheProxyModel::setFilterRole(int role)
 {
-    if ( filterRole() != role ){   
+    if (filterRole() != role) {
         mSupressBM = true;
         sourceModelAboutToBeReset();
         mSortFilterProxyModel->setFilterRole(role);
@@ -418,19 +417,22 @@ void HgCacheProxyModel::release(int start, int end)
     TX_ENTRY_ARGS( QString("%0-%1").arg(start).arg(end));   
     QList<int> list;
     int idx = 0;
-    if ( start > end){
+    if (start > end) {
         idx = end;
         end = start;
         start = idx;
         idx = 0;
     }
-    for ( int i=start; i <=end; i++){
+    for (int i=start; i <=end; i++) {
         idx = mapToDataProviderIndex(i);
-        if ( idx >=0)
+        if (idx >=0)
             list.append(idx);
     }
-    if (mDataProviderModel)
-        mDataProviderModel->release(list, true);
+    if (mDataProviderModel) {
+        mSupressBM = true;
+        mDataProviderModel->release(list, false);
+        mSupressBM = false;
+    }
     TX_EXIT
 }
 
@@ -439,16 +441,16 @@ void HgCacheProxyModel::request(int start, int end, HgRequestOrder order)
     TX_ENTRY_ARGS( QString("%0-%1").arg(start).arg(end));   
     QList<int> list;
     int idx;
-    if (order == HgRequestOrderAscending){
-        for ( int i=start; i <=end; i++){
+    if (order == HgRequestOrderAscending) {
+        for (int i=start; i <=end; i++) {
             idx = mapToDataProviderIndex(i);
-            if ( idx >=0)
+            if (idx >=0)
                 list.append(idx);
         }
     } else {
-        for ( int i=end; i >=start; i--){
+        for (int i=end; i >=start; i--) {
             idx = mapToDataProviderIndex(i);
-            if ( idx >=0)
+            if (idx >=0)
                 list.append(idx);
         }
     }
@@ -484,9 +486,9 @@ int HgCacheProxyModel::mapFromDataProviderIndex(int myIndex) const
 
 void HgCacheProxyModel::releaseAll()
 {
-    if ( mDataProviderModel ){
+    if (mDataProviderModel) {
         QList<int> list;
-        for ( int i=0; i<mDataProviderModel->rowCount(); i++){
+        for (int i=0; i<mDataProviderModel->rowCount(); i++) {
             list.append(i);
         }
         mDataProviderModel->release(list, true);
@@ -495,8 +497,8 @@ void HgCacheProxyModel::releaseAll()
 
 void HgCacheProxyModel::setBufferPosition(int pos) const
 {
-    if (mBufferManager && !mSupressBM){
-        if (mCurrentPos!=pos){
+    if (mBufferManager && !mSupressBM) {
+        if (mCurrentPos!=pos) {
 //            TX_LOG_ARGS(QString("pos:%1 ").arg(pos) );
             mCurrentPos = pos;
             mBufferManager->setPosition(mCurrentPos);
@@ -562,10 +564,10 @@ void HgCacheProxyModel::sourceColumnsRemoved( const QModelIndex & parent, int st
 void HgCacheProxyModel::sourceDataChanged( const QModelIndex & topLeft, const QModelIndex & bottomRight )
 {
     TX_ENTRY_ARGS(QString("from:%1 to:%2").arg( topLeft.row() ).arg( bottomRight.row() ) );
-    QModelIndex begin = index( topLeft.row(), topLeft.column() );
-    QModelIndex end = index( bottomRight.row(), bottomRight.column() );
+    QModelIndex begin = index(topLeft.row(), topLeft.column());
+    QModelIndex end = index(bottomRight.row(), bottomRight.column());
     
-    if (begin.isValid() && end.isValid() && !mSupressBM){
+    if (begin.isValid() && end.isValid() && !mSupressBM) {
         emit dataChanged(begin, end);
     }
     TX_EXIT
@@ -574,7 +576,7 @@ void HgCacheProxyModel::sourceDataChanged( const QModelIndex & topLeft, const QM
 void HgCacheProxyModel::sourceHeaderDataChanged( Qt::Orientation orientation, int first, int last )
 {
     TX_ENTRY
-    emit headerDataChanged( orientation, first, last );
+    emit headerDataChanged(orientation, first, last);
     TX_EXIT
 }
 
@@ -605,9 +607,9 @@ void HgCacheProxyModel::sourceModelReset()
 {
     TX_ENTRY
     mSupressBM = true;
-    if (mBufferManager){
+    if (mBufferManager) {
         mCurrentPos = 0;
-        mBufferManager->resetBuffer( mCurrentPos, count() );
+        mBufferManager->resetBuffer(mCurrentPos, count());
     }
     mSupressBM = false;
     endResetModel();
@@ -617,9 +619,9 @@ void HgCacheProxyModel::sourceModelReset()
 void HgCacheProxyModel::sourceRowsAboutToBeInserted( const QModelIndex & parent, int start, int end )
 {
     TX_ENTRY
-    if (mBufferManager && !mSupressBM){
+    if (mBufferManager && !mSupressBM) {
         beginInsertRows(parent, start, end);
-        for ( int i=start; i <=end; i++){
+        for (int i=start; i <=end; i++) {
             mBufferManager->aboutToInsertItem(i);
         }        
     }
@@ -637,9 +639,9 @@ void HgCacheProxyModel::sourceRowsAboutToBeMoved( const QModelIndex & sourcePare
 void HgCacheProxyModel::sourceRowsAboutToBeRemoved( const QModelIndex & parent, int start, int end )
 {
     TX_ENTRY
-    if (mBufferManager && !mSupressBM){
+    if (mBufferManager && !mSupressBM) {
         beginRemoveRows(parent, start, end);
-        for ( int i=start; i <=end; i++){
+        for (int i=start; i <=end; i++) {
             mBufferManager->aboutToRemoveItem(i);
         }
     }
@@ -651,8 +653,8 @@ void HgCacheProxyModel::sourceRowsInserted( const QModelIndex & parent, int star
     TX_ENTRY
     Q_UNUSED(parent);
     Q_UNUSED(end);
-    if (mBufferManager && !mSupressBM){
-        for ( int i=start; i <=end; i++){
+    if (mBufferManager && !mSupressBM) {
+        for (int i=start; i <=end; i++) {
             mBufferManager->insertedItem(i);
         }
         endInsertRows();
@@ -678,8 +680,8 @@ void HgCacheProxyModel::sourceRowsRemoved( const QModelIndex & parent, int start
     TX_ENTRY
     Q_UNUSED(parent);
     Q_UNUSED(end);
-    if (mBufferManager && !mSupressBM){
-        for ( int i=start; i <=end; i++){
+    if (mBufferManager && !mSupressBM) {
+        for (int i=start; i <=end; i++) {
             mBufferManager->removedItem(i);
         }
         endRemoveRows();
@@ -694,13 +696,13 @@ void HgCacheProxyModel::dataUpdated(int from, int to)
     QModelIndex end;
     begin = index(mapFromDataProviderIndex(from),0);
     
-    if ( from == to ){
+    if (from == to) {
         end = begin;
     } else {
         end = index(mapFromDataProviderIndex(to),0);
     }
     
-    if (begin.isValid() && end.isValid() && !mSupressBM){
+    if (begin.isValid() && end.isValid() && !mSupressBM) {
         emit dataChanged(begin, end );
     }
 }

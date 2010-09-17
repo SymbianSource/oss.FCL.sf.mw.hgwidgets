@@ -13,7 +13,7 @@
 *
 * Description:
 *
-*  Version     : %version: 1 %
+*  Version     : %version: 3 %
 */
 #ifndef HGLOGGER_H_
 #define HGLOGGER_H_
@@ -36,10 +36,12 @@
     #include <e32debug.h>
 
     #ifdef TRACE_FILE
-        #define _TRACE_FILENAME "c:/trace.txt"
+		#ifndef TRACE_FILENAME
+			#define TRACE_FILENAME "c:/trace.txt"
+		#endif
         #define _TX_INIT void __tx_myMessageOutput(QtMsgType type, const char *msg) {\
              static const QString timeFmt("hh:mm:ss.zzz");\
-             FILE *f = fopen(_TRACE_FILENAME, "a");\
+             FILE *f = fopen(TRACE_FILENAME, "a");\
              fprintf(f, "%s ", QTime::currentTime().toString(timeFmt).toLatin1().data() );\
              switch (type) {\
              case QtDebugMsg: fprintf(f, "[DEB] [TX] %s\n", msg); break;\

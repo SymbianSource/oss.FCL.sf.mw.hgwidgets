@@ -19,26 +19,27 @@
 #include <QPainter>
 #include <QTimer>
 #include <HbMainWindow>
-#include "hgcontainer.h"
-#include "hgmediawallrenderer.h"
-#include "hgquad.h"
-#include "hgvgquadrenderer.h"
-#include "hgvgimage.h"
-#include "hgwidgetitem.h"
-#include "trace.h"
-
 #include <HbCheckBox>
 #include <HbGridViewItem>
 #include <HbGridView>
 #include <HbIconItem>
 #include <QAbstractItemModel>
 #include <HbTapGesture>
+
+#include "hgcontainer.h"
+#include "hgmediawallrenderer.h"
+#include "hgquad.h"
+#include "hgimage.h"
+#include "hgwidgetitem.h"
+#include "trace.h"
+#include "hgquadrenderer.h"
 #include "hglongpressvisualizer.h"
 
+
 static const qreal KSpringKScrolling(50.0);
-static const qreal KSpringKScrollBar(10.0);
+static const qreal KSpringKScrollBar(50.0);
 static const qreal KSpringDampingScrolling(20.0);
-static const qreal KSpringDampingScrollBar(5.0);
+static const qreal KSpringDampingScrollBar(20.0);
 static const qreal KFramesToZeroVelocity(60.0);
 static const int   KLongTapDuration(400);
 
@@ -103,7 +104,7 @@ int HgContainer::itemCount() const
     return mItems.count();
 }
 
-int HgContainer::rowCount() const
+int HgContainer::currentRowCount() const
 {
     return mRenderer ? mRenderer->getRowCount() : 0;
 }
@@ -287,12 +288,12 @@ void HgContainer::scrollTo(const QModelIndex &index)
                 if ((int)containerRect.height()%rowHeight) {
                     itemsOnScreen++;
                 }
-                itemsOnScreen *= rowCount();
+                itemsOnScreen *= currentRowCount();
                 if (itemsOnScreen + index.row() > mItems.count()) {
                     int newItem = mItems.count()-itemsOnScreen;
 
-                    if (mItems.count()%rowCount())
-                        newItem += rowCount() - (mItems.count()%rowCount());
+                    if (mItems.count()%currentRowCount())
+                        newItem += currentRowCount() - (mItems.count()%currentRowCount());
                     if (newItem < 0)
                         newItem = 0;
 
@@ -307,12 +308,12 @@ void HgContainer::scrollTo(const QModelIndex &index)
                 if ((int)containerRect.height()%rowWidth) {
                     itemsOnScreen++;
                 }
-                itemsOnScreen *= rowCount();
+                itemsOnScreen *= currentRowCount();
                 if (itemsOnScreen + index.row() > mItems.count()) {
                     int newItem = mItems.count()-itemsOnScreen;
 
-                    if (mItems.count()%rowCount())
-                        newItem += rowCount() - (mItems.count()%rowCount());
+                    if (mItems.count()%currentRowCount())
+                        newItem += currentRowCount() - (mItems.count()%currentRowCount());
                     if (newItem < 0) newItem = 0;
 
                     scrollToPosition(QPointF(newItem/mRenderer->getRowCount(),0), false);
@@ -410,7 +411,9 @@ int HgContainer::flags(int index) const
 {
     if (index >= 0 && index < itemCount()) {
         if (mSelectionMode != HgWidget::NoSelection) {
-            if (mSelectionModel && mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
+            if (mSelectionModel && 
+                    mSelectionModel->model() &&
+                    mSelectionModel->isSelected(mSelectionModel->model()->index(index, 0))) {
                 return 1; // TODO: Assign flag to mark indicator
             } else
                 return 2;
@@ -686,77 +689,6 @@ bool HgContainer::handlePanning(QPanGesture *gesture)
     return true;
 }
 
-bool HgContainer::handleTap(Qt::GestureState state, const QPointF &pos)
-{
-    FUNC_LOG;
-    
-    bool handleGesture = false;
-    
-    if (hasItemAt(pos)) {
-        switch (state) 
-            {
-            case Qt::GestureStarted:
-                {
-                if (mRenderer->coverflowModeEnabled() || !mSpring.isActive()) {
-                    mIgnoreGestureAction = false;
-                    
-                    if (mHandleLongPress) {
-                        if (mRenderer->coverflowModeEnabled()) {
-                            // in coverflow mode we react to longtap only if animation is not on and
-                            // center item is tapped.
-                            int temp = 0;
-                            if (getItemAt(pos,temp)->modelIndex() == mSelectionModel->currentIndex() &&
-                                    !mSpring.isActive()) {
-                                startLongPressWatcher(pos);
-                            }
-                        } else {
-                            startLongPressWatcher(pos);
-                        }
-                    }
-                } else if(mSpring.isActive()) {
-                    
-                    int rowCount = mRenderer->getRowCount();
-                    if(rowCount != 0)   //just in case, should not be zero 
-                    {
-                        qreal springPos = mSpring.pos().x();
-                        int gridTotalHeightInImages = ceilf( mItems.count() / rowCount );
-                        qreal currentViewHeightInImages;
-                        if (scrollDirection() == Qt::Horizontal ) {
-                            int rowHeight = mRenderer->getImageSize().width() + mRenderer->getSpacing().width();
-                            currentViewHeightInImages = rect().width() / rowHeight;
-                        } else {
-                            int rowHeight = mRenderer->getImageSize().height() + mRenderer->getSpacing().height();
-                            currentViewHeightInImages = rect().height() / rowHeight;
-                        }
-                        
-                        // If list does not currently fill the whole screen (some theme background behind the list
-                        // is visible), and list is moving, then do not react to tapping.
-                        if( springPos >= 0 
-                            && springPos <= (gridTotalHeightInImages - currentViewHeightInImages) )
-                        {
-                            mSpring.cancel();
-                        }
-                    }
-                    mIgnoreGestureAction = true;
-                }
-                break;
-                }
-            case Qt::GestureFinished:
-                handleGesture = handleItemAction(pos, NormalTap);
-            case Qt::GestureUpdated:
-            case Qt::GestureCanceled:
-            default:
-                stopLongPressWatcher();
-                break;
-            }
-        
-        handleGesture = true;
-    } else {
-        mIgnoreGestureAction = true;
-    }    
-    return handleGesture;
-}
-
 bool HgContainer::handleLongTap(Qt::GestureState state, const QPointF &pos)
 {
     FUNC_LOG;
@@ -768,7 +700,11 @@ bool HgContainer::handleLongTap(Qt::GestureState state, const QPointF &pos)
         switch (state) 
             {
             case Qt::GestureUpdated:
-                handleItemAction(pos,LongTap);
+                {
+                int hitItemIndex = -1;
+                HgWidgetItem* hitItem = getItemAt(pos,hitItemIndex);
+                handleLongTapAction(pos,hitItem, hitItemIndex);
+                }
             case Qt::GestureStarted:
             case Qt::GestureCanceled:
             case Qt::GestureFinished:
@@ -784,121 +720,6 @@ bool HgContainer::handleLongTap(Qt::GestureState state, const QPointF &pos)
     return handleGesture;
 }
 
-/*!
-    Handle tap, lang tap and double tap action.
-    Finds out the item in the tap position and sends out suitable signal,
-    Sets the item as the current item and in multiselection mode toggles the
-    item selection status.
-*/
-bool HgContainer::handleItemAction(const QPointF &pos, ItemActionType action)
-{
-    FUNC_LOG;
-
-    // If there is content, mSelectionModel must always exist - either default or client-provided
-    if (!mSelectionModel) return false;
-
-    int index = -1;
-    mHitItem = getItemAt(pos, index);
-    if (mHitItem)
-    {
-        HgWidgetItem* item = itemByIndex(index);
-        if (item && action != DoubleTap) {
-            if (action == LongTap) {
-                INFO("Long tap:" << item->modelIndex().row());
-
-                bool currentPressed = item->modelIndex() == mSelectionModel->currentIndex();
-                
-                if (!mRenderer->coverflowModeEnabled()) {
-                    selectItem(index);
-                } else {
-                    mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                    mSpring.animateToPos(QPointF(index, 0));
-                }
-
-                if (!mIgnoreGestureAction) {
-                    if (mRenderer->coverflowModeEnabled() && mHandleLongPress) {
-                        if( currentPressed && !mSpring.isActive()) {
-                            emit longPressed(item->modelIndex(), pos);
-                        }
-                    } else if (mHandleLongPress){
-                        emit longPressed(item->modelIndex(), pos);
-                    }
-                } else {
-                    mSpring.resetVelocity();
-                    update();
-                    mIgnoreGestureAction = false;
-                }
-            }
-            else if (mSelectionMode == HgWidget::MultiSelection) {
-                mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                INFO("Select:" << item->modelIndex().row());
-                mSelectionModel->select(item->modelIndex(), QItemSelectionModel::Toggle);
-                update(); // It would be enough to update the item
-            }
-            else if (mSelectionMode == HgWidget::SingleSelection) {
-                mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                INFO("Select:" << item->modelIndex().row());
-                mSelectionModel->select(item->modelIndex(), QItemSelectionModel::ClearAndSelect);
-                update(); // It would be enough to update the item
-            }
-            else if (mSelectionMode == HgWidget::ContiguousSelection) {
-                mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                QModelIndex newSelected = item->modelIndex();
-                QModelIndexList oldSelection = mSelectionModel->selectedIndexes();
-                INFO("Select:" << newSelected.row());
-                if (oldSelection.count() > 0 && !mSelectionModel->isSelected(newSelected)) {
-                    if (newSelected.row() < oldSelection.front().row()) {
-                        mSelectionModel->select(QItemSelection(newSelected, oldSelection.back()),
-                            QItemSelectionModel::Select);
-                    }
-                    else { // newSelected.row() > oldSelection.back().row()
-                        mSelectionModel->select(QItemSelection(oldSelection.front(), newSelected),
-                            QItemSelectionModel::Select);
-                    }
-                }
-                else {
-                    mSelectionModel->select(newSelected, QItemSelectionModel::Select);
-                }
-                update(); // It would be enough to update the item
-            }
-            else {
-                INFO("Tap:" << item->modelIndex().row());
-
-                if (mRenderer->coverflowModeEnabled()) {  //coverflow and t-bone modes  
-                    if (qAbs(qreal(index) - mSpring.pos().x()) < 0.01f)
-                    {
-                        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                        emit activated(item->modelIndex());
-                    }
-                    else
-                    {
-                        mSpring.animateToPos(QPointF(index, 0));
-                    }
-                }
-                else {   //grid mode
-                    if (!mIgnoreGestureAction) {
-                        // Current should be topleft item.
-//                        mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
-                        selectItem(index);
-                        emit activated(item->modelIndex());                        
-                    } else {
-                        mSpring.resetVelocity();
-                        update();
-                        mIgnoreGestureAction = false;
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-    else {
-        INFO("No quad at pos:" << pos);
-
-        unselectItem();
-        return false;
-    }
-}
 
 bool HgContainer::getItemPoints(int index, QPolygonF& points)
 {
@@ -926,7 +747,7 @@ void HgContainer::itemDataChanged(const int &firstIndex, const int &lastIndex)
     
     int firstItemOnScreen = 0, lastItemOnScreen = 0;
     firstItemOnScreen = mSpring.pos().x();
-    firstItemOnScreen *= rowCount();
+    firstItemOnScreen *= currentRowCount();
 
     int itemsOnScreen = mRenderer->getVisibleQuads().count();
     lastItemOnScreen = firstItemOnScreen+itemsOnScreen;
@@ -1099,18 +920,20 @@ qreal HgContainer::getCameraRotationY(qreal springVelocity)
     return 0;
 }
 
-void HgContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
+bool HgContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
 {
     Q_UNUSED(pos)
     Q_UNUSED(hitItem)
     Q_UNUSED(hitItemIndex)
+    return false;
 }
 
-void HgContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
+bool HgContainer::handleLongTapAction(const QPointF& pos, HgWidgetItem* hitItem, int hitItemIndex)
 {
     Q_UNUSED(pos)
     Q_UNUSED(hitItem)
     Q_UNUSED(hitItemIndex)
+    return false;
 }
 
 void HgContainer::onScrollPositionChanged(qreal pos)
@@ -1250,4 +1073,56 @@ void HgContainer::setHandleLongPress(bool handheLongPress)
     // this is just a flag that is used in gesturehandling logic.
     mHandleLongPress = handheLongPress;
 }
+
+bool HgContainer::handleItemSelection(HgWidgetItem* item) 
+{
+    bool handled = true;
+    switch(mSelectionMode)
+        {
+        case HgWidget::MultiSelection: 
+            {
+            mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+            INFO("Select:" << item->modelIndex().row());
+            mSelectionModel->select(item->modelIndex(), QItemSelectionModel::Toggle);
+            update(); // It would be enough to update the item
+            break;
+            }
+        case HgWidget::SingleSelection:
+            {
+            mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+            INFO("Select:" << item->modelIndex().row());
+            mSelectionModel->select(item->modelIndex(), QItemSelectionModel::ClearAndSelect);
+            update(); // It would be enough to update the item
+            break;
+            }
+        case HgWidget::ContiguousSelection: 
+            {
+            mSelectionModel->setCurrentIndex(item->modelIndex(), QItemSelectionModel::Current);
+            QModelIndex newSelected = item->modelIndex();
+            QModelIndexList oldSelection = mSelectionModel->selectedIndexes();
+            INFO("Select:" << newSelected.row());
+            if (oldSelection.count() > 0 && !mSelectionModel->isSelected(newSelected)) {
+                if (newSelected.row() < oldSelection.front().row()) {
+                    mSelectionModel->select(QItemSelection(newSelected, oldSelection.back()),
+                        QItemSelectionModel::Select);
+                }
+                else { // newSelected.row() > oldSelection.back().row()
+                    mSelectionModel->select(QItemSelection(oldSelection.front(), newSelected),
+                        QItemSelectionModel::Select);
+                }
+            }
+            else {
+                mSelectionModel->select(newSelected, QItemSelectionModel::Select);
+            }
+            update(); // It would be enough to update the item
+            break;
+            }
+        default:
+            handled = false;
+            break;
+        }
+    
+    return handled;
+}
+
 // EOF
