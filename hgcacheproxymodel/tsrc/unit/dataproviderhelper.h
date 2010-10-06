@@ -93,7 +93,8 @@ public:
 //from HgDataProviderModelObserver
 public:
     virtual void dataUpdated(int from, int to);
-
+    virtual bool isCached(int idx) const;
+    
 private slots:
     void slotDataUpdated(QModelIndex,QModelIndex);
     void slotRowsAboutToBeInserted(QModelIndex,int,int);

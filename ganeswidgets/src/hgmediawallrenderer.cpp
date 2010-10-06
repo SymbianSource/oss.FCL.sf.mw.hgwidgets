@@ -584,13 +584,20 @@ void HgMediaWallRenderer::updateCameraMatrices()
     mProjMatrix = proj;
 
     qreal mirrorPlaneY;
+
+    // with factor 0.375 mirroring plane moves to correct pos. In grid we want to draw
+    // the reflections little below the bottom row. This value needs to be changed
+    // if reflection's height factor changes, so this in not really robust. Currently
+    // reflection's height is half from the image height.
+    const qreal factor(0.375);        
     if (mCoverflowMode)
     {
-        mirrorPlaneY = -mImageSize3D.height()/2;
+        mirrorPlaneY = -mImageSize3D.height()*factor;
     }
     else // grid
     {
-        mirrorPlaneY = getRowPosY(mRowCount-1)-mImageSize3D.height()/2;
+        // we want to add some space between the bottom row and the reflection.
+        mirrorPlaneY = getRowPosY(mRowCount-1)-mImageSize3D.height()*(factor+0.025);
     }
 
     mRenderer->setMirroringPlaneY(mirrorPlaneY);

@@ -64,6 +64,7 @@ private slots:
     void testCP_Data();
     void testCP_Sort();
     void testCP_Filter();
+    void testCP_IsCached();
     
 private:
     BMHelper* bmh;

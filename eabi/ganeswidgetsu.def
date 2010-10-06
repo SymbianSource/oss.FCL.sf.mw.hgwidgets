@@ -110,4 +110,6 @@ EXPORTS
 	_ZNK6HgGrid11pinchLevelsEN2Qt11OrientationE @ 109 NONAME
 	_ZNK6HgGrid12pinchEnabledEv @ 110 NONAME
 	_ZNK6HgGrid8rowCountEN2Qt11OrientationE @ 111 NONAME
+	_ZN6HgGrid21setReflectionsEnabledEb @ 112 NONAME
+	_ZNK6HgGrid18reflectionsEnabledEv @ 113 NONAME
 

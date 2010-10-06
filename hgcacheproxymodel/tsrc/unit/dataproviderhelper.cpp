@@ -372,6 +372,11 @@ void DataProviderHelper::dataUpdated(int from, int to)
     mObserverDataUpdated.append(p);
 }
 
+bool DataProviderHelper::isCached(int idx) const
+{
+    return HgDataProviderModel::isCached(idx);
+}
+
 void DataProviderHelper::slotDataUpdated(QModelIndex from,QModelIndex to)
 {
     QPair< int, int > p;

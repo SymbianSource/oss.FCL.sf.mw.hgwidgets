@@ -45,7 +45,7 @@ public:
         Qt::Orientation orientation, 
         const QTransform& sceneTransform);    
     virtual HgImage* createNativeImage();
-    virtual void setDefaultImage(QImage defaultImage);
+    virtual void setDefaultImage(QPixmap defaultImage);
 
     // new functions
     HgQtImage* defaultImage();

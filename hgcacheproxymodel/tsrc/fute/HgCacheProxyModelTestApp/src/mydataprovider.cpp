@@ -26,7 +26,6 @@ const int KThumbnailsPriority = EPriorityLess; //standard priority
 
 MyDataProvider::MyDataProvider(QObject *parent) :
 HgDataProviderModel(parent),
-mDefaultIcon(QIcon(QPixmap(":/icons/default.png"))),
 mScheduler(new CActiveSchedulerWait()),
 mWrapper( new ThumbnailManager() ),
 mThumbnailRequestPending(false),
@@ -34,11 +33,21 @@ mThumbnailRequestIndex(-1),
 mThumbnailRequestID(-1),
 mThumbnailsize(ThumbnailManager::ThumbnailMedium),
 mMDSLoadInProgress(false),
-mMode(0),
-mNoIcon(QIcon(QPixmap(":/icons/noIcon.png")))
+mMode(0)
 {
 //    TX_ENTRY
     Q_UNUSED(parent);
+    QPixmap defaultPixmap(":/icons/default.png");
+    mDefaultIcon.insert(HgDataProviderIconHbIcon, HbIcon(":/icons/default.png"));
+    mDefaultIcon.insert(HgDataProviderIconQIcon, QIcon(defaultPixmap));
+    mDefaultIcon.insert(HgDataProviderIconQImage, defaultPixmap.toImage());
+    mDefaultIcon.insert(HgDataProviderIconQPixmap, defaultPixmap);
+    
+    QPixmap noIconPixmap(":/icons/noIcon.png");
+    mNoIcon.insert(HgDataProviderIconHbIcon, HbIcon(":/icons/noIcon.png"));
+    mNoIcon.insert(HgDataProviderIconQIcon, QIcon(noIconPixmap));
+    mNoIcon.insert(HgDataProviderIconQImage, noIconPixmap.toImage());
+    mNoIcon.insert(HgDataProviderIconQPixmap, noIconPixmap);
     
     mWrapper->setThumbnailSize( mThumbnailsize );
     mWrapper->setQualityPreference( ThumbnailManager::OptimizeForPerformance );
@@ -108,7 +117,7 @@ void MyDataProvider::getNextThumbnail()
             mThumbnailRequestIndex = i;
             mThumbnailRequestPending = true;            
         } else {
-            updateIcon(i, mNoIcon, true);
+            updateIcon(i, mNoIcon[iconMode()], true);
             getNextThumbnail();
         }
     }
@@ -124,14 +133,13 @@ void MyDataProvider::thumbnailReady( QPixmap pixmap, void* data, int id, int err
 {
 //    TX_ENTRY    
     Q_UNUSED(id);
+    int idx = reinterpret_cast<int>(data);
     if (!error && pixmap.rect().height()>0  && pixmap.rect().width()>0 ) {
-        int idx = reinterpret_cast<int>(data);
         TX_LOG_ARGS(QString("thumbnailReady idx = %0").arg(idx));
-//        updateIcon(idx, HbIcon( QIcon( pixmap ) ) );
-//        update(idx, HbIcon( QIcon( pixmap ) ), Qt::DecorationRole, false);
         updateIcon(idx, createIcon(idx, pixmap));
 	} else {
-        TX_LOG_ARGS(QString("error:%0 id:%0").arg(error).arg(id));
+        updateIcon(idx, mNoIcon[iconMode()], true);	    
+        TX_LOG_ARGS(QString("error:%0 id:%0").arg(error).arg(idx));
 	}
     mThumbnailRequestIndex = -1;
     mThumbnailRequestID = -1;
@@ -167,7 +175,8 @@ void MyDataProvider::doReleaseData(QList<int> list, bool silent)
 
 QVariant MyDataProvider::defaultIcon() const
 {
-    return mDefaultIcon;
+    MyDataProvider* me = const_cast<MyDataProvider*>(this);
+    return mDefaultIcon[me->iconMode()];
 }
 
 void MyDataProvider::HandleSessionOpened(CMdESession& aSession, TInt aError)

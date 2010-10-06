@@ -21,6 +21,6 @@ SYMBIAN_PLATFORMS = WINSCW ARMV5
 
 CONFIG += ordered
 
-SUBDIRS += hgwidgets_plat/hgwidgets_plat.pro
+SUBDIRS += hgwidgets_pub/hgwidgets_pub.pro
 SUBDIRS += ganeswidgets/ganeswidgets.pro
 SUBDIRS += hgcacheproxymodel/hgcacheproxymodel.pro

@@ -16,11 +16,6 @@
 *  Version     : %version: 8 %
 */
 #include "mywindow.h"
-#include <HbMenu>
-#include <HbAction>
-#include <HbMainWindow>
-#include <HbSlider>
-#include <HbScrollBar>
 #include <QTimer>
 #include <QtGui>
 #include <QDebug>
@@ -28,10 +23,16 @@
 #include <QApplication>
 #include <QGraphicsLinearLayout>
 #include <QCoreApplication>
+#include <QFileSystemWatcher>
 #include <HbGridView>
 #include <HbInstance>
 #include <HbInputDialog>
-#include <QFileSystemWatcher>
+#include <HbMenu>
+#include <HbAction>
+#include <HbMainWindow>
+#include <HbSlider>
+#include <HbScrollBar>
+#include <hbstyleloader.h>
 #include <hgwidgets/hgcacheproxymodel.h>
 #include <hgwidgets/hgmediawall.h>
 #include <hgwidgets/hggrid.h>
@@ -47,6 +48,8 @@ const int KScrollTo0 = 5;
 const int KScrollTo546 = 6;
 const int KScrollTo875 = 7;
 const int KScrollToEnd = 8;
+const int KToogleStyle = 9;
+const int KToogleFriction = 10;
 
 const int KSort1Command = 1101;
 const int KSort2Command = 1102;
@@ -86,6 +89,7 @@ const int KTogleResetTestCommand = 2500;
 
 const int KResetCommand = 10000;
 
+
 MyWindow::MyWindow()
     : HbMainWindow(), 
     mCurrentWidget(0),
@@ -100,7 +104,9 @@ MyWindow::MyWindow()
     mFilterTestTimer(new QTimer(this)),
     mFilterTestVal(-1),
     mResetTestTimer(new QTimer(this)),
-    mResetTestVal(-1)
+    mResetTestVal(-1),
+    mUseStyles(false),
+    mEnableFriction(true)
 {
     mMainView = new HbView();
     addView( mMainView ); 
@@ -116,7 +122,7 @@ MyWindow::MyWindow()
     connect(mResetTestTimer, SIGNAL(timeout()), this, SLOT(resetTestTimeout()));
     
     HbAction action;
-	action.setData ( QVariant(KListViewCommand) );	//select Grid
+	action.setData ( QVariant(KListViewCommand) );	//select List
 	processAction(&action);
 }
 
@@ -170,6 +176,11 @@ void MyWindow::addChangeViewMenu(HbMenu* parent)
     action->setData(QVariant(KScrollTo875));
     action = viewSubMenu->addAction("Scroll to bottom");
     action->setData(QVariant(KScrollToEnd));
+    
+    action = viewSubMenu->addAction("Enable styles usage");
+    action->setData(QVariant(KToogleStyle));
+    action = viewSubMenu->addAction("Disable friction");
+    action->setData(QVariant(KToogleFriction));
     
 }
 
@@ -277,11 +288,16 @@ void MyWindow::processAction( HbAction* action )
     switch (command){
         case KGridViewCommand : {
             mMainView->setWidget( NULL ); //this will delete old Widget
+            mGridWidget = NULL;
+            mListWidget = NULL;
+            mMediaWallWidget = NULL;
+            mHgGridWidget = NULL;
             mGridWidget = new HbGridView();
+            if (mUseStyles) mGridWidget->setLayoutName( "hgcacheproxymodeltestapp_grid" );        
             if ( orientation() == Qt::Horizontal ) {
                 mGridWidget->setColumnCount( 5 );
                 mGridWidget->setRowCount( 3 );
-            }else {
+            } else {
                 mGridWidget->setColumnCount( 3 );
                 mGridWidget->setRowCount( 5 );         
             }
@@ -289,6 +305,7 @@ void MyWindow::processAction( HbAction* action )
             mGridWidget->setItemRecycling( true );
             mGridWidget->verticalScrollBar()->setInteractive(true);
             mGridWidget->verticalScrollBar()->setVisible(true);
+            mGridWidget->setFrictionEnabled(mEnableFriction);
             mMainView->setWidget( mGridWidget );
             mGridWidget->setModel(mModel);
             mCurrentWidget = mGridWidget;
@@ -296,11 +313,17 @@ void MyWindow::processAction( HbAction* action )
         }
         case KListViewCommand : {
             mMainView->setWidget( NULL ); //this will delete old Widget
+            mGridWidget = NULL;
+            mListWidget = NULL;
+            mMediaWallWidget = NULL;
+            mHgGridWidget = NULL;
             mListWidget = new HbListView();
+            if (mUseStyles) mListWidget->setLayoutName( "hgcacheproxymodeltestapp_list" );
             mListWidget->setUniformItemSizes( true );
             mListWidget->setItemRecycling( true );
             mListWidget->verticalScrollBar()->setInteractive(true);
             mListWidget->verticalScrollBar()->setVisible(true);
+            mListWidget->setFrictionEnabled(mEnableFriction);
             mMainView->setWidget( mListWidget );
             mListWidget->setModel(mModel);            
             mCurrentWidget = mListWidget;
@@ -308,6 +331,10 @@ void MyWindow::processAction( HbAction* action )
         }
         case KMediaWallViewCommand : {
             mMainView->setWidget( NULL ); //this will delete old Widget
+            mGridWidget = NULL;
+            mListWidget = NULL;
+            mMediaWallWidget = NULL;
+            mHgGridWidget = NULL;      
             mMediaWallWidget = new HgMediawall();
             mMediaWallWidget->scrollBar()->setInteractive(true);
             mMediaWallWidget->scrollBar()->setVisible(true);            
@@ -318,6 +345,10 @@ void MyWindow::processAction( HbAction* action )
         }
         case KHgGridViewCommand : {
             mMainView->setWidget( NULL ); //this will delete old Widget
+            mGridWidget = NULL;
+            mListWidget = NULL;
+            mMediaWallWidget = NULL;
+            mHgGridWidget = NULL;
             mHgGridWidget = new HgGrid(orientation());
             connect(this, SIGNAL(orientationChanged(Qt::Orientation)), mHgGridWidget, SLOT(orientationChanged(Qt::Orientation)));
             mHgGridWidget->scrollBar()->setInteractive(true);
@@ -341,6 +372,66 @@ void MyWindow::processAction( HbAction* action )
         }
         case KScrollToEnd : {
             scrollTo(mMyDataProvider->rowCount()-1);
+            break;
+        }
+        case KToogleStyle : {
+            bool oldVal = mUseStyles;
+            if ( !mUseStyles ) {
+                bool widgetmlLoaded = HbStyleLoader::registerFilePath("f:/hgcacheproxymodeltestapp.widgetml");
+                if (!widgetmlLoaded) {
+                    widgetmlLoaded = HbStyleLoader::registerFilePath(":/layout/hgcacheproxymodeltestapp.widgetml");
+                }
+                bool cssLoaded = HbStyleLoader::registerFilePath("f:/hgcacheproxymodeltestapp.css");
+                if (!cssLoaded) {
+                    cssLoaded = HbStyleLoader::registerFilePath(":/layout/hgcacheproxymodeltestapp.css");
+                }
+                if (widgetmlLoaded && cssLoaded) {
+                    mUseStyles = true;
+                } else { //unload all, no layout files
+                    HbStyleLoader::unregisterFilePath("f:/hgcacheproxymodeltestapp.widgetml");
+                    HbStyleLoader::unregisterFilePath("f:/hgcacheproxymodeltestapp.css");
+                    HbStyleLoader::unregisterFilePath(":/layout/hgcacheproxymodeltestapp.widgetml");
+                    HbStyleLoader::unregisterFilePath(":/layout/hgcacheproxymodeltestapp.css");
+                    mUseStyles = false;
+                }
+            } else {
+                HbStyleLoader::unregisterFilePath("f:/hgcacheproxymodeltestapp.widgetml");
+                HbStyleLoader::unregisterFilePath("f:/hgcacheproxymodeltestapp.css");
+                HbStyleLoader::unregisterFilePath(":/layout/hgcacheproxymodeltestapp.widgetml");
+                HbStyleLoader::unregisterFilePath(":/layout/hgcacheproxymodeltestapp.css");
+                mUseStyles = false;
+            }
+            
+            if (oldVal != mUseStyles){
+                if (mUseStyles) {
+                    action->setText("Disable styles usage");
+                } else {
+                    action->setText("Enable styles usage");
+                }
+    
+                HbAction newAction;
+                if (mGridWidget) {
+                    newAction.setData ( QVariant(KGridViewCommand) );  //select hbgrid
+                } else if (mListWidget) {
+                    newAction.setData ( QVariant(KListViewCommand) );  //select hblist
+                } else {
+                    newAction.setData ( QVariant());
+                }
+                if (newAction.data().isValid()) processAction(&newAction); //don't change view for mediawall and hggrid
+            }
+            break;
+        }
+        case KToogleFriction : {
+            mEnableFriction = !mEnableFriction;
+            if (mGridWidget) mGridWidget->setFrictionEnabled(mEnableFriction);
+            if (mListWidget) mListWidget->setFrictionEnabled(mEnableFriction);
+            
+            if (mEnableFriction) {
+                action->setText("Disable friction");
+            } else {
+                action->setText("Enable friction");
+            }
+            
             break;
         }
         case KSort1Command : {

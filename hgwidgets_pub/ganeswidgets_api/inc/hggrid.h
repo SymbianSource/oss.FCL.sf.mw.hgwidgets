@@ -27,7 +27,7 @@ class HG_WIDGETS_EXPORT HgGrid : public HgWidget
     Q_OBJECT
     Q_PROPERTY(bool effect3dEnabled  READ effect3dEnabled  WRITE setEffect3dEnabled )
     Q_PROPERTY(bool pinchEnabled  READ pinchEnabled  WRITE setPinchEnabled )
-	Q_PROPERTY(int rowCount  READ rowCount  WRITE setRowCount )
+    Q_PROPERTY(bool reflectionsEnabled READ reflectionsEnabled WRITE setReflectionsEnabled)
 public:
 
     explicit HgGrid(Qt::Orientation scrollDirection, QGraphicsItem *parent = 0 );
@@ -45,6 +45,9 @@ public:
     void setRowCount(int count, Qt::Orientation scrollDirection = Qt::Horizontal);
     int rowCount(Qt::Orientation scrollDirection = Qt::Horizontal) const;
 
+    void setReflectionsEnabled(bool reflectionsEnabled);
+    bool reflectionsEnabled() const;
+    
 signals:
 
     void emptySpacePressed();

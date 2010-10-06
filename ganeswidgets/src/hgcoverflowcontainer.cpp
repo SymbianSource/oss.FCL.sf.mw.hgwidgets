@@ -18,6 +18,7 @@
 #include <QGesture>
 #include <QGraphicsSceneResizeEvent>
 #include <QPainter>
+#include <HbWidgetFeedback>
 #include "hgcoverflowcontainer.h"
 #include "hgmediawallrenderer.h"
 #include "hgwidgetitem.h"
@@ -230,13 +231,14 @@ void HgCoverflowContainer::setFrontItemElevationFactor(qreal factor)
 
 void HgCoverflowContainer::enableReflections(bool enabled)
 {
+    mReflectionsEnabled = enabled;
     if (mRenderer)
         mRenderer->enableReflections(enabled);
 }
 
 bool HgCoverflowContainer::reflectionsEnabled() const
 {
-    return mRenderer ? mRenderer->reflectionsEnabled() : false;
+    return mReflectionsEnabled;
 }
 
 void HgCoverflowContainer::setCenterItemArea(HgCenterItemArea *centerItemArea)
@@ -267,8 +269,9 @@ bool HgCoverflowContainer::handleTap(Qt::GestureState state, const QPointF &pos)
         HgWidgetItem* hitItem = getItemAt(pos,hitItemIndex);
         switch (state) 
             {
+            
             case Qt::GestureStarted:
-                {
+                {                                
                 mIgnoreGestureAction = false;
                 
                 if (mHandleLongPress && !mSpring.isActive()) {
@@ -282,7 +285,11 @@ bool HgCoverflowContainer::handleTap(Qt::GestureState state, const QPointF &pos)
                 break;
                 }
             case Qt::GestureFinished:
+                {
+                // This enables tactile and audio feedback
+                HbWidgetFeedback::triggered(this, Hb::InstantPressed, 0);
                 handleGesture = handleTapAction(pos,hitItem,hitItemIndex);
+                }
             case Qt::GestureUpdated:
             case Qt::GestureCanceled:
             default:

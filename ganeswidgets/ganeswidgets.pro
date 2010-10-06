@@ -9,7 +9,6 @@
 # Contributors:
 # Description:
 
-symbian:TARGET.UID3 = 0x10207C66
 TEMPLATE = lib
 CONFIG += hb
 TARGET = ganeswidgets
@@ -19,15 +18,21 @@ TARGET.CAPABILITY = All \
 DEPENDPATH += .
 INCLUDEPATH += . \
     inc \
-    $$MW_LAYER_SYSTEMINCLUDE
+    $$MW_LAYER_SYSTEMINCLUDE \
+    /epoc32/include/mw/hb/hbfeedback
 LIBS += -lestor.dll \
     -lhbcore \
+    -lhbfeedback \
     -lhbwidgets \
     -llibOpenVG.dll \
     -llibOpenVGU.dll
-symbian { 
+symbian {
+    TARGET.UID3 = 0x10207C66
     TARGET.EPOCALLOWDLLDATA = 1
     
+    #Symmetric Multi-Processing safety
+	MMP_RULES += SMPSAFE
+	
     #the def files are located in the root of hgwidgets so this is needed
     defFilePath=..
 }
@@ -57,9 +62,9 @@ SOURCES += src/hgwidgets.cpp \
     src/hgtransformedquadrenderer.cpp \
     src/hgcenteritemarea.cpp
 HEADERS = inc/trace.h \
-    ../hgwidgets_plat/ganeswidgets_api/inc/hgwidgets.h \
-    ../hgwidgets_plat/ganeswidgets_api/inc/hggrid.h \
-    ../hgwidgets_plat/ganeswidgets_api/inc/hgmediawall.h \
+    ../hgwidgets_pub/ganeswidgets_api/inc/hgwidgets.h \
+    ../hgwidgets_pub/ganeswidgets_api/inc/hggrid.h \
+    ../hgwidgets_pub/ganeswidgets_api/inc/hgmediawall.h \
     inc/hgwidgets_p.h \
     inc/hggrid_p.h \
     inc/hgmediawall_p.h \

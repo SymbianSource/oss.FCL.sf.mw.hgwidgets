@@ -40,6 +40,7 @@ public:
     void removedItem(int pos);
     void aboutToInsertItem(int pos);
     void insertedItem(int pos);
+	bool isCached(int idx) const;
 	
 private:
 	void calculate();

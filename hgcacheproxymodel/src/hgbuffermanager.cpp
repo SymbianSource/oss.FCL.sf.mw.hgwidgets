@@ -317,4 +317,8 @@ void HgBufferManager::insertedItem(int pos)
     }
 }
 
+bool HgBufferManager::isCached(int idx) const
+{
+    return ((idx>=mBufferPosition) && (idx<mBufferPosition+mBufferSize));
+}
 //eof

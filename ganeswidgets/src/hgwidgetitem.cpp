@@ -28,7 +28,8 @@ mTitle(""),
 mDescription(""),
 mValidData(false),
 mHgImage(NULL),
-mRenderer(renderer)
+mRenderer(renderer),
+mReflectionEnabled(false)
 {
 }
 
@@ -53,16 +54,7 @@ HgWidgetItem::~HgWidgetItem()
 
 void HgWidgetItem::setImage(const QImage &image)
 {
-    if (!mHgImage)
-    {
-        mHgImage = mRenderer->createNativeImage();
-    }
-    
-    mHgImage->setImage(image);
-
-    if (!mVisibility)
-        mHgImage->setAlpha(0);
-    
+    setPixmap(QPixmap::fromImage(image));
 }
 
 void HgWidgetItem::setPixmap(const QPixmap &pixmap)
@@ -72,13 +64,22 @@ void HgWidgetItem::setPixmap(const QPixmap &pixmap)
         mHgImage = mRenderer->createNativeImage();
     }
     
-    mHgImage->setPixmap(pixmap);
-
+    mHgImage->setPixmap(pixmap,mReflectionEnabled);
+        
     if (!mVisibility)
         mHgImage->setAlpha(0);
     
 }
 
+void HgWidgetItem::enableReflection(bool enabled)
+{
+    if (mReflectionEnabled != enabled ) {
+        mReflectionEnabled = enabled;
+        if (mHgImage) {
+            mHgImage->updateMirror(enabled);
+        }
+    }
+}
 
 void HgWidgetItem::setTitle( QString title )
 {
@@ -209,7 +210,7 @@ void HgWidgetItem::releaseItemData()
     mDescription = "";
     mValidData = false;
     if (mHgImage)
-        mHgImage->releaseImage();
+        mHgImage->releaseImages();
 
     delete mHgImage;
     mHgImage = 0;

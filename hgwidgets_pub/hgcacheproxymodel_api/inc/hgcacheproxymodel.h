@@ -152,6 +152,7 @@ private slots:
 //from HgDataProviderModelObserver    
 public:
     virtual void dataUpdated(int from, int to);
+    virtual bool isCached(int idx) const;
     
 private:
     HgBufferManager* mBufferManager;

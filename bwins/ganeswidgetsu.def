@@ -101,4 +101,6 @@ EXPORTS
 	?emptySpacePressed@HgGrid@@IAEXXZ @ 100 NONAME ; void HgGrid::emptySpacePressed(void)
 	?pinchLevels@HgGrid@@QBE?AU?$QPair@HH@@W4Orientation@Qt@@@Z @ 101 NONAME ; struct QPair<int, int> HgGrid::pinchLevels(enum Qt::Orientation) const
 	?rowCount@HgGrid@@QBEHW4Orientation@Qt@@@Z @ 102 NONAME ; int HgGrid::rowCount(enum Qt::Orientation) const
+	?reflectionsEnabled@HgGrid@@QBE_NXZ @ 103 NONAME ; bool HgGrid::reflectionsEnabled(void) const
+	?setReflectionsEnabled@HgGrid@@QAEX_N@Z @ 104 NONAME ; void HgGrid::setReflectionsEnabled(bool)
 

@@ -33,8 +33,8 @@ INCLUDEPATH += /sf/mw/qt/src/gui/image/
 
 # Input
 HEADERS +=  \
-	../hgwidgets_plat/hgcacheproxymodel_api/inc/hgcacheproxymodel.h \
-	../hgwidgets_plat/hgcacheproxymodel_api/inc/hgdataprovidermodel.h \
+	../hgwidgets_pub/hgcacheproxymodel_api/inc/hgcacheproxymodel.h \
+	../hgwidgets_pub/hgcacheproxymodel_api/inc/hgdataprovidermodel.h \
 	inc/hgbuffermanager.h \
 	inc/hglogger.h
 

@@ -61,10 +61,11 @@ private slots:
     
 private:
     HbMenu *createMainMenu();
-    
     void addChangeViewMenu(HbMenu* parent);
     void addCacheProxyModelMenu(HbMenu* parent);
     void addDataProviderMenu(HbMenu* parent);
+    
+    
     void scrollTo(int pos);
     
 private:   
@@ -87,7 +88,9 @@ private:
 
     QTimer *mResetTestTimer;
     int mResetTestVal;
-
+    
+    bool mUseStyles;
+    bool mEnableFriction;
 };
 
 #endif // CONTENTWIDGET_H

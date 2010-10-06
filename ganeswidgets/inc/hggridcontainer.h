@@ -47,6 +47,9 @@ public:
     void setRowCount(int count, Qt::Orientation scrollDirection = Qt::Horizontal);
     int rowCount(Qt::Orientation scrollDirection) const;
 
+    void setReflectionsEnabled(bool reflectionsEnabled);
+    bool reflectionsEnabled() const;    
+    
 signals:
 
     void emptySpacePressed();
@@ -75,6 +78,12 @@ protected:
     void handlePinchEnd();
     void handlePinchUpdate(HbPinchGesture* pinch);    
 
+    void updateReflections(bool enable, int start, int end);
+
+    virtual void addItems(int start, int end);
+    virtual void removeItems(int start, int end);
+    virtual void moveItems(int start, int end, int destination);
+    
 public slots:
     
     void effectFinished();

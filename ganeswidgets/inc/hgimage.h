@@ -29,12 +29,13 @@ public:
     virtual ~HgImage() {}
     virtual void setAlpha(qreal alpha) { mAlpha = alpha; }
     virtual qreal alpha() const { return mAlpha; }
-    virtual void setImage(const QImage& image)=0;
-    virtual void setPixmap(const QPixmap& pixmap)=0;
-    virtual QImage getQImage() const=0;
-    virtual void releaseImage()=0;
+    virtual void setPixmap(const QPixmap& pixmap, bool createMirror=false)=0;
+    virtual void updateMirror(bool enabled) = 0;
+    virtual void releaseImages()=0;
     virtual int width() const = 0;
     virtual int height() const = 0;
+    virtual void setMirrorPixmap(const QPixmap& pixmap) = 0;
+    virtual QPixmap pixmap() const = 0;
 private:
     qreal mAlpha;
 };

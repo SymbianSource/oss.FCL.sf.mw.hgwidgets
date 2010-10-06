@@ -1,6 +1,11 @@
 <RCC>
-    <qresource prefix="/icons" >
+    <qresource prefix="/icons">
         <file>default.png</file>
         <file>noIcon.png</file>
     </qresource>
+    <qresource prefix="/layout">
+        <file>hgcacheproxymodeltestapp.css</file>
+        <file>hgcacheproxymodeltestapp.widgetml</file>
+    </qresource>
+	
 </RCC>

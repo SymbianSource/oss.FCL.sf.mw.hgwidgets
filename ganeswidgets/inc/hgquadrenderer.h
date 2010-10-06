@@ -19,7 +19,7 @@
 #define HGQUADRENDERER_H
 
 #include <QList>
-#include <QImage>
+#include <QPixmap>
 #include <QVector2D>
 
 class HgQuad;
@@ -96,7 +96,7 @@ public:
     /**
      * 
      */
-    virtual void setDefaultImage(QImage defaultImage);
+    virtual void setDefaultImage(QPixmap defaultImage);
 
     /**
      * 
@@ -111,7 +111,7 @@ public:
     /**
      * 
      */
-    virtual QImage getDefaultImage() const;
+    virtual QPixmap defaultImage() const;
     
     /**
      * 
@@ -128,7 +128,7 @@ protected:
 
     QList<HgQuad*> mQuads;
     qreal mMirroringPlaneY;
-    QImage mDefaultImage;
+    QPixmap mDefaultImage;
     QVector2D mTranslation;
     bool mReflectionsEnabled;
 };

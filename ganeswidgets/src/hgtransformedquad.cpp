@@ -106,16 +106,17 @@
 
         QMatrix4x4 mirror = trans;
 
+        QVector2D temp = quad->scale();
         qreal distToPlane = qAbs(quad->position().y() - mirroringPlaneY);
         
-        mirror.translate(quad->position().x(), mirroringPlaneY - distToPlane/1, quad->position().z());
-        mirror.scale(quad->scale().x(), -quad->scale().y()/1);
+        mirror.translate(quad->position().x(), mirroringPlaneY - distToPlane, quad->position().z());
+        mirror.scale(quad->scale().x(), -temp.y()*ReflectionHeight);
         mirror.rotate(quad->rotation());
             
         QMatrix4x4 modelViewProjMatrix = projView * mirror;
         
         perspectiveTransformPoints(mMirroredPoints, modelViewProjMatrix, center, windowSize);    
-        
+                
         for (int i = 0; i < 4; i++)
             mMirroredPoints[i] += translate;
 

@@ -23,6 +23,8 @@
 #include <QQuaternion>
 #include <QVariant>
 
+static const qreal ReflectionHeight(0.5);
+
 class HgImage;
 
 /**

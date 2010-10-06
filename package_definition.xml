@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SystemDefinition schema="3.0.0" xmlns:qt="http://www.nokia.com/qt">
-  <package id="hgwidgets" name="Multimedia Widgets" levels="framework service api">
+  <package id="hgwidgets" name="Multimedia Widgets" levels="framework service api" version="1.0.0">
     <collection id="hgwidgets_plat" name="Multimedia Widgets Platform Interfaces" level="api">
      <component id="ganeswidgets_api" name="Ganes Widgets API" class="api" introduced="^4" filter="s60">
       <unit bldFile="hgwidgets_plat/ganeswidgets_api"/>

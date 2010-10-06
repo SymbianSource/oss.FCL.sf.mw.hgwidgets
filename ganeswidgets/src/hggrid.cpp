@@ -90,5 +90,17 @@ QPair<int,int> HgGrid::pinchLevels(Qt::Orientation scrollDirection) const
     return d->container()->pinchLevels(scrollDirection);    
 }
 
+void HgGrid::setReflectionsEnabled(bool reflectionsEnabled)
+{
+    Q_D( HgGrid );
+    d->container()->setReflectionsEnabled(reflectionsEnabled);        
+}
+
+bool HgGrid::reflectionsEnabled() const
+{
+    Q_D( const HgGrid );
+    return d->container()->reflectionsEnabled();    
+}
+
 
 // EOF

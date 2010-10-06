@@ -1414,6 +1414,81 @@ void TestCacheProxy::testCP_Filter()
 
 }
 
+void TestCacheProxy::testCP_IsCached()
+{
+    cp = new HgCacheProxyModel();
+    dph = new DataProviderHelper(1000);
+    cp->setDataProvider(dph);
+    
+    QModelIndex idx = cp->index(0, 0);
+    QVariant res = cp->data(idx, Qt::DisplayRole); //this will move buffer to 0-119
+    int begin = 0;
+    int end = 120;
+    int size = dph->getCount();
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+    
+    idx = cp->index(50, 0);
+    cp->data(idx, Qt::DisplayRole); //don't move buffer yet
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+
+    idx = cp->index(89, 0);//don't move buffer yet
+    cp->data(idx, Qt::DisplayRole);
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+    
+    idx = cp->index(100, 0); //now move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 40;
+    end = 160;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+
+    idx = cp->index(500, 0); //move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 440;
+    end = 560;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+
+    idx = cp->index(980, 0); //move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 880;
+    end = 1000;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+
+    idx = cp->index(920, 0); //move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 880;
+    end = 1000;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+    
+    idx = cp->index(890, 0); //move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 830;
+    end = 950;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+    
+    idx = cp->index(10, 0); //move buffer
+    cp->data(idx, Qt::DisplayRole);
+    begin = 0;
+    end = 120;
+    for (int i=0; i<size; i++){
+        QVERIFY2((dph->isCached(i))==((i>=begin)&& (i<end)), QString("begin:%1 end:%2 size:%3 i:%4").arg(begin).arg(end).arg(size).arg(i).toLatin1().data() );
+    }
+}
 
 #ifdef _CACHEPROXYDATAMODEL_UNITTEST_LOG_TO_C
     int main (int argc, char* argv[]) 
@@ -1436,6 +1511,7 @@ void TestCacheProxy::testCP_Filter()
                 if ( !file.exists(s) ){
                     file.mkpath(s);
                 }
+                break;
             }
         }
         

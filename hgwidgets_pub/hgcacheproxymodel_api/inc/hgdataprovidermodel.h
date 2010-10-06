@@ -39,7 +39,8 @@ class HgCacheProxyModel;
 class HgDataProviderModelObserver
 {
 public:
-    virtual void dataUpdated(int from, int to) = 0;    
+    virtual void dataUpdated(int from, int to) = 0;
+    virtual bool isCached(int idx) const = 0;
 };
 
 class CACHEPROXYMODEL_EXPORT HgDataProviderModel : public QAbstractItemModel
@@ -91,7 +92,7 @@ protected:
     virtual QVariant defaultIcon() const = 0;
     inline bool containsRole(int idx, int role) const;
     inline bool isIndexValid(int idx) const;
-
+    bool isCached(int idx) const;
 public:    
     void resetModel();
     

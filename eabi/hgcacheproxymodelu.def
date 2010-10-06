@@ -134,4 +134,7 @@ EXPORTS
 	_ZThn12_N17HgCacheProxyModel11dataUpdatedEii @ 133 NONAME
 	_ZThn8_N17HgCacheProxyModel7releaseEii @ 134 NONAME
 	_ZThn8_N17HgCacheProxyModel7requestEiiN23HgBufferManagerObserver14HgRequestOrderE @ 135 NONAME
+	_ZNK17HgCacheProxyModel8isCachedEi @ 136 NONAME
+	_ZNK19HgDataProviderModel8isCachedEi @ 137 NONAME
+	_ZThn12_NK17HgCacheProxyModel8isCachedEi @ 138 NONAME
 

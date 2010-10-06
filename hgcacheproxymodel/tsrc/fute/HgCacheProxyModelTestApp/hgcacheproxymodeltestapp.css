@@ -1,0 +1,39 @@
+/*
+hgcacheproxymodeltestapp_list-1 from widgetml is not working.
+*/
+/*
+HbListViewItem[layoutName="hgcacheproxymodeltestapp_list"]{
+    layout:hgcacheproxymodeltestapp_list-1;
+}
+*/
+HbListViewItem::text-1[layoutName="hgcacheproxymodeltestapp_list"]{
+  text-height: var(hb-param-text-height-primary);
+  font-variant: primary;
+  text-align: Right;
+  text-line-count-min:1;
+  text-line-count-max:2;
+  fixed-height: 57px;
+}
+
+HbListViewItem::icon-1[layoutName="hgcacheproxymodeltestapp_list"]{
+  fixed-height: 57px;
+  fixed-width: 57px;
+}
+/*
+HbGridViewItem[layoutName="hgcacheproxymodeltestapp_grid"]{
+    layout:hgcacheproxymodeltestapp_grid-1;
+}
+
+HbGridViewItem::text-1[layoutName="hgcacheproxymodeltestapp_grid"]{
+  text-height: var(hb-param-text-height-primary);
+  font-variant: primary;
+  text-align: Right;
+  text-line-count-min:1;
+  text-line-count-max:2;
+}
+*/
+
+HbGridViewItem::icon-1[layoutName="hgcacheproxymodeltestapp_grid"]{
+  fixed-height: 57px;
+  fixed-width: 57px;
+}

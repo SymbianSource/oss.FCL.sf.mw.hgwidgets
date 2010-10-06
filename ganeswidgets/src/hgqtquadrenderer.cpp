@@ -40,106 +40,74 @@ public:
     {
     }
 
-    int width() const
-    {
+    int width() const {
         return mPixmap.width();
     }
 
-    int height() const
-    {
+    int height() const {
         return mPixmap.height();
     }
 
-    int mirrorImageWidth() const
-    {
-        return width();
+    int mirrorPixmapWidth() const {
+        return mMirrorPixmap.width();
     }
 
-    int mirrorImageHeight() const
-    {
-        return height();
-    }
-
-    void setImage(const QImage& image)
-    {
-        mPixmap = QPixmap::fromImage(image);
-        //mMirrorPixmap = QPixmap();
+    int mirrorPixmapHeight() const {
+        return mMirrorPixmap.height();
     }
     
-    void setPixmap(const QPixmap& pixmap)
-    {
-        mPixmap = pixmap;
-        //mMirrorPixmap = QPixmap();
-    }
-    
-    void releaseImage()
-    {
-        //mPixmap = QPixmap();
-        //mMirrorPixmap = QPixmap();
-    }
-    
-    QImage getQImage() const
-    {
-        return mPixmap.toImage();
-    }
-        
-    const QPixmap& pixmap() const
-    {
-        return mPixmap;
-    }
-    
-    const QPixmap& mirrorPixmap(QPainter* painter)
-    {
-        Q_UNUSED(painter)
-
-        return mPixmap;
-/*        
-        if (mPixmap.isNull())
-            return mPixmap;
-
-        if (mMirrorPixmap.isNull())
-        {
-            QImage img = mPixmap.toImage();
-            QImage mirrorImage = img.scaled(QSize(img.width()/3,img.height()/3)).convertToFormat(QImage::Format_ARGB32);
-            
-            // apply gradient to alpha channel so that mirror image looks like
-            // it fades under the floor
-            for (int i = 0; i < mirrorImage.height(); i++)
-            {
-                qreal t = qreal(i) / qreal(mirrorImage.height());
-                int a = (int)(t * 255.0);
-                uchar* scanline = mirrorImage.scanLine(i);
-                for (int j = 0; j < mirrorImage.width(); j++)
-                {
-                    scanline[j*4+0] /= 3;
-                    scanline[j*4+1] /= 3;
-                    scanline[j*4+2] /= 3;
-                    scanline[j*4+3] = 255;
-                }        
-            }
-            
-            mMirrorPixmap = QPixmap::fromImage(mirrorImage);
-            
-            QPaintDevice* device = painter->device();
-            painter->end();
-
-            mMirrorPixmap = mPixmap.scaled(100,100);
-            int w = mMirrorPixmap.width();
-            int h = mMirrorPixmap.height();
-            //QPainter p;
-            painter->begin(&mMirrorPixmap);
-            painter->fillRect(0,0,w, h, QColor::fromRgbF(0, 0, 0, 0.5f));
-            painter->end();
-
-            painter->begin(device);
-        
+    void setPixmap(const QPixmap& pixmap, bool createMirror) {
+        mPixmap = pixmap;        
+        if (createMirror) {
+            createMirrorPixmap(mPixmap);
+        } else {
+            mMirrorPixmap = QPixmap();
         }
-        
-        
-        return mMirrorPixmap;*/
+    }
+    
+    void releaseImages() {
+        mPixmap = QPixmap();
+        mMirrorPixmap = QPixmap();
+    }
+            
+    QPixmap pixmap() const {
+        return mPixmap;
+    }
+    
+    QPixmap mirrorPixmap() {
+        return mMirrorPixmap;
     }
 
+    void setMirrorPixmap(const QPixmap& mirrorPixmap) {
+        mMirrorPixmap = mirrorPixmap;
+    }
+    
+    void createMirrorPixmap(const QPixmap& source) {
+        if (!source.isNull()) {
+            mMirrorPixmap = source.copy(QRect(0,source.height()*ReflectionHeight,source.width(),source.height()));
+            QPainter painter(&mMirrorPixmap);
+            painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+            QLinearGradient gradient(0.5,0.0,0.5,1);
+            gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+            gradient.setColorAt(1, QColor::fromRgb(0,0,0,128));
+            gradient.setColorAt(0, QColor::fromRgb(0,0,0,0));
+            QBrush brush(gradient);
+            painter.setBrush(brush);
+            painter.setPen(Qt::NoPen);
+            painter.drawRect(mMirrorPixmap.rect());
+        }    
+    }
+    
+    void updateMirror(bool enabled) {
+        if (enabled && !mPixmap.isNull() && mMirrorPixmap.isNull()) {
+            createMirrorPixmap(mPixmap);
+        } else if(!enabled) {
+            mMirrorPixmap = QPixmap();
+        }
+    }
+    
     QPixmap mPixmap;
+    QPixmap mMirrorPixmap;
 };
 
 class HgQtQuad : public HgTransformedQuad
@@ -198,14 +166,17 @@ private:
     
     void drawImage(QPainter* painter, HgQtImage* image, const QRectF& rect, const QTransform& transform)
     {
-        const QPixmap& pixmap = image->pixmap();
+        QPixmap pixmap = image->pixmap();
         
         if (pixmap.isNull())            
             return;
         
+                
         const QVector2D* points = mTransformedPoints;
-        if (mRenderer->isReflection() && quad()->mirrorImageEnabled())
+        if (mRenderer->isReflection() && quad()->mirrorImageEnabled()) {
             points = mMirroredPoints;
+            pixmap = image->mirrorPixmap();            
+        }
         
         QPolygonF poly;
         poly << points[0].toPointF();
@@ -217,9 +188,10 @@ private:
             return;
         }
         
-        computeWarpMatrix(mTransform, image->width(), image->height(), points);
+        computeWarpMatrix(mTransform, pixmap.width(), pixmap.height(), points);
         
         painter->setTransform(mTransform * transform);    
+
         painter->drawPixmap(QPointF(0,0), pixmap);
     }
 
@@ -235,9 +207,9 @@ HgQtQuadRenderer::HgQtQuadRenderer(int maxQuads) :
 {
     // initialize base class to the end.
     init(maxQuads);
-    QImage image(QSize(200,200), QImage::Format_RGB16);
+    QImage image(QSize(250,250), QImage::QImage::Format_ARGB32_Premultiplied);
     image.fill(0xFFFFFFFF);
-    setDefaultImage(image);
+    setDefaultImage(QPixmap::fromImage(image));
     
     QPixmapCache::setCacheLimit(2048);
 }
@@ -289,7 +261,7 @@ HgQtImage* HgQtQuadRenderer::defaultImage()
     return mDefaultQtImage;
 }
 
-void HgQtQuadRenderer::setDefaultImage(QImage defaultImage)
+void HgQtQuadRenderer::setDefaultImage(QPixmap defaultImage)
 {
     HgQuadRenderer::setDefaultImage(defaultImage);
     
@@ -297,8 +269,7 @@ void HgQtQuadRenderer::setDefaultImage(QImage defaultImage)
     mDefaultQtImage = 0;
     
     mDefaultQtImage = static_cast<HgQtImage*>(createNativeImage());
-    mDefaultQtImage->setImage(mDefaultImage);
-
+    mDefaultQtImage->setPixmap(mDefaultImage, true);
 }
 
 HgTransformedQuad* HgQtQuadRenderer::createNativeQuad()
@@ -313,9 +284,7 @@ bool HgQtQuadRenderer::isReflection() const
 
 void HgQtQuadRenderer::drawFloor(QPainter* painter, const QRectF& rect)
 {
-    QRectF floorRect(0, rect.height()/2, rect.width(), rect.height()/2);
-    QBrush brush(QColor::fromRgbF(0,0,0,0.5f));
-    painter->setBrush(brush);
-    painter->drawRect(floorRect);
+    Q_UNUSED(painter);
+    Q_UNUSED(rect);
 }
 

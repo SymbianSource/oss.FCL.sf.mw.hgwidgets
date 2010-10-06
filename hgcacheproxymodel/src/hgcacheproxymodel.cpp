@@ -707,4 +707,13 @@ void HgCacheProxyModel::dataUpdated(int from, int to)
     }
 }
 
+bool HgCacheProxyModel::isCached(int idx) const
+{
+    bool res = false;
+    if (mBufferManager) {
+        res = mBufferManager->isCached(mapFromDataProviderIndex(idx));
+    }
+    return res;
+}
+
 //eof

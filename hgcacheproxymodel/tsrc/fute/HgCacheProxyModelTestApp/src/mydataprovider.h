@@ -19,15 +19,15 @@
 #define MYDATAPROVIDER2_H
 
 #include <QtGui>
-
-#include <thumbnailmanager_qt.h>
-#include <hgwidgets/hgdataprovidermodel.h>
-#include <HbIcon>
 #include <QList>
 #include <QPair>
+#include <QMap>
+#include <HbIcon>
+#include <hgwidgets/hgdataprovidermodel.h>
 #include <mdesession.h>
 #include <mdequery.h>
 #include "flogger.h"
+#include <thumbnailmanager_qt.h>
 
 class CMdESession;
 class CActiveSchedulerWait;
@@ -69,7 +69,9 @@ public:
     void testInsertItem(int pos, QList< QPair< QVariant, int > >* data);
     
 private:
-    QVariant mDefaultIcon;
+    QMap<HgDataProviderIconMode, QVariant> mDefaultIcon;
+    QMap<HgDataProviderIconMode, QVariant> mNoIcon;
+    
     CActiveSchedulerWait* mScheduler;
     ThumbnailManager* mWrapper;
     QList<int> mWaitingThumbnails;
@@ -79,7 +81,6 @@ private:
 	ThumbnailManager::ThumbnailSize mThumbnailsize;
 	bool mMDSLoadInProgress;
 	int mMode;
-	HbIcon mNoIcon;
 };
 
 #endif // MYDATAPROVIDER2_H

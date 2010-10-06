@@ -32,6 +32,7 @@
 #include "hglongpressvisualizer.h"
 #include <HbPinchGesture>
 #include <QGraphicsSceneMouseEvent>
+#include <HbWidgetFeedback>
 
 static const qreal KCameraMaxYAngle(20);
 static const qreal KSpringVelocityToCameraYAngleFactor(2);
@@ -46,13 +47,13 @@ HgGridContainer::HgGridContainer(QGraphicsItem *parent) :
     mTempRowCount(-1),
     mPinchEndAlreadyHandled(false),
     mReactToOnlyPanGestures(false),
-    mHorizontalRowCount(3),
+    mHorizontalRowCount(2),
     mVerticalColumnCount(3),
     mHorizontalPinchLevels(QPair<int,int>(2,3)),
     mVerticalPinchLevels(QPair<int,int>(2,5))
 {
     mUserItemSize = QSize(120,120);
-    mUserItemSpacing = QSize(0,0);
+    mUserItemSpacing = QSize(1,1);
 }
 
 HgGridContainer::~HgGridContainer()
@@ -124,15 +125,13 @@ void HgGridContainer::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
 HgMediaWallRenderer* HgGridContainer::createRenderer(Qt::Orientation scrollDirection)
 {
-
     HgMediaWallRenderer* renderer = new HgMediaWallRenderer(this, scrollDirection, scrollDirection, false);
     renderer->enableCoverflowMode(false);
     renderer->setImageSize(mUserItemSize);
     const int rowCount = scrollDirection == Qt::Horizontal ? mHorizontalRowCount : mVerticalColumnCount;
     renderer->setRowCount(rowCount, renderer->getImageSize(), false);    
-    renderer->enableReflections(false);
+    renderer->enableReflections(mReflectionsEnabled && scrollDirection == Qt::Horizontal);
     renderer->setSpacing(mUserItemSpacing);
-    renderer->setFrontCoverElevationFactor(0.5);    
 
     return renderer;
 }
@@ -157,7 +156,12 @@ bool HgGridContainer::handleTapAction(const QPointF& pos, HgWidgetItem* hitItem,
 {
     Q_UNUSED(pos)
 
-    if (mSelectionMode != HgWidget::NoSelection) {
+    if (!mIgnoreGestureAction) {
+        // This enables tactile and audio feedback
+        HbWidgetFeedback::triggered(this, Hb::InstantPressed, 0);                
+    }        
+        
+    if (!mIgnoreGestureAction && mSelectionMode != HgWidget::NoSelection) {
         return handleItemSelection(hitItem);
     }
     
@@ -230,7 +234,7 @@ bool HgGridContainer::handleTap(Qt::GestureState state, const QPointF &pos)
         switch (state) 
             {
             case Qt::GestureStarted:
-                {
+                {                
                 // TODO IS THIS IF REALLY NEEDED
                 if(mSpring.isActive()) {                    
                     qreal springPos = mSpring.pos().x();
@@ -363,6 +367,7 @@ void HgGridContainer::gestureEvent(QGestureEvent* event)
     QGesture* pinchGesture = event->gesture(Qt::PinchGesture);
     if(mPinchEnabled && !mReactToOnlyPanGestures && pinchGesture)
     {
+        mIgnoreGestureAction = true;
         HbPinchGesture* pinch = static_cast<HbPinchGesture *>(pinchGesture);
         switch (pinch->state())
             {
@@ -376,6 +381,11 @@ void HgGridContainer::gestureEvent(QGestureEvent* event)
                 iTargetRowCountList.clear();
                 mPinchingOngoing = true;
                 mPinchEndAlreadyHandled = false;
+                stopLongPressWatcher();
+                if (mSpring.isActive()) {
+                    mSpring.cancel();
+                    emit scrollingEnded();
+                }
                 break;
             case Qt::GestureCanceled:
                 mPinchingOngoing = false;
@@ -512,13 +522,16 @@ void HgGridContainer::effectFinished()
     if (iFadeAnimation.direction() == QAbstractAnimation::Forward) {
         mRenderer->setRowCount(mTargetRowCount, mTargetImageSize);
         mRenderer->setImageSize(mTargetImageSize);
-//        mSpring.setDamping( mTargetRowCount != 3 ? 
-//            KSpringDampingScrolling*(mTargetRowCount-3)*4 : KSpringDampingScrolling );
-//        mSpring.setK( mTargetRowCount != 3 ? 
-//            KSpringKScrolling/((mTargetRowCount-3)*4) : KSpringKScrolling );
         scrollTo(mSelectionModel->currentIndex());
         iFadeAnimation.setDirection(QAbstractAnimation::Backward);
-        iFadeAnimation.start();
+        iFadeAnimation.start();  
+        
+        // Reflections are drawn only in horizontal scrolling mode.
+        const bool reflectionsEnabled = mReflectionsEnabled && 
+                scrollDirection() == Qt::Horizontal;
+        // reflections need to be recreated since row count changes.
+        // reflections are created only to the bottom row.
+        updateReflections(reflectionsEnabled,0,mItems.count());
     }
 }
 
@@ -538,23 +551,23 @@ int HgGridContainer::rowCount(Qt::Orientation scrollDirection) const
 
 void HgGridContainer::setOrientation(Qt::Orientation orientation, bool animate)
 {
-    HgContainer::setOrientation(orientation, animate);
+    const int newRowCount = orientation == Qt::Horizontal ?
+        mHorizontalRowCount : mVerticalColumnCount;
+    const bool rowCountChanges = currentRowCount() != newRowCount;
     
-    if (orientation == Qt::Horizontal) {
-            mRenderer->enableReflections(false);
-            mRenderer->setImageSize(mUserItemSize);
-        if (currentRowCount() != mHorizontalRowCount) {
-            mRenderer->setRowCount(mHorizontalRowCount, mUserItemSize, false);
-            scrollTo(mSelectionModel->currentIndex());
-        }
-    } else {
-        mRenderer->enableReflections(false);
-        mRenderer->setImageSize(mUserItemSize);
-        if (currentRowCount() != mVerticalColumnCount) {
-            mRenderer->setRowCount(mVerticalColumnCount, mUserItemSize, false);        
-            scrollTo(mSelectionModel->currentIndex());
-        }
+    // Disable orientation change animation if the row count also changes.
+    HgContainer::setOrientation(orientation, animate && !rowCountChanges);
+        
+    mRenderer->setImageSize(mUserItemSize);
+    if (rowCountChanges) {
+        mRenderer->setRowCount(newRowCount, mUserItemSize, false);
+        scrollTo(mSelectionModel->currentIndex());
     }
+
+    // Reflections are drawn only in horizontal scrolling mode.
+    const bool reflectionsEnabled = mReflectionsEnabled && orientation == Qt::Horizontal;    
+    mRenderer->enableReflections(reflectionsEnabled);
+    updateReflections(reflectionsEnabled,0,mItems.count());
 }
 
 void HgGridContainer::setPinchLevels(QPair<int,int> levels, Qt::Orientation scrollDirection)
@@ -570,6 +583,52 @@ QPair<int,int> HgGridContainer::pinchLevels(Qt::Orientation scrollDirection) con
 {
     return scrollDirection == Qt::Horizontal ? 
         mHorizontalPinchLevels : mVerticalPinchLevels;
+}
+
+void HgGridContainer::setReflectionsEnabled(bool reflectionsEnabled)
+{
+    mReflectionsEnabled = reflectionsEnabled;
+    mRenderer->enableReflections(reflectionsEnabled);
+}
+
+bool HgGridContainer::reflectionsEnabled() const
+{
+    return mReflectionsEnabled;
+}
+
+void HgGridContainer::updateReflections(bool enable, int start, int end)
+{
+    int first = qBound(0, start, mItems.count()-1);
+    int last = qBound(0, end, mItems.count()-1);
+    const int rowCount = currentRowCount();
+    for(;first<=last; first++){
+        HgWidgetItem* item = mItems.at(first);
+        item->enableReflection(enable && ((first+1)%rowCount == 0));
+    }    
+}
+
+void HgGridContainer::addItems(int start, int end)
+{
+    HgContainer::addItems(start, end);
+    if (mReflectionsEnabled && scrollDirection() == Qt::Horizontal) {
+        updateReflections(true,start,mItems.count());
+    }
+}
+
+void HgGridContainer::removeItems(int start, int end)
+{
+    HgContainer::removeItems(start,end);
+    if (mReflectionsEnabled && scrollDirection() == Qt::Horizontal) {
+        updateReflections(true,start,mItems.count());
+    }
+}
+
+void HgGridContainer::moveItems(int start, int end, int destination)
+{
+    HgContainer::moveItems(start,end,destination);
+    if (mReflectionsEnabled && scrollDirection() == Qt::Horizontal) {
+        updateReflections(true,start,destination+(end-start));
+    }
 }
 
 // End of file

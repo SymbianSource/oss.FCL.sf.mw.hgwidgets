@@ -49,7 +49,7 @@ void HgQuadRenderer::setMirroringPlaneY(qreal mirroringPlaneY)
     mMirroringPlaneY = mirroringPlaneY;
 }
 
-void HgQuadRenderer::setDefaultImage(QImage defaultImage)
+void HgQuadRenderer::setDefaultImage(QPixmap defaultImage)
 {    
     mDefaultImage = defaultImage;
 }
@@ -70,7 +70,7 @@ HgQuad* HgQuadRenderer::getQuadByUserData(const QVariant& userData) const
     return NULL;
 }
 
-QImage HgQuadRenderer::getDefaultImage() const
+QPixmap HgQuadRenderer::defaultImage() const
 {
     return mDefaultImage;
 }

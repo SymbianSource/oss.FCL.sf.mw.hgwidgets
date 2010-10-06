@@ -457,4 +457,9 @@ QPixmap* HgDataProviderModel::getPixmap(int idx)
     return res;
 }
 
+bool HgDataProviderModel::isCached(int idx) const
+{
+    return mObserver->isCached(idx);
+}
+
 //eof

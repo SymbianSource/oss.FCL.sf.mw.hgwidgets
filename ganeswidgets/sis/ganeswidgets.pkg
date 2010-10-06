@@ -19,7 +19,7 @@
 &EN
 
 ; standard SIS file header
-#{"GanesWidgets"},(0x10207C66),10,10,0, TYPE=SA, RU
+#{"GanesWidgets"},(0x10207C66),10,0,0, TYPE=SA, RU
 
 ;Localised Vendor name
 %{"Nokia"}

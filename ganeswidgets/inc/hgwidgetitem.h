@@ -55,6 +55,8 @@ public:
     bool visibility() const;
     void setVisibility(bool visible);
 
+    void enableReflection(bool enabled);
+    
 private:
 
     QString     mTitle;
@@ -64,7 +66,8 @@ private:
     HgImage*    mHgImage;
     HgQuadRenderer* mRenderer;
     bool mVisibility;
-
+    bool mReflectionEnabled; 
+    
     Q_DISABLE_COPY(HgWidgetItem)
 };
 

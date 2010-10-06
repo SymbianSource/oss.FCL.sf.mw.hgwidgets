@@ -65,7 +65,8 @@ HgContainer::HgContainer(QGraphicsItem* parent) :
     mOrientation(Qt::Vertical),
     mDelayedScrollToIndex(),
     mIgnoreGestureAction(false),
-    mHandleLongPress(false)
+    mHandleLongPress(false),
+    mReflectionsEnabled(false)
 {
     FUNC_LOG;
 
@@ -94,6 +95,12 @@ void HgContainer::setItemCount(int itemCount)
     mItems.clear();
     for (int i=0; i<itemCount; i++) {
         HgWidgetItem* item = new HgWidgetItem(mQuadRenderer);
+
+        if ( mReflectionsEnabled && (mRenderer->coverflowModeEnabled() || 
+                (scrollDirection() == Qt::Horizontal))) {
+            // Reflection image is created only for bottom row in grid mode.
+            item->enableReflection((i+1)%currentRowCount() == 0);
+        }
         mItems.append(item);
     }
 }
@@ -955,8 +962,11 @@ void HgContainer::setDefaultImage(QImage defaultImage)
 {
     HgQuadRenderer *renderer = mRenderer->getRenderer();
     if (renderer) {
-        QImage scaled = defaultImage.scaled(mRenderer->getImageSize().toSize());
-        renderer->setDefaultImage(scaled);
+        QImage temp = defaultImage;
+        if(!temp.isNull()) {
+            temp = defaultImage.scaled(mRenderer->getImageSize().toSize());
+        }
+        renderer->setDefaultImage(QPixmap::fromImage(temp));
     }
 }
 
@@ -1060,10 +1070,10 @@ void HgContainer::loadIndicatorGraphics(bool loadIfExists)
 
     if (!selectedPixmap.isNull() && !unselectedPixmap.isNull()) {
         if (mMarkImageOn) {
-            mMarkImageOn->setPixmap(selectedPixmap);
+            mMarkImageOn->setPixmap(selectedPixmap, true);
         }
         if (mMarkImageOff) {
-            mMarkImageOff->setPixmap(unselectedPixmap);
+            mMarkImageOff->setPixmap(unselectedPixmap, true);
         }
     }    
 }
@@ -1121,8 +1131,15 @@ bool HgContainer::handleItemSelection(HgWidgetItem* item)
             handled = false;
             break;
         }
-    
+
     return handled;
+}
+
+// This is added to be able to get feedback (audio and tactile)
+// when tapping items in both mediawall and grid.
+int HgContainer::type() const
+{
+    return Hb::ItemType_GridViewItem;
 }
 
 // EOF

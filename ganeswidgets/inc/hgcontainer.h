@@ -67,9 +67,9 @@ public:
 
     void itemDataChanged(const QModelIndex &firstIndex, const QModelIndex &lastIndex);
 
-    void addItems(int start, int end);
-    void removeItems(int start, int end);
-    void moveItems(int start, int end, int destination);
+    virtual void addItems(int start, int end);
+    virtual void removeItems(int start, int end);
+    virtual void moveItems(int start, int end, int destination);
 
     bool getItemPoints(int index, QPolygonF& points);
 
@@ -94,6 +94,9 @@ public:
     qreal scrollPosition() const;
 
     void setHandleLongPress(bool handleLongPress);
+    
+    // Overrides the type of HbWidget
+    virtual int type() const;
         
 signals:
 
@@ -225,6 +228,7 @@ protected: // data
     bool mIgnoreGestureAction;
     bool mHandleLongPress;
     bool mEmitScrollingEnded;
+    bool mReflectionsEnabled;
 };
 
 #endif
