@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SystemDefinition schema="3.0.0" xmlns:qt="http://www.nokia.com/qt">
-  <package id="hgwidgets" name="Multimedia Widgets" levels="framework service api" version="1.0.0">
-    <collection id="hgwidgets_plat" name="Multimedia Widgets Platform Interfaces" level="api">
+  <package id="hgwidgets" name="Multimedia Widgets" levels="framework service api" version="10.0.0">
+    <collection id="hgwidgets_pub" name="Multimedia Widgets Platform Interfaces" level="api">
      <component id="ganeswidgets_api" name="Ganes Widgets API" class="api" introduced="^4" filter="s60">
-      <unit bldFile="hgwidgets_plat/ganeswidgets_api"/>
+      <unit bldFile="hgwidgets_pub/ganeswidgets_api"/>
 	 </component>
      <component id="hgcacheproxymodel_api" name="Hg Cache Proxy Model API" class="api" introduced="^4" filter="s60">
-      <unit bldFile="hgwidgets_plat/hgcacheproxymodel_api"/>
+      <unit bldFile="hgwidgets_pub/hgcacheproxymodel_api"/>
 	 </component>
     </collection>
     <collection id="ganeswidgets" name="Ganes Widgets" level="service">

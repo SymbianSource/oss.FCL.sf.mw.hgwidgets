@@ -24,5 +24,6 @@ symbian {
     for(header, headers.sources) {
         FILENAME = $$basename(header)
         BLD_INF_RULES.prj_exports += "$$header MW_LAYER_PUBLIC_EXPORT_PATH(hgwidgets/$$FILENAME)"
+        BLD_INF_RULES.prj_exports += "$$header MW_LAYER_PLATFORM_EXPORT_PATH(hgwidgets/$$FILENAME)"
     }
 }
